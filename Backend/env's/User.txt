@@ -1,0 +1,11 @@
+DATASOURCE_URL=jdbc:postgresql://ep-dark-mountain-ags60oae-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATASOURCE_USERNAME=neondb_owner
+DATASOURCE_PASSWORD=npg_nqTfCIdHs16J
+EUREKA_URL=http://localhost:8761/eureka/
+JWT_SECRET_KEY=673b7d63593f46596122544a31797c665026482759764d3f7e2f3c3534
+
+SMTP_SERVER=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USERNAME=996d8d001@smtp-brevo.com
+SMTP_PASSWORD=6Ucgfr9kv52D4HPX
+SMTP_FROM=siudek61@gmail.com
