@@ -67,9 +67,6 @@ public class Listing {
     @Column(name = "longitude")
     private Double longitude;
 
-    @Column(name = "image_url")
-    private String imageUrl;
-
     @Column(nullable = false)
     private String status; // draft, active, expired, blocked, sold
     

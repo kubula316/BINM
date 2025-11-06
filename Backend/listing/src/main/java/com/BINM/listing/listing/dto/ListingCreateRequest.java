@@ -36,7 +36,7 @@ public class ListingCreateRequest {
 
     private Double longitude;
 
-    private String imageUrl;
+    private List<String> mediaUrls;
 
     private List<ListingAttributeRequest> attributes;
 }

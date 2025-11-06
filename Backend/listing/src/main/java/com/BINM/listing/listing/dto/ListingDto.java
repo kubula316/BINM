@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,4 +35,6 @@ public class ListingDto {
     private OffsetDateTime expiresAt;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private List<ListingAttributeDto> attributes;
+    private List<ListingMediaDto> media;
 }

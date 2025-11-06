@@ -21,6 +21,7 @@ import java.util.*;
 public class ListingSeeder {
     private final ListingRepository listingRepository;
     private final ListingAttributeRepository listingAttributeRepository;
+    private final ListingMediaRepository listingMediaRepository;
     private final AttributeService attributeService;
     private final AttributeOptionRepository optionRepository;
     private final CategoryRepository categoryRepository;
@@ -46,8 +47,8 @@ public class ListingSeeder {
                 "Stan bardzo dobry, komplet strun, pokrowiec w zestawie.",
                 new BigDecimal("499.99"),
                 "Kraków", "Małopolskie",
-                "https://example.com/images/gitary/yamaha-c40.jpg",
                 "used");
+            addMedia(l, "https://example.com/images/gitary/yamaha-c40.jpg");
             attachAttributes(cat, l, Map.of(
                     "brand", "yamaha",
                     "strings_count", "6",
@@ -63,8 +64,8 @@ public class ListingSeeder {
                 "Bateria 89%, bez blokady, komplet akcesoriów.",
                 new BigDecimal("1999.00"),
                 "Warszawa", "Mazowieckie",
-                "https://example.com/images/phones/iphone12.jpg",
                 "used");
+            addMedia(l, "https://example.com/images/phones/iphone12.jpg");
             attachAttributes(cat, l, Map.of(
                     "brand", "apple",
                     "model", "iPhone 12",
@@ -74,31 +75,37 @@ public class ListingSeeder {
         });
 
         // Elektronika -> Komputery
-        findByPath("Elektronika", "Komputery").ifPresent(cat -> createListing(cat,
+        findByPath("Elektronika", "Komputery").ifPresent(cat -> {
+            Listing l = createListing(cat,
                 "Laptop Dell Inspiron 15",
                 "i5, 16GB RAM, 512GB SSD, stan bardzo dobry.",
                 new BigDecimal("2499.00"),
                 "Gdańsk", "Pomorskie",
-                "https://example.com/images/laptops/dell-inspiron15.jpg",
-                "used"));
+                "used");
+            addMedia(l, "https://example.com/images/laptops/dell-inspiron15.jpg");
+        });
 
         // Dom i ogród -> Meble
-        findByPath("Dom i ogród", "Meble").ifPresent(cat -> createListing(cat,
+        findByPath("Dom i ogród", "Meble").ifPresent(cat -> {
+            Listing l = createListing(cat,
                 "Sofa 3-osobowa szara",
                 "Nowoczesna, rozkładana, prawie nieużywana.",
                 new BigDecimal("1200.00"),
                 "Wrocław", "Dolnośląskie",
-                "https://example.com/images/furniture/sofa.jpg",
-                "used"));
+                "used");
+            addMedia(l, "https://example.com/images/furniture/sofa.jpg");
+        });
 
         // Sport i turystyka -> Rowery
-        findByPath("Sport i turystyka", "Rowery").ifPresent(cat -> createListing(cat,
+        findByPath("Sport i turystyka", "Rowery").ifPresent(cat -> {
+            Listing l = createListing(cat,
                 "Rower górski MTB 29",
                 "Aluminiowa rama, hamulce tarczowe, 21 biegów.",
                 new BigDecimal("1599.00"),
                 "Poznań", "Wielkopolskie",
-                "https://example.com/images/bikes/mtb29.jpg",
-                "used"));
+                "used");
+            addMedia(l, "https://example.com/images/bikes/mtb29.jpg");
+        });
 
         // Motoryzacja -> Ogłoszenia motoryzacyjne
         findByPath("Motoryzacja", "Ogłoszenia motoryzacyjne").ifPresent(cat -> {
@@ -107,8 +114,8 @@ public class ListingSeeder {
                 "Serwisowany, bezwypadkowy, przebieg 210k km.",
                 new BigDecimal("26999.00"),
                 "Łódź", "Łódzkie",
-                "https://example.com/images/cars/audi-a4-b8.jpg",
                 "used");
+            addMedia(l, "https://example.com/images/cars/audi-a4-b8.jpg");
             attachAttributes(cat, l, Map.of(
                     "brand", "audi",
                     "model", "A4",
@@ -124,13 +131,15 @@ public class ListingSeeder {
         });
 
         // Nieruchomości -> Mieszkania
-        findByPath("Nieruchomości", "Mieszkania").ifPresent(cat -> createListing(cat,
+        findByPath("Nieruchomości", "Mieszkania").ifPresent(cat -> {
+            Listing l = createListing(cat,
                 "Mieszkanie 2 pokoje 42m2",
                 "Parter, balkon, piwnica, blisko komunikacji.",
                 new BigDecimal("399000.00"),
                 "Katowice", "Śląskie",
-                "https://example.com/images/flats/2-pokoje.jpg",
-                "used"));
+                "used");
+            addMedia(l, "https://example.com/images/flats/2-pokoje.jpg");
+        });
         }
 
         // Następnie uzupełnij brakujące: po jednym ogłoszeniu dla KAŻDEJ kategorii‑liścia, jeśli pusta
@@ -145,9 +154,9 @@ public class ListingSeeder {
                                 new BigDecimal("99.00"),
                                 "Warszawa",
                                 "Mazowieckie",
-                                "https://example.com/images/placeholder/" + c.getId() + ".jpg",
                                 "used"
                         );
+                        addMedia(l, "https://example.com/images/placeholder/" + c.getId() + ".jpg");
                         // brak atrybutów – fallback
                     }
                 });
@@ -169,7 +178,6 @@ public class ListingSeeder {
                                BigDecimal price,
                                String city,
                                String region,
-                               String imageUrl,
                                String condition) {
         if (!Boolean.TRUE.equals(category.getIsLeaf())) return null; // safety
         Listing l = Listing.builder()
@@ -183,9 +191,19 @@ public class ListingSeeder {
                 .conditionLabel(condition)
                 .locationCity(city)
                 .locationRegion(region)
-                .imageUrl(imageUrl)
                 .build();
         return listingRepository.save(l);
+    }
+
+    private void addMedia(Listing listing, String url) {
+        if (listing == null || url == null || url.isBlank()) return;
+        ListingMedia m = ListingMedia.builder()
+                .listing(listing)
+                .mediaUrl(url)
+                .mediaType("image")
+                .position(0)
+                .build();
+        listingMediaRepository.save(m);
     }
 
     private void attachAttributes(Category category, Listing listing, Map<String, String> attrs) {

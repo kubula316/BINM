@@ -3,6 +3,7 @@ package com.BINM.listing.category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ public class CategorySeeder {
     private final CategoryRepository repository;
 
     @Bean
+    @Order(0)
     ApplicationRunner seedCategoriesRunner() {
         return args -> seedIfEmpty();
     }
