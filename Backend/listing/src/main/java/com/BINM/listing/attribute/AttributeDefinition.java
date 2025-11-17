@@ -35,7 +35,7 @@ public class AttributeDefinition {
     private Boolean required;
 
     @Column(name = "unit")
-    private String unit; // np. cm3, KM, PLN
+    private String unit; //  cm3, KM, PLN
 
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder;

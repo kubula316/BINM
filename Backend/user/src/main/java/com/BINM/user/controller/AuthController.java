@@ -36,8 +36,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request){
         try {
-            authenticate(request.getEmail(), request.getPassword());
-            final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.getEmail());
+            authenticate(request.email(), request.password());
+            final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.email());
             System.out.println(userDetails);
             final String jwtToken = jwtUtil.generateToken(userDetails);
             System.out.println("generated token:"+jwtToken);
@@ -49,7 +49,7 @@ public class AuthController {
                     .build();
             System.out.println(cookie);
             return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(new AuthResponse(request.getEmail(), jwtToken));
+                    .body(new AuthResponse(request.email(), jwtToken));
         }catch (BadCredentialsException ex){
             Map<String, Object> error = new HashMap<>();
             error.put("error", true);
@@ -86,7 +86,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request){
         try {
-            profileService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+            profileService.resetPassword(request.email(), request.otp(), request.newPassword());
         }catch (Exception e){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }

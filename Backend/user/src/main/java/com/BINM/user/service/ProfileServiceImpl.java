@@ -4,6 +4,7 @@ import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
 import com.BINM.user.model.UserEntity;
 import com.BINM.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,16 +17,17 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
-public class ProfileServiceImpl  implements ProfileService{
+public class ProfileServiceImpl implements ProfileService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
     @Override
+    @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {
         UserEntity newProfile = convertToUserEntity(request);
-        if (!userRepository.existsByEmail(request.getEmail())){
+        if (!userRepository.existsByEmail(request.email())){
             userRepository.save(newProfile);
             return convertToProfileResponse(newProfile);
         }
@@ -120,20 +122,20 @@ public class ProfileServiceImpl  implements ProfileService{
     }
 
     private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
-        return ProfileResponse.builder()
-                .userId(newProfile.getUserId())
-                .name(newProfile.getName())
-                .email(newProfile.getEmail())
-                .isAccountVerified(newProfile.getIsAccountVerified())
-                .build();
+        return new ProfileResponse(
+                newProfile.getUserId(),
+                newProfile.getName(),
+                newProfile.getEmail(),
+                newProfile.getIsAccountVerified()
+        );
     }
 
     private UserEntity convertToUserEntity(ProfileRequest request) {
         return UserEntity.builder()
-                .email(request.getEmail())
+                .email(request.email())
                 .userId(UUID.randomUUID().toString())
-                .name(request.getName())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.name())
+                .password(passwordEncoder.encode(request.password()))
                 .isAccountVerified(false)
                 .resetOtpExpireAt(0L)
                 .verifyOtp(null)

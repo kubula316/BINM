@@ -21,7 +21,7 @@ public class ProfileController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProfileResponse register(@Valid @RequestBody ProfileRequest request){
         ProfileResponse response = profileService.createProfile(request);
-        emailService.sendWelcomeEmail(response.getEmail(), response.getName());
+        emailService.sendWelcomeEmail(response.email(), response.name());
         return response;
     }
 

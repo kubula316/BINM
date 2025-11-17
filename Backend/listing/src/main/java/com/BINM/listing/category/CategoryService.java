@@ -67,7 +67,7 @@ public class CategoryService {
                 if (parent != null) {
                     parent.getChildren().add(node);
                 } else {
-                    roots.add(node); // fallback if missing
+                    roots.add(node);
                 }
             }
         }
@@ -89,8 +89,6 @@ public class CategoryService {
             }
         }
     }
-
-    // create/get removed as per requirements; we keep getChildren for /category/list
 
     private CategoryDto toDto(Category c) {
         return CategoryDto.builder()
