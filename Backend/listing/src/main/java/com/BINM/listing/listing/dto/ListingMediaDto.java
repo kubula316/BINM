@@ -1,16 +1,7 @@
 package com.BINM.listing.listing.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ListingMediaDto {
-    private String url;
-    private String type; // image|video
-    private Integer position;
-}
+public record ListingMediaDto(
+        String url,
+        String type, // image|video
+        Integer position
+) {}

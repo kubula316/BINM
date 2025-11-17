@@ -47,15 +47,16 @@ public class CategoryService {
 
         // First pass: create DTOs
         for (Category c : all) {
-            CategoryTreeDto node = CategoryTreeDto.builder()
-                    .id(c.getId())
-                    .parentId(c.getParent() != null ? c.getParent().getId() : null)
-                    .name(c.getName())
-                    .sortOrder(c.getSortOrder())
-                    .depth(c.getDepth())
-                    .isLeaf(c.getIsLeaf())
-                    .build();
-            byId.put(node.getId(), node);
+            CategoryTreeDto node = new CategoryTreeDto(
+                    c.getId(),
+                    c.getParent() != null ? c.getParent().getId() : null,
+                    c.getName(),
+                    c.getSortOrder(),
+                    c.getDepth(),
+                    c.getIsLeaf(),
+                    new java.util.ArrayList<>()
+            );
+            byId.put(node.id(), node);
         }
 
         // Second pass: attach to parents
@@ -67,7 +68,7 @@ public class CategoryService {
             } else {
                 CategoryTreeDto parent = byId.get(pid);
                 if (parent != null) {
-                    parent.getChildren().add(node);
+                    parent.children().add(node);
                 } else {
                     roots.add(node);
                 }
@@ -76,8 +77,8 @@ public class CategoryService {
 
         // Sort children lists consistently
         Comparator<CategoryTreeDto> cmp = Comparator
-                .comparing(CategoryTreeDto::getSortOrder)
-                .thenComparing(CategoryTreeDto::getName, String.CASE_INSENSITIVE_ORDER);
+                .comparing(CategoryTreeDto::sortOrder)
+                .thenComparing(CategoryTreeDto::name, String.CASE_INSENSITIVE_ORDER);
 
         sortRecursively(roots, cmp);
         return roots;
@@ -86,20 +87,20 @@ public class CategoryService {
     private void sortRecursively(List<CategoryTreeDto> nodes, Comparator<CategoryTreeDto> cmp) {
         nodes.sort(cmp);
         for (CategoryTreeDto n : nodes) {
-            if (n.getChildren() != null && !n.getChildren().isEmpty()) {
-                sortRecursively(n.getChildren(), cmp);
+            if (n.children() != null && !n.children().isEmpty()) {
+                sortRecursively(n.children(), cmp);
             }
         }
     }
 
     private CategoryDto toDto(Category c) {
-        return CategoryDto.builder()
-                .id(c.getId())
-                .parentId(c.getParent() != null ? c.getParent().getId() : null)
-                .name(c.getName())
-                .sortOrder(c.getSortOrder())
-                .depth(c.getDepth())
-                .isLeaf(c.getIsLeaf())
-                .build();
+        return new CategoryDto(
+                c.getId(),
+                c.getParent() != null ? c.getParent().getId() : null,
+                c.getName(),
+                c.getSortOrder(),
+                c.getDepth(),
+                c.getIsLeaf()
+        );
     }
 }

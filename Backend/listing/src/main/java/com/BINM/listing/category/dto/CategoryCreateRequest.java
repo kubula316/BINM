@@ -3,10 +3,10 @@ package com.BINM.listing.category.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-@Data
-public class CategoryCreateRequest {
+
+public record CategoryCreateRequest (
     @NotBlank
-    private String name;
-    private Long parentId; // null => root
-    private Integer sortOrder; // optional
-}
+    String name,
+    Long parentId,
+    Integer sortOrder
+) {}

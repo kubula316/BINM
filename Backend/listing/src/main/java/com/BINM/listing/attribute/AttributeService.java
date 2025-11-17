@@ -60,21 +60,18 @@ public class AttributeService {
     }
 
     private AttributeDefinitionDto toDto(AttributeDefinition d, List<AttributeOption> opts) {
-        return AttributeDefinitionDto.builder()
-                .id(d.getId())
-                .categoryId(d.getCategory().getId())
-                .key(d.getKey())
-                .label(d.getLabel())
-                .type(d.getType())
-                .required(d.getRequired())
-                .unit(d.getUnit())
-                .sortOrder(d.getSortOrder())
-                .options(opts.stream().map(o -> AttributeOptionDto.builder()
-                        .id(o.getId())
-                        .value(o.getValue())
-                        .label(o.getLabel())
-                        .sortOrder(o.getSortOrder())
-                        .build()).toList())
-                .build();
+        return new AttributeDefinitionDto(
+                d.getId(),
+                d.getCategory().getId(),
+                d.getKey(),
+                d.getLabel(),
+                d.getType(),
+                d.getRequired(),
+                d.getUnit(),
+                d.getSortOrder(),
+                opts.stream().map(o -> new AttributeOptionDto(
+                        o.getId(), o.getValue(), o.getLabel(), o.getSortOrder()
+                )).toList()
+        );
     }
 }

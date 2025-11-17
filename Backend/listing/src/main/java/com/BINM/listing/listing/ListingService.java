@@ -34,7 +34,7 @@ public class ListingService {
         if (sellerUserId == null || sellerUserId.isBlank()) {
             throw new IllegalArgumentException("Missing seller user id");
         }
-        Category category = categoryRepository.findById(req.getCategoryId())
+        Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         if (!Boolean.TRUE.equals(category.getIsLeaf())) {
             throw new IllegalArgumentException("Listing must be assigned to a leaf category");
@@ -42,36 +42,36 @@ public class ListingService {
         Listing entity = Listing.builder()
                 .sellerUserId(sellerUserId)
                 .category(category)
-                .title(req.getTitle().trim())
-                .description(req.getDescription())
-                .priceAmount(req.getPriceAmount())
-                .currency(req.getCurrency() != null ? req.getCurrency() : "PLN")
-                .negotiable(req.getNegotiable() != null && req.getNegotiable())
-                .conditionLabel(req.getConditionLabel())
-                .locationCity(req.getLocationCity())
-                .locationRegion(req.getLocationRegion())
-                .latitude(req.getLatitude())
-                .longitude(req.getLongitude())
+                .title(req.title().trim())
+                .description(req.description())
+                .priceAmount(req.priceAmount())
+                .currency(req.currency() != null ? req.currency() : "PLN")
+                .negotiable(req.negotiable() != null && req.negotiable())
+                .conditionLabel(req.conditionLabel())
+                .locationCity(req.locationCity())
+                .locationRegion(req.locationRegion())
+                .latitude(req.latitude())
+                .longitude(req.longitude())
                 .status("active")
                 .build();
         Listing saved = listingRepository.save(entity);
 
         // attributes (optional)
-        if (req.getAttributes() != null && !req.getAttributes().isEmpty()) {
+        if (req.attributes() != null && !req.attributes().isEmpty()) {
             Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
             // validate required later, after insert map
-            for (ListingAttributeRequest ar : req.getAttributes()) {
-                if (ar.getKey() == null) continue;
-                String k = ar.getKey().trim().toLowerCase(Locale.ROOT);
+            for (ListingAttributeRequest ar : req.attributes()) {
+                if (ar.key() == null) continue;
+                String k = ar.key().trim().toLowerCase(Locale.ROOT);
                 AttributeDefinition def = defs.get(k);
                 if (def == null) {
-                    throw new IllegalArgumentException("Unknown attribute key: " + ar.getKey());
+                    throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
                 }
                 ListingAttribute lav = ListingAttribute.builder()
                         .listing(saved)
                         .attribute(def)
                         .build();
-                String val = ar.getValue();
+                String val = ar.value();
                 switch (def.getType()) {
                     case STRING -> lav.setVText(val);
                     case NUMBER -> {
@@ -103,8 +103,8 @@ public class ListingService {
                 listingAttributeRepository.save(lav);
             }
             // required check
-            var providedKeys = req.getAttributes().stream()
-                    .map(a -> a.getKey() == null ? "" : a.getKey().trim().toLowerCase(Locale.ROOT))
+            var providedKeys = req.attributes().stream()
+                    .map(a -> a.key() == null ? "" : a.key().trim().toLowerCase(Locale.ROOT))
                     .collect(java.util.stream.Collectors.toSet());
             defs.values().stream()
                     .filter(AttributeDefinition::getRequired)
@@ -115,9 +115,9 @@ public class ListingService {
                     });
         }
         // media (optional)
-        if (req.getMediaUrls() != null && !req.getMediaUrls().isEmpty()) {
+        if (req.mediaUrls() != null && !req.mediaUrls().isEmpty()) {
             int pos = 0;
-            for (String url : req.getMediaUrls()) {
+            for (String url : req.mediaUrls()) {
                 if (url == null || url.isBlank()) continue;
                 ListingMedia m = ListingMedia.builder()
                         .listing(saved)
@@ -136,10 +136,15 @@ public class ListingService {
     public ListingDto get(Long id) {
         Listing l = listingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-        ListingDto dto = toDto(l);
-        dto.setAttributes(loadAttributes(l));
-        dto.setMedia(loadMedia(l));
-        return dto;
+        return new ListingDto(
+                l.getId(), l.getPublicId(),
+                l.getCategory() != null ? l.getCategory().getId() : null,
+                l.getSellerUserId(), l.getTitle(), l.getDescription(),
+                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(), l.getConditionLabel(),
+                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
+                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
+                loadAttributes(l), loadMedia(l)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -164,28 +169,28 @@ public class ListingService {
     @Transactional(readOnly = true)
     public Page<ListingDto> search(ListingSearchRequest req) {
         Pageable pageable = PageRequest.of(
-                Optional.ofNullable(req.getPage()).orElse(0),
-                Optional.ofNullable(req.getSize()).orElse(20),
+                Optional.ofNullable(req.page()).orElse(0),
+                Optional.ofNullable(req.size()).orElse(20),
                 resolveSort(req)
         );
 
         Specification<Listing> spec = Specification.where(null);
 
-        if (req.getCategoryId() != null) {
-            List<Long> ids = collectDescendantIds(req.getCategoryId());
+        if (req.categoryId() != null) {
+            List<Long> ids = collectDescendantIds(req.categoryId());
             if (!ids.isEmpty()) {
                 spec = spec.and((root, cq, cb) -> root.get("category").get("id").in(ids));
             } else {
                 return Page.empty(pageable);
             }
         }
-        if (req.getSellerUserId() != null && !req.getSellerUserId().isBlank()) {
-            String s = req.getSellerUserId();
+        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
+            String s = req.sellerUserId();
             spec = spec.and((root, cq, cb) -> cb.equal(root.get("sellerUserId"), s));
         }
 
-        if (req.getAttributes() != null) {
-            for (ListingSearchRequest.AttributeFilter f : req.getAttributes()) {
+        if (req.attributes() != null) {
+            for (ListingSearchRequest.AttributeFilter f : req.attributes()) {
                 spec = spec.and(hasAttribute(f));
             }
         }
@@ -195,15 +200,15 @@ public class ListingService {
 
     private Sort resolveSort(ListingSearchRequest req) {
         List<Sort.Order> orders = new ArrayList<>();
-        if (req.getSort() != null) {
-            for (ListingSearchRequest.SortSpec s : req.getSort()) {
-                String field = switch (s.getField()) {
+        if (req.sort() != null) {
+            for (ListingSearchRequest.SortSpec s : req.sort()) {
+                String field = switch (s.field()) {
                     case "price", "priceAmount" -> "priceAmount";
                     case "createdAt" -> "createdAt";
                     case "publishedAt" -> "publishedAt";
                     default -> "createdAt";
                 };
-                Sort.Direction dir = "asc".equalsIgnoreCase(s.getDir()) ? Sort.Direction.ASC : Sort.Direction.DESC;
+                Sort.Direction dir = "asc".equalsIgnoreCase(s.dir()) ? Sort.Direction.ASC : Sort.Direction.DESC;
                 orders.add(new Sort.Order(dir, field));
             }
         }
@@ -221,41 +226,41 @@ public class ListingService {
             sq.select(cb.literal(1L));
             var predicates = new ArrayList<jakarta.persistence.criteria.Predicate>();
             predicates.add(cb.equal(la.get("listing"), root));
-            predicates.add(cb.equal(cb.lower(def.get("key")), f.getKey().toLowerCase(Locale.ROOT)));
+            predicates.add(cb.equal(cb.lower(def.get("key")), f.key().toLowerCase(Locale.ROOT)));
 
-            String type = Optional.ofNullable(f.getType()).orElse("STRING").toUpperCase(Locale.ROOT);
-            String op = Optional.ofNullable(f.getOp()).orElse("eq").toLowerCase(Locale.ROOT);
+            String type = Optional.ofNullable(f.type()).orElse("STRING").toUpperCase(Locale.ROOT);
+            String op = Optional.ofNullable(f.op()).orElse("eq").toLowerCase(Locale.ROOT);
 
             switch (type) {
                 case "ENUM" -> {
                     var opt = la.join("option");
                     if ("eq".equals(op)) {
-                        predicates.add(cb.equal(cb.lower(opt.get("value")), f.getValue().toLowerCase(Locale.ROOT)));
-                    } else if ("in".equals(op) && f.getValues() != null && !f.getValues().isEmpty()) {
-                        var lowered = f.getValues().stream().filter(Objects::nonNull).map(v -> v.toLowerCase(Locale.ROOT)).toList();
+                        predicates.add(cb.equal(cb.lower(opt.get("value")), f.value().toLowerCase(Locale.ROOT)));
+                    } else if ("in".equals(op) && f.values() != null && !f.values().isEmpty()) {
+                        var lowered = f.values().stream().filter(Objects::nonNull).map(v -> v.toLowerCase(Locale.ROOT)).toList();
                         predicates.add(cb.lower(opt.get("value")).in(lowered));
                     }
                 }
                 case "NUMBER" -> {
                     if ("between".equals(op)) {
-                        var from = f.getFrom() != null ? new java.math.BigDecimal(f.getFrom()) : null;
-                        var to = f.getTo() != null ? new java.math.BigDecimal(f.getTo()) : null;
+                        var from = f.from() != null ? new java.math.BigDecimal(f.from()) : null;
+                        var to = f.to() != null ? new java.math.BigDecimal(f.to()) : null;
                         if (from != null) predicates.add(cb.greaterThanOrEqualTo(la.get("vNumber"), from));
                         if (to != null) predicates.add(cb.lessThanOrEqualTo(la.get("vNumber"), to));
                     } else if ("gte".equals(op)) {
-                        predicates.add(cb.greaterThanOrEqualTo(la.get("vNumber"), new java.math.BigDecimal(f.getValue())));
+                        predicates.add(cb.greaterThanOrEqualTo(la.get("vNumber"), new java.math.BigDecimal(f.value())));
                     } else if ("lte".equals(op)) {
-                        predicates.add(cb.lessThanOrEqualTo(la.get("vNumber"), new java.math.BigDecimal(f.getValue())));
+                        predicates.add(cb.lessThanOrEqualTo(la.get("vNumber"), new java.math.BigDecimal(f.value())));
                     } else { // eq
-                        predicates.add(cb.equal(la.get("vNumber"), new java.math.BigDecimal(f.getValue())));
+                        predicates.add(cb.equal(la.get("vNumber"), new java.math.BigDecimal(f.value())));
                     }
                 }
-                case "BOOLEAN" -> predicates.add(cb.equal(la.get("vBoolean"), parseBool(f.getValue())));
+                case "BOOLEAN" -> predicates.add(cb.equal(la.get("vBoolean"), parseBool(f.value())));
                 default -> { // STRING
                     if ("like".equals(op)) {
-                        predicates.add(cb.like(cb.lower(la.get("vText")), "%" + f.getValue().toLowerCase(Locale.ROOT) + "%"));
+                        predicates.add(cb.like(cb.lower(la.get("vText")), "%" + f.value().toLowerCase(Locale.ROOT) + "%"));
                     } else { // eq
-                        predicates.add(cb.equal(cb.lower(la.get("vText")), f.getValue().toLowerCase(Locale.ROOT)));
+                        predicates.add(cb.equal(cb.lower(la.get("vText")), f.value().toLowerCase(Locale.ROOT)));
                     }
                 }
             }
@@ -291,17 +296,12 @@ public class ListingService {
         List<ListingAttributeDto> dtos = new ArrayList<>();
         for (ListingAttribute a : list) {
             var def = a.getAttribute();
-            ListingAttributeDto dto = ListingAttributeDto.builder()
-                    .key(def.getKey())
-                    .label(def.getLabel())
-                    .type(def.getType())
-                    .stringValue(a.getVText())
-                    .numberValue(a.getVNumber())
-                    .booleanValue(a.getVBoolean())
-                    .enumValue(a.getOption() != null ? a.getOption().getValue() : null)
-                    .enumLabel(a.getOption() != null ? a.getOption().getLabel() : null)
-                    .build();
-            dtos.add(dto);
+            dtos.add(new ListingAttributeDto(
+                    def.getKey(), def.getLabel(), def.getType(),
+                    a.getVText(), a.getVNumber(), a.getVBoolean(),
+                    a.getOption() != null ? a.getOption().getValue() : null,
+                    a.getOption() != null ? a.getOption().getLabel() : null
+            ));
         }
         return dtos;
     }
@@ -310,11 +310,9 @@ public class ListingService {
         var media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
         var dtos = new java.util.ArrayList<com.BINM.listing.listing.dto.ListingMediaDto>();
         for (ListingMedia m : media) {
-            dtos.add(com.BINM.listing.listing.dto.ListingMediaDto.builder()
-                    .url(m.getMediaUrl())
-                    .type(m.getMediaType())
-                    .position(m.getPosition())
-                    .build());
+            dtos.add(new com.BINM.listing.listing.dto.ListingMediaDto(
+                    m.getMediaUrl(), m.getMediaType(), m.getPosition()
+            ));
         }
         return dtos;
     }
@@ -323,29 +321,29 @@ public class ListingService {
     public ListingDto update(Long id, com.BINM.listing.listing.dto.ListingUpdateRequest req) {
         Listing l = listingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-        if (req.getCategoryId() != null && !Objects.equals(l.getCategory().getId(), req.getCategoryId())) {
-            Category category = categoryRepository.findById(req.getCategoryId())
+        if (req.categoryId() != null && !Objects.equals(l.getCategory().getId(), req.categoryId())) {
+            Category category = categoryRepository.findById(req.categoryId())
                     .orElseThrow(() -> new EntityNotFoundException("Category not found"));
             if (!Boolean.TRUE.equals(category.getIsLeaf())) {
                 throw new IllegalArgumentException("Listing must be assigned to a leaf category");
             }
             l.setCategory(category);
         }
-        if (req.getTitle() != null) l.setTitle(req.getTitle().trim());
-        if (req.getDescription() != null) l.setDescription(req.getDescription());
-        if (req.getPriceAmount() != null) l.setPriceAmount(req.getPriceAmount());
-        if (req.getCurrency() != null) l.setCurrency(req.getCurrency());
-        if (req.getNegotiable() != null) l.setNegotiable(req.getNegotiable());
-        if (req.getConditionLabel() != null) l.setConditionLabel(req.getConditionLabel());
-        if (req.getLocationCity() != null) l.setLocationCity(req.getLocationCity());
-        if (req.getLocationRegion() != null) l.setLocationRegion(req.getLocationRegion());
-        if (req.getLatitude() != null) l.setLatitude(req.getLatitude());
-        if (req.getLongitude() != null) l.setLongitude(req.getLongitude());
+        if (req.title() != null) l.setTitle(req.title().trim());
+        if (req.description() != null) l.setDescription(req.description());
+        if (req.priceAmount() != null) l.setPriceAmount(req.priceAmount());
+        if (req.currency() != null) l.setCurrency(req.currency());
+        if (req.negotiable() != null) l.setNegotiable(req.negotiable());
+        if (req.conditionLabel() != null) l.setConditionLabel(req.conditionLabel());
+        if (req.locationCity() != null) l.setLocationCity(req.locationCity());
+        if (req.locationRegion() != null) l.setLocationRegion(req.locationRegion());
+        if (req.latitude() != null) l.setLatitude(req.latitude());
+        if (req.longitude() != null) l.setLongitude(req.longitude());
 
-        if (req.getMediaUrls() != null) {
+        if (req.mediaUrls() != null) {
             listingMediaRepository.deleteByListingId(l.getId());
             int pos = 0;
-            for (String url : req.getMediaUrls()) {
+            for (String url : req.mediaUrls()) {
                 if (url == null || url.isBlank()) continue;
                 ListingMedia m = ListingMedia.builder()
                         .listing(l)
@@ -358,10 +356,15 @@ public class ListingService {
         }
 
         Listing saved = listingRepository.save(l);
-        ListingDto dto = toDto(saved);
-        dto.setAttributes(loadAttributes(saved));
-        dto.setMedia(loadMedia(saved));
-        return dto;
+        return new ListingDto(
+                saved.getId(), saved.getPublicId(),
+                saved.getCategory() != null ? saved.getCategory().getId() : null,
+                saved.getSellerUserId(), saved.getTitle(), saved.getDescription(),
+                saved.getPriceAmount(), saved.getCurrency(), saved.getNegotiable(), saved.getConditionLabel(),
+                saved.getLocationCity(), saved.getLocationRegion(), saved.getLatitude(), saved.getLongitude(),
+                saved.getStatus(), saved.getPublishedAt(), saved.getExpiresAt(), saved.getCreatedAt(), saved.getUpdatedAt(),
+                loadAttributes(saved), loadMedia(saved)
+        );
     }
 
     @Transactional
@@ -373,26 +376,14 @@ public class ListingService {
     }
 
     private ListingDto toDto(Listing l) {
-        return ListingDto.builder()
-                .id(l.getId())
-                .publicId(l.getPublicId())
-                .categoryId(l.getCategory() != null ? l.getCategory().getId() : null)
-                .sellerUserId(l.getSellerUserId())
-                .title(l.getTitle())
-                .description(l.getDescription())
-                .priceAmount(l.getPriceAmount())
-                .currency(l.getCurrency())
-                .negotiable(l.getNegotiable())
-                .conditionLabel(l.getConditionLabel())
-                .locationCity(l.getLocationCity())
-                .locationRegion(l.getLocationRegion())
-                .latitude(l.getLatitude())
-                .longitude(l.getLongitude())
-                .status(l.getStatus())
-                .publishedAt(l.getPublishedAt())
-                .expiresAt(l.getExpiresAt())
-                .createdAt(l.getCreatedAt())
-                .updatedAt(l.getUpdatedAt())
-                .build();
+        return new ListingDto(
+                l.getId(), l.getPublicId(),
+                l.getCategory() != null ? l.getCategory().getId() : null,
+                l.getSellerUserId(), l.getTitle(), l.getDescription(),
+                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(), l.getConditionLabel(),
+                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
+                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
+                null, null
+        );
     }
 }
