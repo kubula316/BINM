@@ -4,6 +4,7 @@ import com.BINM.listing.category.dto.CategoryDto;
 import com.BINM.listing.category.dto.CategoryTreeDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("categoryTree")
     public List<CategoryTreeDto> getAllTree() {
         List<Category> all = categoryRepository.findAll(
                 Sort.by(Sort.Direction.ASC, "depth")
