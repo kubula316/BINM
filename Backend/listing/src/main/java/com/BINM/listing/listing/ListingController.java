@@ -16,11 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class ListingController {
     private final ListingService listingService;
 
-    @PostMapping("/create")
-    public ResponseEntity<ListingDto> create(@RequestHeader(value = "X-User-Id", required = false) String userId,
-                                             @Valid @RequestBody ListingCreateRequest req) {
-        return ResponseEntity.ok(listingService.create(req, userId));
-    }
+
 
     @GetMapping("/get")
     public ResponseEntity<ListingDto> get(@RequestParam Long id) {
@@ -39,6 +35,12 @@ public class ListingController {
     @PostMapping("/search")
     public ResponseEntity<Page<ListingDto>> search(@RequestBody ListingSearchRequest req) {
         return ResponseEntity.ok(listingService.search(req));
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<ListingDto> create(@RequestHeader(value = "X-User-Id", required = false) String userId,
+                                             @Valid @RequestBody ListingCreateRequest req) {
+        return ResponseEntity.ok(listingService.create(req, userId));
     }
 
     @PutMapping("/update")
