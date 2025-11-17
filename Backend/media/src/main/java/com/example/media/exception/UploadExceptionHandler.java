@@ -10,11 +10,11 @@ public class UploadExceptionHandler {
 
     @ExceptionHandler(value = UploadException.class)
     public ResponseEntity<ErrorInfo> handleException(UploadException e){
-        if (e.getStudentError().equals(UploadError.FAILED_TO_UPLOAD_IMAGE)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorInfo(e.getStudentError().getMessage()));
+        if (e.getUploadError().equals(UploadError.FAILED_TO_UPLOAD_IMAGE)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorInfo(e.getUploadError().getMessage()));
         }
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorInfo(e.getStudentError().getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorInfo(e.getUploadError().getMessage()));
     }
 
 }
