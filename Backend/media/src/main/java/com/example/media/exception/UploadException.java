@@ -1,6 +1,5 @@
 package com.example.media.exception;
 
-import com.azure.core.annotation.Get;
 import lombok.Getter;
 
 @Getter
