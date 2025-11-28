@@ -6,31 +6,38 @@ import com.BINM.listing.listing.dto.ListingUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/private/listings")
+@RequestMapping("/user/listing")
 @RequiredArgsConstructor
 public class ListingUserController {
 
     private final ListingService listingService;
 
     @PostMapping("/create")
-    public ResponseEntity<ListingDto> create(@RequestHeader(value = "X-User-Id", required = false) String userId,
-                                             @Valid @RequestBody ListingCreateRequest req) {
+    public ResponseEntity<ListingDto> create(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
+            @Valid @RequestBody ListingCreateRequest req) {
         return ResponseEntity.ok(listingService.create(req, userId));
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ListingDto> update(@RequestParam Long id,
-                                             @RequestBody ListingUpdateRequest req) {
+    public ResponseEntity<ListingDto> update(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
+            @RequestParam Long id,
+            @RequestBody ListingUpdateRequest req) {
+        // TODO: Dodać logikę w serwisie, która sprawdzi, czy zalogowany użytkownik (userId) jest właścicielem ogłoszenia.
         return ResponseEntity.ok(listingService.update(id, req));
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> delete(@RequestParam Long id) {
+    public ResponseEntity<Void> delete(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
+            @RequestParam Long id) {
+        // TODO: Dodać logikę w serwisie, która sprawdzi, czy zalogowany użytkownik (userId) jest właścicielem ogłoszenia.
         listingService.delete(id);
         return ResponseEntity.noContent().build();
     }

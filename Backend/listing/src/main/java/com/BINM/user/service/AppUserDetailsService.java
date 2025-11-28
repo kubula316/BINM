@@ -3,7 +3,6 @@ package com.BINM.user.service;
 import com.BINM.user.model.UserEntity;
 import com.BINM.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,8 +17,14 @@ public class AppUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserEntity existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));
-        return new User(existingUser.getEmail(), existingUser.getPassword(), new ArrayList<>());
+        UserEntity userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return new CustomUserDetails(
+                userEntity.getUserId(),
+                userEntity.getEmail(),
+                userEntity.getPassword(),
+                new ArrayList<>()
+        );
     }
 }
