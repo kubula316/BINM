@@ -1,4 +1,4 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.model;
 
 import com.BINM.listing.category.Category;
 import jakarta.persistence.*;

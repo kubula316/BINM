@@ -1,4 +1,4 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.service;
 
 import com.BINM.listing.attribute.AttributeDefinition;
 import com.BINM.listing.attribute.AttributeOption;
@@ -7,6 +7,12 @@ import com.BINM.listing.attribute.AttributeService;
 import com.BINM.listing.category.Category;
 import com.BINM.listing.category.CategoryRepository;
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.listing.model.Listing;
+import com.BINM.listing.listing.model.ListingAttribute;
+import com.BINM.listing.listing.model.ListingMedia;
+import com.BINM.listing.listing.repository.ListingAttributeRepository;
+import com.BINM.listing.listing.repository.ListingMediaRepository;
+import com.BINM.listing.listing.repository.ListingRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

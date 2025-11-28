@@ -1,5 +1,6 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.repository;
 
+import com.BINM.listing.listing.model.ListingMedia;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

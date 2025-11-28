@@ -1,4 +1,4 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.model;
 
 import com.BINM.listing.attribute.AttributeDefinition;
 import com.BINM.listing.attribute.AttributeOption;

@@ -1,8 +1,9 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.controller;
 
 import com.BINM.listing.listing.dto.ListingCreateRequest;
 import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingUpdateRequest;
+import com.BINM.listing.listing.service.ListingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

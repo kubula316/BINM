@@ -1,5 +1,6 @@
-package com.BINM.listing.listing;
+package com.BINM.listing.listing.repository;
 
+import com.BINM.listing.listing.model.Listing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
