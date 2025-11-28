@@ -15,7 +15,6 @@ public record ListingDto(
         BigDecimal priceAmount,
         String currency,
         Boolean negotiable,
-        String conditionLabel,
         String locationCity,
         String locationRegion,
         Double latitude,

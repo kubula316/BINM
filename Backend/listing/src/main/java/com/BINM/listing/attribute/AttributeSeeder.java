@@ -38,7 +38,8 @@ public class AttributeSeeder {
                     {"body_type", "Nadwozie", AttributeType.ENUM, false, null, 70},
                     {"engine_capacity", "Pojemność silnika", AttributeType.NUMBER, false, "cm3", 80},
                     {"power", "Moc", AttributeType.NUMBER, false, "KM", 90},
-                    {"vin", "VIN", AttributeType.STRING, false, null, 100}
+                    {"vin", "VIN", AttributeType.STRING, false, null, 100},
+                    {"condition", "Stan", AttributeType.ENUM, true, null, 5} // Dodany atrybut 'condition'
             });
             ensureOptions(defs.get("brand"), new String[][]{
                     {"audi", "Audi"}, {"bmw", "BMW"}, {"mercedes", "Mercedes-Benz"}, {"volkswagen", "Volkswagen"}, {"toyota", "Toyota"}
@@ -51,6 +52,9 @@ public class AttributeSeeder {
             });
             ensureOptions(defs.get("body_type"), new String[][]{
                     {"sedan", "Sedan"}, {"hatchback", "Hatchback"}, {"combi", "Kombi"}, {"suv", "SUV"}, {"coupe", "Coupé"}
+            });
+            ensureOptions(defs.get("condition"), new String[][]{ // Dodane opcje dla 'condition'
+                    {"new", "Nowy"}, {"used", "Używany"}
             });
         });
 

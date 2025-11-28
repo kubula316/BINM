@@ -11,12 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "listing",
-        indexes = {
-                @Index(name = "idx_listing_category", columnList = "category_id"),
-                @Index(name = "idx_listing_seller", columnList = "seller_user_id"),
-                @Index(name = "idx_listing_status", columnList = "status")
-        })
+@Table(name = "listing", indexes = {@Index(name = "idx_listing_category", columnList = "category_id"), @Index(name = "idx_listing_seller", columnList = "seller_user_id"), @Index(name = "idx_listing_status", columnList = "status")})
 @Getter
 @Setter
 @Builder
@@ -51,9 +46,6 @@ public class Listing {
 
     @Column(nullable = false)
     private Boolean negotiable;
-
-    @Column
-    private String conditionLabel;
 
     @Column(name = "location_city")
     private String locationCity;

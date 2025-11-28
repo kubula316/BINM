@@ -15,7 +15,6 @@ public record ListingCreateRequest(
         @NotNull @DecimalMin(value = "0.0", inclusive = true) BigDecimal priceAmount,
         @Size(min = 3, max = 3) String currency,
         Boolean negotiable,
-        String conditionLabel,
         String locationCity,
         String locationRegion,
         Double latitude,

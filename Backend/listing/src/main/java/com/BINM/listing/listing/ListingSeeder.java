@@ -18,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Map.entry;
+
 @Configuration
 @RequiredArgsConstructor
 public class ListingSeeder {
@@ -48,8 +50,7 @@ public class ListingSeeder {
                         "Gitara klasyczna Yamaha C40",
                         "Stan bardzo dobry, komplet strun, pokrowiec w zestawie.",
                         new BigDecimal("499.99"),
-                        "Kraków", "Małopolskie",
-                        "used");
+                        "Kraków", "Małopolskie");
                 addMedia(l, "https://example.com/images/gitary/yamaha-c40.jpg");
                 attachAttributes(cat, l, Map.of(
                         "brand", "yamaha",
@@ -65,8 +66,7 @@ public class ListingSeeder {
                         "Apple iPhone 12 128GB czarny",
                         "Bateria 89%, bez blokady, komplet akcesoriów.",
                         new BigDecimal("1999.00"),
-                        "Warszawa", "Mazowieckie",
-                        "used");
+                        "Warszawa", "Mazowieckie");
                 addMedia(l, "https://example.com/images/phones/iphone12.jpg");
                 attachAttributes(cat, l, Map.of(
                         "brand", "apple",
@@ -82,9 +82,9 @@ public class ListingSeeder {
                         "Laptop Dell Inspiron 15",
                         "i5, 16GB RAM, 512GB SSD, stan bardzo dobry.",
                         new BigDecimal("2499.00"),
-                        "Gdańsk", "Pomorskie",
-                        "used");
+                        "Gdańsk", "Pomorskie");
                 addMedia(l, "https://example.com/images/laptops/dell-inspiron15.jpg");
+                attachAttributes(cat, l, Map.of("condition", "used"));
             });
 
             // Dom i ogród -> Meble
@@ -93,9 +93,9 @@ public class ListingSeeder {
                         "Sofa 3-osobowa szara",
                         "Nowoczesna, rozkładana, prawie nieużywana.",
                         new BigDecimal("1200.00"),
-                        "Wrocław", "Dolnośląskie",
-                        "used");
+                        "Wrocław", "Dolnośląskie");
                 addMedia(l, "https://example.com/images/furniture/sofa.jpg");
+                attachAttributes(cat, l, Map.of("condition", "used"));
             });
 
             // Sport i turystyka -> Rowery
@@ -104,9 +104,9 @@ public class ListingSeeder {
                         "Rower górski MTB 29",
                         "Aluminiowa rama, hamulce tarczowe, 21 biegów.",
                         new BigDecimal("1599.00"),
-                        "Poznań", "Wielkopolskie",
-                        "used");
+                        "Poznań", "Wielkopolskie");
                 addMedia(l, "https://example.com/images/bikes/mtb29.jpg");
+                attachAttributes(cat, l, Map.of("condition", "new"));
             });
 
             // Motoryzacja -> Ogłoszenia motoryzacyjne
@@ -115,20 +115,20 @@ public class ListingSeeder {
                         "Audi A4 B8 2.0 TDI 2009",
                         "Serwisowany, bezwypadkowy, przebieg 210k km.",
                         new BigDecimal("26999.00"),
-                        "Łódź", "Łódzkie",
-                        "used");
+                        "Łódź", "Łódzkie");
                 addMedia(l, "https://example.com/images/cars/audi-a4-b8.jpg");
-                attachAttributes(cat, l, Map.of(
-                        "brand", "audi",
-                        "model", "A4",
-                        "year", "2009",
-                        "mileage", "210000",
-                        "fuel", "diesel",
-                        "gearbox", "manual",
-                        "body_type", "sedan",
-                        "engine_capacity", "1968",
-                        "power", "143",
-                        "vin", "WAUZZZ8K09A000000"
+                attachAttributes(cat, l, Map.ofEntries(
+                        entry("brand", "audi"),
+                        entry("model", "A4"),
+                        entry("year", "2009"),
+                        entry("mileage", "210000"),
+                        entry("fuel", "diesel"),
+                        entry("gearbox", "manual"),
+                        entry("body_type", "sedan"),
+                        entry("engine_capacity", "1968"),
+                        entry("power", "143"),
+                        entry("vin", "WAUZZZ8K09A000000"),
+                        entry("condition", "used")
                 ));
             });
 
@@ -138,9 +138,9 @@ public class ListingSeeder {
                         "Mieszkanie 2 pokoje 42m2",
                         "Parter, balkon, piwnica, blisko komunikacji.",
                         new BigDecimal("399000.00"),
-                        "Katowice", "Śląskie",
-                        "used");
+                        "Katowice", "Śląskie");
                 addMedia(l, "https://example.com/images/flats/2-pokoje.jpg");
+                attachAttributes(cat, l, Map.of("condition", "used"));
             });
         }
 
@@ -155,11 +155,10 @@ public class ListingSeeder {
                                 "Wpis testowy dla kategorii '" + c.getName() + "'.",
                                 new BigDecimal("99.00"),
                                 "Warszawa",
-                                "Mazowieckie",
-                                "used"
+                                "Mazowieckie"
                         );
                         addMedia(l, "https://example.com/images/placeholder/" + c.getId() + ".jpg");
-                        // brak atrybutów – fallback
+                        attachAttributes(c, l, Map.of("condition", "new"));
                     }
                 });
     }
@@ -179,8 +178,7 @@ public class ListingSeeder {
                                   String description,
                                   BigDecimal price,
                                   String city,
-                                  String region,
-                                  String condition) {
+                                  String region) {
         if (!Boolean.TRUE.equals(category.getIsLeaf())) return null; // safety
         Listing l = Listing.builder()
                 .sellerUserId(DEMO_SELLER_ID)
@@ -190,7 +188,6 @@ public class ListingSeeder {
                 .priceAmount(price)
                 .currency("PLN")
                 .negotiable(false)
-                .conditionLabel(condition)
                 .locationCity(city)
                 .locationRegion(region)
                 .build();

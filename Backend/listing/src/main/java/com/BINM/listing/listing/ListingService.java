@@ -47,7 +47,6 @@ public class ListingService {
                 .priceAmount(req.priceAmount())
                 .currency(req.currency() != null ? req.currency() : "PLN")
                 .negotiable(req.negotiable() != null && req.negotiable())
-                .conditionLabel(req.conditionLabel())
                 .locationCity(req.locationCity())
                 .locationRegion(req.locationRegion())
                 .latitude(req.latitude())
@@ -141,7 +140,7 @@ public class ListingService {
                 l.getId(), l.getPublicId(),
                 l.getCategory() != null ? l.getCategory().getId() : null,
                 l.getSellerUserId(), l.getTitle(), l.getDescription(),
-                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(), l.getConditionLabel(),
+                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
                 l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
                 l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
                 loadAttributes(l), loadMedia(l)
@@ -335,7 +334,6 @@ public class ListingService {
         if (req.priceAmount() != null) l.setPriceAmount(req.priceAmount());
         if (req.currency() != null) l.setCurrency(req.currency());
         if (req.negotiable() != null) l.setNegotiable(req.negotiable());
-        if (req.conditionLabel() != null) l.setConditionLabel(req.conditionLabel());
         if (req.locationCity() != null) l.setLocationCity(req.locationCity());
         if (req.locationRegion() != null) l.setLocationRegion(req.locationRegion());
         if (req.latitude() != null) l.setLatitude(req.latitude());
@@ -361,7 +359,7 @@ public class ListingService {
                 saved.getId(), saved.getPublicId(),
                 saved.getCategory() != null ? saved.getCategory().getId() : null,
                 saved.getSellerUserId(), saved.getTitle(), saved.getDescription(),
-                saved.getPriceAmount(), saved.getCurrency(), saved.getNegotiable(), saved.getConditionLabel(),
+                saved.getPriceAmount(), saved.getCurrency(), saved.getNegotiable(),
                 saved.getLocationCity(), saved.getLocationRegion(), saved.getLatitude(), saved.getLongitude(),
                 saved.getStatus(), saved.getPublishedAt(), saved.getExpiresAt(), saved.getCreatedAt(), saved.getUpdatedAt(),
                 loadAttributes(saved), loadMedia(saved)
@@ -381,7 +379,7 @@ public class ListingService {
                 l.getId(), l.getPublicId(),
                 l.getCategory() != null ? l.getCategory().getId() : null,
                 l.getSellerUserId(), l.getTitle(), l.getDescription(),
-                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(), l.getConditionLabel(),
+                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
                 l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
                 l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
                 null, null
