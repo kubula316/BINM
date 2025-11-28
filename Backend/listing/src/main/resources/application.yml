@@ -2,6 +2,21 @@ server:
   port: 8081
 
 spring:
+  mail:
+    host: ${SMTP_SERVER}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          from: ${SMTP_FROM}
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: ${SMTP_SERVER}
   jpa:
     hibernate:
       ddl-auto: update
