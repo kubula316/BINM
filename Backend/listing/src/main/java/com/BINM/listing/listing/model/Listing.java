@@ -1,6 +1,6 @@
 package com.BINM.listing.listing.model;
 
-import com.BINM.listing.category.Category;
+import com.BINM.listing.category.model.Category;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

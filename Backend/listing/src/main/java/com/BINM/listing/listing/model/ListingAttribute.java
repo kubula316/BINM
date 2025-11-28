@@ -1,7 +1,7 @@
 package com.BINM.listing.listing.model;
 
-import com.BINM.listing.attribute.AttributeDefinition;
-import com.BINM.listing.attribute.AttributeOption;
+import com.BINM.listing.attribute.model.AttributeDefinition;
+import com.BINM.listing.attribute.model.AttributeOption;
 import jakarta.persistence.*;
 import lombok.*;
 

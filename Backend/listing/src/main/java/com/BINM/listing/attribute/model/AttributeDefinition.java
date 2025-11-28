@@ -1,6 +1,6 @@
-package com.BINM.listing.attribute;
+package com.BINM.listing.attribute.model;
 
-import com.BINM.listing.category.Category;
+import com.BINM.listing.category.model.Category;
 import jakarta.persistence.*;
 import lombok.*;
 

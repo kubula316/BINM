@@ -1,5 +1,6 @@
-package com.BINM.listing.attribute;
+package com.BINM.listing.attribute.repostiory;
 
+import com.BINM.listing.attribute.model.AttributeDefinition;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

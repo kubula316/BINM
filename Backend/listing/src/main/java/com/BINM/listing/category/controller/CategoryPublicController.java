@@ -1,7 +1,8 @@
-package com.BINM.listing.category;
+package com.BINM.listing.category.controller;
 
-import com.BINM.listing.attribute.AttributeService;
+import com.BINM.listing.attribute.service.AttributeService;
 import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
+import com.BINM.listing.category.service.CategoryService;
 import com.BINM.listing.category.dto.CategoryDto;
 import com.BINM.listing.category.dto.CategoryTreeDto;
 import lombok.RequiredArgsConstructor;

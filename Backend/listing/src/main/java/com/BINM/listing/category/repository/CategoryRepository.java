@@ -1,5 +1,6 @@
-package com.BINM.listing.category;
+package com.BINM.listing.category.repository;
 
+import com.BINM.listing.category.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

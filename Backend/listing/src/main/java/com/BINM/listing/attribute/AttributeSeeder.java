@@ -1,7 +1,12 @@
 package com.BINM.listing.attribute;
 
-import com.BINM.listing.category.Category;
-import com.BINM.listing.category.CategoryRepository;
+import com.BINM.listing.attribute.model.AttributeDefinition;
+import com.BINM.listing.attribute.model.AttributeOption;
+import com.BINM.listing.attribute.model.AttributeType;
+import com.BINM.listing.attribute.repostiory.AttributeDefinitionRepository;
+import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
+import com.BINM.listing.category.model.Category;
+import com.BINM.listing.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;

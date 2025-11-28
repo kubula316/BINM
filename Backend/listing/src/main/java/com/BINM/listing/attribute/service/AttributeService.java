@@ -1,9 +1,13 @@
-package com.BINM.listing.attribute;
+package com.BINM.listing.attribute.service;
 
+import com.BINM.listing.attribute.repostiory.AttributeDefinitionRepository;
+import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
 import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
 import com.BINM.listing.attribute.dto.AttributeOptionDto;
-import com.BINM.listing.category.Category;
-import com.BINM.listing.category.CategoryRepository;
+import com.BINM.listing.attribute.model.AttributeDefinition;
+import com.BINM.listing.attribute.model.AttributeOption;
+import com.BINM.listing.category.model.Category;
+import com.BINM.listing.category.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.BINM.listing.attribute;
+package com.BINM.listing.attribute.model;
 
 import jakarta.persistence.*;
 import lombok.*;

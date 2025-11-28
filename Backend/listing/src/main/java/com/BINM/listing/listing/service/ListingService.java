@@ -1,11 +1,11 @@
 package com.BINM.listing.listing.service;
 
-import com.BINM.listing.attribute.AttributeDefinition;
-import com.BINM.listing.attribute.AttributeOption;
-import com.BINM.listing.attribute.AttributeOptionRepository;
-import com.BINM.listing.attribute.AttributeService;
-import com.BINM.listing.category.Category;
-import com.BINM.listing.category.CategoryRepository;
+import com.BINM.listing.attribute.model.AttributeDefinition;
+import com.BINM.listing.attribute.model.AttributeOption;
+import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
+import com.BINM.listing.attribute.service.AttributeService;
+import com.BINM.listing.category.model.Category;
+import com.BINM.listing.category.repository.CategoryRepository;
 import com.BINM.listing.listing.dto.*;
 import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingAttribute;

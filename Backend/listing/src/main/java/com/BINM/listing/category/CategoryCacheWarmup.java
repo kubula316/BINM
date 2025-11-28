@@ -1,5 +1,6 @@
 package com.BINM.listing.category;
 
+import com.BINM.listing.category.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
