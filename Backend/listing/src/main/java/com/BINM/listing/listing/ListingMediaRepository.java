@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface ListingMediaRepository extends JpaRepository<ListingMedia, Long> {
     List<ListingMedia> findByListingIdOrderByPositionAsc(Long listingId);
+
     void deleteByListingId(Long listingId);
 }

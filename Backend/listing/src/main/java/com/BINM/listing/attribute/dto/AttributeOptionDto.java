@@ -5,4 +5,5 @@ public record AttributeOptionDto(
         String value,
         String label,
         Integer sortOrder
-) {}
+) {
+}

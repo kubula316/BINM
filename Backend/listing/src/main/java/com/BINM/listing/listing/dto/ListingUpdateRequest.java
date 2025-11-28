@@ -16,4 +16,5 @@ public record ListingUpdateRequest(
         Double latitude,
         Double longitude,
         List<String> mediaUrls
-) {}
+) {
+}

@@ -4,4 +4,5 @@ public record ListingMediaDto(
         String url,
         String type, // image|video
         Integer position
-) {}
+) {
+}

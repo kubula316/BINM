@@ -1,6 +1,7 @@
 package com.BINM.listing.attribute.dto;
 
 import com.BINM.listing.attribute.AttributeType;
+
 import java.util.List;
 
 public record AttributeDefinitionDto(
@@ -13,4 +14,5 @@ public record AttributeDefinitionDto(
         String unit,
         Integer sortOrder,
         List<AttributeOptionDto> options
-) {}
+) {
+}

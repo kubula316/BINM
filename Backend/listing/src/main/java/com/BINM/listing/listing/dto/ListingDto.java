@@ -27,4 +27,5 @@ public record ListingDto(
         OffsetDateTime updatedAt,
         List<ListingAttributeDto> attributes,
         List<ListingMediaDto> media
-) {}
+) {
+}

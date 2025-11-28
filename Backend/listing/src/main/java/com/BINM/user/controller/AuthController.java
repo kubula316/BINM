@@ -17,16 +17,15 @@ import java.util.Map;
 public class AuthController {
 
 
-
     private final ProfileFacade profileService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request){
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         return profileService.login(request.email(), request.password());
     }
 
     @GetMapping("/is-authenticated")
-    public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email){
+    public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email) {
         return ResponseEntity.ok(email != null);
     }
 
@@ -36,7 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public void resetPassword(@Valid @RequestBody ResetPasswordRequest request){
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         profileService.resetPassword(request.email(), request.otp(), request.newPassword());
     }
 

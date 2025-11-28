@@ -11,10 +11,15 @@ import java.util.UUID;
 
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
     Page<Listing> findByCategoryId(Long categoryId, Pageable pageable);
+
     Page<Listing> findBySellerUserId(String sellerUserId, Pageable pageable);
+
     Page<Listing> findByCategoryIdAndSellerUserId(Long categoryId, String sellerUserId, Pageable pageable);
+
     Page<Listing> findByCategoryIdIn(Collection<Long> categoryIds, Pageable pageable);
+
     Page<Listing> findByCategoryIdInAndSellerUserId(Collection<Long> categoryIds, String sellerUserId, Pageable pageable);
+
     Optional<Listing> findByPublicId(UUID publicId);
 
     long countByCategoryId(Long categoryId);

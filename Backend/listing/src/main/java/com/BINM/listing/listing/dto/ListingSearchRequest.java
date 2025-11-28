@@ -18,10 +18,12 @@ public record ListingSearchRequest(
             List<String> values,
             String from,
             String to
-    ) {}
+    ) {
+    }
 
     public static record SortSpec(
             String field,
             String dir
-    ) {}
+    ) {
+    }
 }

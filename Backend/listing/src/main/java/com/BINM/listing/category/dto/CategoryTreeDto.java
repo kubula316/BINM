@@ -10,4 +10,5 @@ public record CategoryTreeDto(
         Integer depth,
         Boolean isLeaf,
         List<CategoryTreeDto> children
-) {}
+) {
+}

@@ -1,6 +1,7 @@
 package com.BINM.listing.listing.dto;
 
 import com.BINM.listing.attribute.AttributeType;
+
 import java.math.BigDecimal;
 
 public record ListingAttributeDto(
@@ -12,4 +13,5 @@ public record ListingAttributeDto(
         Boolean booleanValue,
         String enumValue,
         String enumLabel
-) {}
+) {
+}

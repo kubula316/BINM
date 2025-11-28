@@ -7,4 +7,5 @@ public record CategoryDto(
         Integer sortOrder,
         Integer depth,
         Boolean isLeaf
-) {}
+) {
+}

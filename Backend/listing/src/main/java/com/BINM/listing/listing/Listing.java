@@ -69,7 +69,7 @@ public class Listing {
 
     @Column(nullable = false)
     private String status; // draft, active, expired, blocked, sold
-    
+
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
 

@@ -17,7 +17,6 @@ public class ListingController {
     private final ListingService listingService;
 
 
-
     @GetMapping("/get")
     public ResponseEntity<ListingDto> get(@RequestParam Long id) {
         return ResponseEntity.ok(listingService.get(id));

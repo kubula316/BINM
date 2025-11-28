@@ -8,7 +8,7 @@ public enum UploadError {
     FAILED_TO_DELETE_IMAGE("Failed to delete image");
 
 
-    private  String message;
+    private String message;
 
     UploadError(String message) {
         this.message = message;

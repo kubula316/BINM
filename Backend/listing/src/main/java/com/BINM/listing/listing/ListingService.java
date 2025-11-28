@@ -1,13 +1,12 @@
 package com.BINM.listing.listing;
 
+import com.BINM.listing.attribute.AttributeDefinition;
+import com.BINM.listing.attribute.AttributeOption;
+import com.BINM.listing.attribute.AttributeOptionRepository;
+import com.BINM.listing.attribute.AttributeService;
 import com.BINM.listing.category.Category;
 import com.BINM.listing.category.CategoryRepository;
-import com.BINM.listing.listing.dto.ListingCreateRequest;
-import com.BINM.listing.listing.dto.ListingDto;
-import com.BINM.listing.listing.dto.ListingAttributeRequest;
-import com.BINM.listing.listing.dto.ListingSearchRequest;
-import com.BINM.listing.listing.dto.ListingAttributeDto;
-import com.BINM.listing.attribute.*;
+import com.BINM.listing.listing.dto.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.*;
 
 @Service
@@ -98,7 +98,8 @@ public class ListingService {
                             lav.setOption(opt);
                         }
                     }
-                    default -> {}
+                    default -> {
+                    }
                 }
                 listingAttributeRepository.save(lav);
             }

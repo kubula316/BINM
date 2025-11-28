@@ -24,7 +24,7 @@ public class MediaServiceImpl implements MediaService {
     public String UploadMediaImage(MultipartFile file) {
         try {
             return uploadImage(MEDIA_CONTAINER_NAME, file);
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
         }
     }
@@ -33,21 +33,21 @@ public class MediaServiceImpl implements MediaService {
     public String uploadProfileImage(MultipartFile file) {
         try {
             return uploadImage(PROFILE_CONTAINER_NAME, file);
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
         }
     }
 
-    public String uploadImage(String containerName, MultipartFile file)throws IOException {
-        try(InputStream inputStream = file.getInputStream()) {
+    public String uploadImage(String containerName, MultipartFile file) throws IOException {
+        try (InputStream inputStream = file.getInputStream()) {
             return this.imageStorageClient.uploadImage(containerName, file.getOriginalFilename(), inputStream, file.getSize());
         }
     }
 
-    public void deleteImage(String containerName, String url)throws IOException {
+    public void deleteImage(String containerName, String url) throws IOException {
         try {
             this.imageStorageClient.deleteImage(containerName, url);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new UploadException(UploadError.FAILED_TO_DELETE_IMAGE);
         }
     }

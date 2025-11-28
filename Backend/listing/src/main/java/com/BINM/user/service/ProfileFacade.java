@@ -2,7 +2,6 @@ package com.BINM.user.service;
 
 import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 
 public interface ProfileFacade {

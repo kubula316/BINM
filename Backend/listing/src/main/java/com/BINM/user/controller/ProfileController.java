@@ -1,8 +1,8 @@
 package com.BINM.user.controller;
 
+import com.BINM.mailing.EmailService;
 import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
-import com.BINM.mailing.EmailService;
 import com.BINM.user.service.ProfileFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +19,12 @@ public class ProfileController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProfileResponse register(@Valid @RequestBody ProfileRequest request){
+    public ProfileResponse register(@Valid @RequestBody ProfileRequest request) {
         return profileService.createProfile(request);
     }
 
     @GetMapping("/profile")
-    public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication.name") String email){
+    public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication.name") String email) {
         return profileService.getProfile(email);
     }
 }
