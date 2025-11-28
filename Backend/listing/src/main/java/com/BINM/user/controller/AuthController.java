@@ -44,16 +44,7 @@ public class AuthController {
         profileService.resetPassword(request.email(), request.otp(), request.newPassword());
     }
 
-    @PostMapping("/send-otp")
-    public void sendVerifyOtp(@CurrentSecurityContext(expression = "authentication.name") String email) {
-        profileService.sendOtp(email);
-    }
 
-    @PostMapping("/verify-otp")
-    public void verifyEmail(@RequestBody @NotNull Map<String, Object> request,
-                            @CurrentSecurityContext(expression = "authentication.name") String email) {
-        profileService.verifyOtp(email, request.get("otp").toString());
-    }
 
 
 }
