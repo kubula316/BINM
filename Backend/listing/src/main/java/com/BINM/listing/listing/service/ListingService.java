@@ -64,7 +64,7 @@ public class ListingService {
         // attributes (optional)
         if (req.attributes() != null && !req.attributes().isEmpty()) {
             Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
-            // validate required later, after insert map
+            List<ListingAttribute> attributesToSave = new ArrayList<>();
             for (ListingAttributeRequest ar : req.attributes()) {
                 if (ar.key() == null) continue;
                 String k = ar.key().trim().toLowerCase(Locale.ROOT);
@@ -106,8 +106,10 @@ public class ListingService {
                     default -> {
                     }
                 }
-                listingAttributeRepository.save(lav);
+                attributesToSave.add(lav);
             }
+            listingAttributeRepository.saveAll(attributesToSave);
+
             // required check
             var providedKeys = req.attributes().stream()
                     .map(a -> a.key() == null ? "" : a.key().trim().toLowerCase(Locale.ROOT))
@@ -122,6 +124,7 @@ public class ListingService {
         }
         // media (optional)
         if (req.mediaUrls() != null && !req.mediaUrls().isEmpty()) {
+            List<ListingMedia> mediaToSave = new ArrayList<>();
             int pos = 0;
             for (String url : req.mediaUrls()) {
                 if (url == null || url.isBlank()) continue;
@@ -131,8 +134,9 @@ public class ListingService {
                         .mediaType("image")
                         .position(pos++)
                         .build();
-                listingMediaRepository.save(m);
+                mediaToSave.add(m);
             }
+            listingMediaRepository.saveAll(mediaToSave);
         }
 
         return toDto(saved);

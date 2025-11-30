@@ -31,59 +31,61 @@ public class AttributeSeeder {
 
     @Transactional
     void seed() {
-        // --- Krok 1: Stwórz uniwersalny atrybut "Stan" ---
-        // Przypisujemy go do jednej z głównych kategorii, aby był dziedziczony.
-        Optional<Category> rootCategoryForCondition = findByPath("Elektronika");
-        if (rootCategoryForCondition.isEmpty()) {
-            System.err.println("AttributeSeeder: Podstawowe kategorie nie istnieją. Przerywam seedowanie atrybutów.");
+        // --- Krok 1: Stwórz uniwersalny atrybut "Stan" dla WSZYSTKICH głównych kategorii ---
+        List<Category> rootCategories = categoryRepository.findByParentIsNullOrderBySortOrderAscNameAsc();
+        if (rootCategories.isEmpty()) {
+            System.err.println("AttributeSeeder: Brak głównych kategorii. Przerywam seedowanie atrybutów.");
             return;
         }
-        Map<String, AttributeDefinition> commonDefs = ensureDefinitions(rootCategoryForCondition.get(), new Object[][]{
-                {"condition", "Stan", AttributeType.ENUM, true, null, 1}
-        });
-        ensureOptions(commonDefs.get("condition"), new String[][]{
-                {"new", "Nowy"}, {"used", "Używany"}, {"damaged", "Uszkodzony"}
-        });
 
-        // --- Krok 2: Przypisz atrybuty do każdej kategorii ---
+        for (Category rootCategory : rootCategories) {
+            Map<String, AttributeDefinition> commonDefs = ensureDefinitions(rootCategory, new Object[][]{
+                    {"condition", "Stan", AttributeType.ENUM, true, null, 1}
+            });
+            ensureOptions(commonDefs.get("condition"), new String[][]{
+                    {"new", "Nowy"}, {"used", "Używany"}, {"damaged", "Uszkodzony"}
+            });
+        }
 
-        // --- Elektronika ---
+        // --- Krok 2: Przypisz atrybuty specyficzne dla podkategorii ---
+
+        // Elektronika
         findByPath("Elektronika", "Telefony i akcesoria").ifPresent(this::addPhoneAttributes);
         findByPath("Elektronika", "Komputery").ifPresent(this::addComputerAttributes);
         findByPath("Elektronika", "RTV i AGD").ifPresent(this::addHomeApplianceAttributes);
         findByPath("Elektronika", "Gaming").ifPresent(this::addGamingAttributes);
 
-        // --- Moda ---
+        // Moda
         findByPath("Moda", "Odzież damska").ifPresent(this::addClothingAttributes);
         findByPath("Moda", "Odzież męska").ifPresent(this::addClothingAttributes);
         findByPath("Moda", "Obuwie").ifPresent(this::addFootwearAttributes);
         findByPath("Moda", "Biżuteria i zegarki").ifPresent(this::addJewelryAttributes);
 
-        // --- Dom i ogród ---
+        // Dom i ogród
         findByPath("Dom i ogród", "Meble").ifPresent(this::addFurnitureAttributes);
         findByPath("Dom i ogród", "Narzędzia").ifPresent(this::addToolAttributes);
 
-        // --- Supermarket ---
+        // Supermarket
         findByPath("Supermarket", "Artykuły spożywcze").ifPresent(this::addFoodAttributes);
         findByPath("Supermarket", "Zwierzęta").ifPresent(this::addPetAttributes);
 
-        // --- Dziecko ---
+        // Dziecko
         findByPath("Dziecko", "Zabawki").ifPresent(this::addToyAttributes);
-        findByPath("Dziecko", "Ubranka").ifPresent(this::addClothingAttributes); // Reużycie
+        findByPath("Dziecko", "Ubranka").ifPresent(this::addClothingAttributes);
 
-        // --- Kultura i rozrywka ---
+        // Kultura i rozrywka
         findByPath("Kultura i rozrywka", "Książki").ifPresent(this::addBookAttributes);
         findByPath("Kultura i rozrywka", "Instrumenty", "Gitary").ifPresent(this::addGuitarAttributes);
         findByPath("Kultura i rozrywka", "Instrumenty", "Klawisze").ifPresent(this::addKeyboardInstrumentAttributes);
 
-        // --- Sport i turystyka ---
+        // Sport i turystyka
         findByPath("Sport i turystyka", "Rowery").ifPresent(this::addBikeAttributes);
 
-        // --- Motoryzacja ---
+        // Motoryzacja
         findByPath("Motoryzacja", "Ogłoszenia motoryzacyjne").ifPresent(this::addCarAdAttributes);
         findByPath("Motoryzacja", "Części samochodowe").ifPresent(this::addCarPartAttributes);
 
-        // --- Nieruchomości ---
+        // Nieruchomości
         findByPath("Nieruchomości", "Mieszkania").ifPresent(this::addApartmentAttributes);
         findByPath("Nieruchomości", "Domy").ifPresent(this::addHouseAttributes);
     }
@@ -185,11 +187,11 @@ public class AttributeSeeder {
     }
 
     private void addBookAttributes(Category cat) {
-        ensureDefinitions(cat, new Object[][]{
+        Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
                 {"author", "Autor", AttributeType.STRING, true, null, 10},
                 {"cover_type", "Okładka", AttributeType.ENUM, false, null, 20}
         });
-        ensureOptions(ensureDefinitions(cat, new Object[][]{}).get("cover_type"), new String[][]{{"hard", "Twarda"}, {"soft", "Miękka"}});
+        ensureOptions(defs.get("cover_type"), new String[][]{{"hard", "Twarda"}, {"soft", "Miękka"}});
     }
 
     private void addGuitarAttributes(Category cat) {
@@ -252,9 +254,6 @@ public class AttributeSeeder {
                 {"rooms", "Liczba pokoi", AttributeType.NUMBER, true, null, 30}
         });
     }
-
-
-    // --- Metody generyczne (bez zmian) ---
 
     private Optional<Category> findByPath(String... names) {
         if (names == null || names.length == 0) return Optional.empty();
