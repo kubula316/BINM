@@ -43,6 +43,13 @@ public class ListingService {
     private final ProfileFacade profileFacade;
 
     @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+        return toCoverDtoPage(listings);
+    }
+
+    @Transactional(readOnly = true)
     public Page<ListingCoverDto> listRandom(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Listing> randomListings = listingRepository.findRandom(pageable);
