@@ -22,12 +22,10 @@ public class ListingPublicController {
     }
 
 
-    @GetMapping("/list")
-    public ResponseEntity<Page<ListingCoverDto>> list(@RequestParam(required = false) Long categoryId,
-                                                      @RequestParam(required = false) String sellerUserId,
-                                                      @RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(listingService.list(categoryId, sellerUserId, page, size));
+    @GetMapping("/random")
+    public ResponseEntity<Page<ListingCoverDto>> listRandom(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(listingService.listRandom(page, size));
     }
 
     @PostMapping("/search")

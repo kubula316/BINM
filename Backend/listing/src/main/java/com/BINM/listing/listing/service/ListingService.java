@@ -42,6 +42,34 @@ public class ListingService {
     private final ListingMediaRepository listingMediaRepository;
     private final ProfileFacade profileFacade;
 
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listRandom(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Listing> randomListings = listingRepository.findRandom(pageable);
+        return toCoverDtoPage(randomListings);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> search(ListingSearchRequest req) {
+        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
+        Specification<Listing> spec = Specification.where(null);
+        if (req.categoryId() != null) {
+            List<Long> ids = collectDescendantIds(req.categoryId());
+            if (ids.isEmpty()) return Page.empty(pageable);
+            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
+        }
+        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
+        }
+        if (req.attributes() != null && !req.attributes().isEmpty()) {
+            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
+                spec = spec.and(hasAttribute(filter));
+            }
+        }
+        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
+    }
+    
+    // ... (reszta metod bez zmian)
     @Transactional
     public ListingDto update(Long id, ListingUpdateRequest req, String currentUserId) {
         Listing l = listingRepository.findById(id)
@@ -109,7 +137,7 @@ public class ListingService {
         Listing saved = listingRepository.save(l);
         return toDto(saved);
     }
-
+    
     @Transactional
     public void delete(Long id, String currentUserId) {
         Listing l = listingRepository.findById(id)
@@ -122,46 +150,6 @@ public class ListingService {
         listingAttributeRepository.deleteByListingId(id);
         listingMediaRepository.deleteByListingId(id);
         listingRepository.deleteById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> search(ListingSearchRequest req) {
-        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
-        Specification<Listing> spec = Specification.where(null);
-        if (req.categoryId() != null) {
-            List<Long> ids = collectDescendantIds(req.categoryId());
-            if (ids.isEmpty()) return Page.empty(pageable);
-            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
-        }
-        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
-        }
-        if (req.attributes() != null && !req.attributes().isEmpty()) {
-            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
-                spec = spec.and(hasAttribute(filter));
-            }
-        }
-        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> list(Long categoryId, String sellerUserId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Listing> pageResult;
-        if (categoryId != null) {
-            List<Long> ids = collectDescendantIds(categoryId);
-            if (ids.isEmpty()) return Page.empty(pageable);
-            if (sellerUserId != null && !sellerUserId.isBlank()) {
-                pageResult = listingRepository.findByCategoryIdInAndSellerUserId(ids, sellerUserId, pageable);
-            } else {
-                pageResult = listingRepository.findByCategoryIdIn(ids, pageable);
-            }
-        } else if (sellerUserId != null && !sellerUserId.isBlank()) {
-            pageResult = listingRepository.findBySellerUserId(sellerUserId, pageable);
-        } else {
-            pageResult = listingRepository.findAll(pageable);
-        }
-        return toCoverDtoPage(pageResult);
     }
 
     @Transactional

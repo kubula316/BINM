@@ -5,12 +5,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
+
+    @Query(value = "SELECT * FROM listing ORDER BY RANDOM()",
+           countQuery = "SELECT count(*) FROM listing",
+           nativeQuery = true)
+    Page<Listing> findRandom(Pageable pageable);
+
     Page<Listing> findByCategoryId(Long categoryId, Pageable pageable);
 
     Page<Listing> findBySellerUserId(String sellerUserId, Pageable pageable);
