@@ -9,7 +9,7 @@ public record ListingDto(
         Long id,
         UUID publicId,
         Long categoryId,
-        String sellerUserId,
+        SellerInfo seller,
         String title,
         String description,
         BigDecimal priceAmount,

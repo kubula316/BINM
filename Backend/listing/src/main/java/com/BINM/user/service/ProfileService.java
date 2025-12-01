@@ -24,8 +24,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,14 +43,21 @@ public class ProfileService implements ProfileFacade {
     @Override
     @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {
-        try {
-            UserEntity newProfile = convertToUserEntity(request);
-            userRepository.save(newProfile);
-            emailService.sendWelcomeEmail(newProfile.getEmail(), newProfile.getName());
-            return convertToProfileResponse(newProfile);
-        } catch (Exception e) {
-            throw new UserAlreadyExistsException("User already exists in database", e);
+        if (userRepository.existsByEmail(request.email())) {
+            throw new UserAlreadyExistsException("User with email " + request.email() + " already exists.");
         }
+        UserEntity newUser = convertToUserEntity(request);
+        String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+        long expiryTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 godziny
+        newUser.setVerifyOtp(otp);
+        newUser.setVerifyOtpExpireAt(expiryTime);
+        UserEntity savedUser = userRepository.save(newUser);
+        try {
+            emailService.sendOtpEmail(savedUser.getEmail(), otp);
+        } catch (Exception e) {
+            throw new OtpException("Could not send OTP email. Please try again later.");
+        }
+        return convertToProfileResponse(savedUser);
     }
 
     @Override
@@ -75,25 +84,29 @@ public class ProfileService implements ProfileFacade {
     }
 
     @Override
-    public ProfileResponse getProfile(String email) {
-        UserEntity existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found" + email));
+    public ProfileResponse getProfile(String userId) {
+        UserEntity existingUser = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
         return convertToProfileResponse(existingUser);
     }
 
     @Override
+    public List<ProfileResponse> getProfilesById(List<String> userIds) {
+        return userRepository.findAllByUserIdIn(userIds).stream()
+                .map(this::convertToProfileResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void sendResetOtp(String email) {
-        try {
-            UserEntity existingEntity = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));
-            String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
-            Long expiryTime = System.currentTimeMillis() + (15 * 60 * 1000);
-            existingEntity.setResetOtp(otp);
-            existingEntity.setResetOtpExpireAt(expiryTime);
-            userRepository.save(existingEntity);
-        } catch (Exception e) {
-            throw new OtpException("Unable to send OTP");
-        }
+        UserEntity existingEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));
+        String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+        long expiryTime = System.currentTimeMillis() + (15 * 60 * 1000);
+        existingEntity.setResetOtp(otp);
+        existingEntity.setResetOtpExpireAt(expiryTime);
+        userRepository.save(existingEntity);
+        // Email sending logic should be here
     }
 
     @Override
@@ -116,12 +129,11 @@ public class ProfileService implements ProfileFacade {
     public void sendOtp(String email) {
         UserEntity existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found for the email: " + email));
-        if (existingUser.getIsAccountVerified() != null && existingUser.getIsAccountVerified()) {
+        if (Boolean.TRUE.equals(existingUser.getIsAccountVerified())) {
             return;
         }
         String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
-        Long expiryTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000);//24 hours
-
+        long expiryTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000);
         existingUser.setVerifyOtp(otp);
         existingUser.setVerifyOtpExpireAt(expiryTime);
         userRepository.save(existingUser);
@@ -135,7 +147,6 @@ public class ProfileService implements ProfileFacade {
     @Override
     @Transactional
     public void verifyOtp(String email, String otp) {
-
         UserEntity existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found for the email: " + email));
         if (existingUser.getVerifyOtp() == null || !existingUser.getVerifyOtp().equals(otp)) {
@@ -157,13 +168,12 @@ public class ProfileService implements ProfileFacade {
         return existingUser.getUserId();
     }
 
-    //private
-    private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
+    private ProfileResponse convertToProfileResponse(UserEntity userEntity) {
         return new ProfileResponse(
-                newProfile.getUserId(),
-                newProfile.getName(),
-                newProfile.getEmail(),
-                newProfile.getIsAccountVerified()
+                userEntity.getUserId(),
+                userEntity.getName(),
+                userEntity.getEmail(),
+                userEntity.getIsAccountVerified()
         );
     }
 
@@ -174,10 +184,6 @@ public class ProfileService implements ProfileFacade {
                 .name(request.name())
                 .password(passwordEncoder.encode(request.password()))
                 .isAccountVerified(false)
-                .resetOtpExpireAt(0L)
-                .verifyOtp(null)
-                .verifyOtpExpireAt(0L)
-                .resetOtp(null)
                 .build();
     }
 

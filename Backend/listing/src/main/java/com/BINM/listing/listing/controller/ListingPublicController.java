@@ -1,5 +1,6 @@
 package com.BINM.listing.listing.controller;
 
+import com.BINM.listing.listing.dto.ListingCoverDto;
 import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingSearchRequest;
 import com.BINM.listing.listing.service.ListingService;
@@ -22,15 +23,15 @@ public class ListingPublicController {
 
 
     @GetMapping("/list")
-    public ResponseEntity<Page<ListingDto>> list(@RequestParam(required = false) Long categoryId,
-                                                 @RequestParam(required = false) String sellerUserId,
-                                                 @RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<Page<ListingCoverDto>> list(@RequestParam(required = false) Long categoryId,
+                                                      @RequestParam(required = false) String sellerUserId,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(listingService.list(categoryId, sellerUserId, page, size));
     }
 
     @PostMapping("/search")
-    public ResponseEntity<Page<ListingDto>> search(@RequestBody ListingSearchRequest req) {
+    public ResponseEntity<Page<ListingCoverDto>> search(@RequestBody ListingSearchRequest req) {
         return ResponseEntity.ok(listingService.search(req));
     }
 }
