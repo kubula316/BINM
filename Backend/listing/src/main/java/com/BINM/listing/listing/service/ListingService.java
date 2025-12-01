@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,88 @@ public class ListingService {
     private final AttributeOptionRepository optionRepository;
     private final ListingMediaRepository listingMediaRepository;
     private final ProfileFacade profileFacade;
+
+    @Transactional
+    public ListingDto update(Long id, ListingUpdateRequest req, String currentUserId) {
+        Listing l = listingRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        if (!l.getSellerUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("You are not the owner of this listing");
+        }
+
+        if (req.title() != null) l.setTitle(req.title().trim());
+        if (req.description() != null) l.setDescription(req.description());
+        if (req.priceAmount() != null) l.setPriceAmount(req.priceAmount());
+        if (req.currency() != null) l.setCurrency(req.currency());
+        if (req.negotiable() != null) l.setNegotiable(req.negotiable());
+        if (req.locationCity() != null) l.setLocationCity(req.locationCity());
+        if (req.locationRegion() != null) l.setLocationRegion(req.locationRegion());
+        if (req.latitude() != null) l.setLatitude(req.latitude());
+        if (req.longitude() != null) l.setLongitude(req.longitude());
+
+        if (req.mediaUrls() != null) {
+            listingMediaRepository.deleteByListingId(l.getId());
+            listingMediaRepository.flush();
+            List<ListingMedia> mediaToSave = new ArrayList<>();
+            int pos = 0;
+            for (String url : req.mediaUrls()) {
+                if (url == null || url.isBlank()) continue;
+                mediaToSave.add(ListingMedia.builder().listing(l).mediaUrl(url).mediaType("image").position(pos++).build());
+            }
+            listingMediaRepository.saveAll(mediaToSave);
+        }
+
+        if (req.attributes() != null) {
+            listingAttributeRepository.deleteByListingId(l.getId());
+            listingAttributeRepository.flush();
+            List<ListingAttribute> attributesToSave = new ArrayList<>();
+            Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(l.getCategory().getId());
+            for (ListingAttributeRequest ar : req.attributes()) {
+                if (ar.key() == null) continue;
+                String k = ar.key().trim().toLowerCase(Locale.ROOT);
+                AttributeDefinition def = defs.get(k);
+                if (def == null) {
+                    continue;
+                }
+                ListingAttribute lav = ListingAttribute.builder().listing(l).attribute(def).build();
+                String val = ar.value();
+                switch (def.getType()) {
+                    case STRING -> lav.setVText(val);
+                    case NUMBER -> {
+                        try {
+                            lav.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    case BOOLEAN -> lav.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
+                    case ENUM -> {
+                        if (val != null && !val.isBlank()) {
+                            optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val).ifPresent(lav::setOption);
+                        }
+                    }
+                }
+                attributesToSave.add(lav);
+            }
+            listingAttributeRepository.saveAll(attributesToSave);
+        }
+
+        Listing saved = listingRepository.save(l);
+        return toDto(saved);
+    }
+
+    @Transactional
+    public void delete(Long id, String currentUserId) {
+        Listing l = listingRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        if (!l.getSellerUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("You are not the owner of this listing");
+        }
+
+        listingAttributeRepository.deleteByListingId(id);
+        listingMediaRepository.deleteByListingId(id);
+        listingRepository.deleteById(id);
+    }
 
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> search(ListingSearchRequest req) {
@@ -162,25 +245,6 @@ public class ListingService {
         return toDto(l);
     }
 
-    @Transactional
-    public ListingDto update(Long id, ListingUpdateRequest req) {
-        Listing l = listingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-        // TODO: Dodać weryfikację właściciela ogłoszenia
-        if (req.title() != null) l.setTitle(req.title().trim());
-        Listing saved = listingRepository.save(l);
-        return toDto(saved);
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        // TODO: Dodać weryfikację właściciela ogłoszenia
-        if (!listingRepository.existsById(id)) return;
-        listingAttributeRepository.deleteByListingId(id);
-        listingMediaRepository.deleteByListingId(id);
-        listingRepository.deleteById(id);
-    }
-
-    //private
     private Page<ListingDto> toDtoPage(Page<Listing> listings) {
         List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
         Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()

@@ -30,16 +30,14 @@ public class ListingUserController {
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @RequestParam Long id,
             @RequestBody ListingUpdateRequest req) {
-        // TODO: Dodać logikę w serwisie, która sprawdzi, czy zalogowany użytkownik (userId) jest właścicielem ogłoszenia.
-        return ResponseEntity.ok(listingService.update(id, req));
+        return ResponseEntity.ok(listingService.update(id, req, userId));
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<Void> delete(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @RequestParam Long id) {
-        // TODO: Dodać logikę w serwisie, która sprawdzi, czy zalogowany użytkownik (userId) jest właścicielem ogłoszenia.
-        listingService.delete(id);
+        listingService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 }

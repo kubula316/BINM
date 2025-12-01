@@ -10,11 +10,11 @@ public record ListingUpdateRequest(
         BigDecimal priceAmount,
         String currency,
         Boolean negotiable,
-        String conditionLabel,
         String locationCity,
         String locationRegion,
         Double latitude,
         Double longitude,
-        List<String> mediaUrls
+        List<String> mediaUrls,
+        List<ListingAttributeRequest> attributes
 ) {
 }
