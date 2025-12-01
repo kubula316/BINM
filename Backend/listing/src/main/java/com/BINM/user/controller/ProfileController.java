@@ -22,8 +22,8 @@ public class ProfileController {
     private final ProfileFacade profileService;
 
     @GetMapping("/profile")
-    public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication.name") String email) {
-        return profileService.getProfile(email);
+    public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication.principal.userId") String id) {
+        return profileService.getProfile(id);
     }
 
     @GetMapping("/is-authenticated")
