@@ -1,6 +1,16 @@
 import './Categories.css'
+import { Link } from 'react-router-dom'
 
 function Categories() {
+  const cats = [
+    { name: 'Odzież', slug: 'odziez', desc: 'Odkryj naszą kolekcję ubrań' },
+    { name: 'Obuwie', slug: 'obuwie', desc: 'Znajdź idealne buty' },
+    { name: 'Akcesoria', slug: 'akcesoria', desc: 'Uzupełnij swój styl' },
+    { name: 'Elektronika', slug: 'elektronika', desc: 'Komputery, RTV i AGD, audio i więcej' },
+    { name: 'Torby', slug: 'torby', desc: 'Praktyczne rozwiązania' },
+    { name: 'Okulary', slug: 'okulary', desc: 'Ochrona i styl' }
+  ]
+
   return (
     <div className="categories-page">
       <div className="categories-container">
@@ -8,35 +18,12 @@ function Categories() {
         {/* <p className="subtitle">Przeglądaj nasze kategorie</p> */}
 
         <div className="categories-grid">
-          <div className="category-card">
-            <h3>Odzież</h3>
-            <p>Odkryj naszą kolekcję ubrań</p>
-          </div>
-
-          <div className="category-card">
-            <h3>Obuwie</h3>
-            <p>Znajdź idealne buty</p>
-          </div>
-
-          <div className="category-card">
-            <h3>Akcesoria</h3>
-            <p>Uzupełnij swój styl</p>
-          </div>
-
-          <div className="category-card">
-            <h3>Zegarki</h3>
-            <p>Elegancja na nadgarstku</p>
-          </div>
-
-          <div className="category-card">
-            <h3>Torby</h3>
-            <p>Praktyczne rozwiązania</p>
-          </div>
-
-          <div className="category-card">
-            <h3>Okulary</h3>
-            <p>Ochrona i styl</p>
-          </div>
+          {cats.map(c => (
+            <Link key={c.slug} className="category-card" to={`/categories/${c.slug}`}>
+              <h3>{c.name}</h3>
+              <p>{c.desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

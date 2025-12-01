@@ -5,6 +5,8 @@ import LoginForm from './components/LoginForm'
 import Home from './pages/Home'
 import Help from './pages/Help'
 import Categories from './pages/Categories'
+import CategoryDetails from './pages/CategoryDetails'
+import AddListing from './pages/AddListing'
 import './App.css'
 
 function App() {
@@ -41,9 +43,11 @@ function App() {
         )}
 
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
           <Route path="/help" element={<Help />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:slug" element={<CategoryDetails />} />
+          <Route path="/add-listing" element={<AddListing username={username} isLoggedIn={isLoggedIn} />} />
         </Routes>
       </div>
     </BrowserRouter>
