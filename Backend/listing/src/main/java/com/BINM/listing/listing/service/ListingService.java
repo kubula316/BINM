@@ -68,8 +68,7 @@ public class ListingService {
         }
         return toCoverDtoPage(listingRepository.findAll(spec, pageable));
     }
-    
-    // ... (reszta metod bez zmian)
+
     @Transactional
     public ListingDto update(Long id, ListingUpdateRequest req, String currentUserId) {
         Listing l = listingRepository.findById(id)
