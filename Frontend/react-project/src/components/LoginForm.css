@@ -51,6 +51,28 @@
   font-size: 28px;
 }
 
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px 16px 0 16px;
+}
+
+.auth-tab {
+  flex: 1;
+  background: transparent;
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px 0;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: #222;
+  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+}
+
 .form-group {
   margin-bottom: 20px;
 }

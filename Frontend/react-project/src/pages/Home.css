@@ -25,3 +25,35 @@
   color: rgba(255, 255, 255, 0.6);
   font-weight: 300;
 }
+
+.home-actions {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.home-card {
+  display: block;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 16px;
+  color: #fff;
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.home-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.home-card-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.home-card-desc {
+  opacity: .9;
+}
