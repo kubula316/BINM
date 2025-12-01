@@ -180,9 +180,7 @@ public class ListingService {
         listingRepository.deleteById(id);
     }
 
-
     //private
-
     private Page<ListingDto> toDtoPage(Page<Listing> listings) {
         List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
         Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
