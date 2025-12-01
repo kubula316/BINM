@@ -81,64 +81,6 @@ public class ListingService {
         return toCoverDtoPage(pageResult);
     }
 
-    private Specification<Listing> hasAttribute(ListingSearchRequest.AttributeFilter filter) {
-        return (root, query, cb) -> {
-            var subquery = query.subquery(Long.class);
-            var subRoot = subquery.from(ListingAttribute.class);
-            var attributeDefJoin = subRoot.join("attribute");
-            Predicate listingMatch = cb.equal(subRoot.get("listing"), root);
-            Predicate keyMatch = cb.equal(cb.lower(attributeDefJoin.get("key")), filter.key().toLowerCase(Locale.ROOT));
-            Predicate valueMatch = buildValuePredicate(filter, subRoot, cb);
-            subquery.select(cb.literal(1L)).where(cb.and(listingMatch, keyMatch, valueMatch));
-            return cb.exists(subquery);
-        };
-    }
-
-    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, jakarta.persistence.criteria.Root<ListingAttribute> subRoot, jakarta.persistence.criteria.CriteriaBuilder cb) {
-        String type = Optional.ofNullable(filter.type()).orElse("STRING").toUpperCase(Locale.ROOT);
-        String op = Optional.ofNullable(filter.op()).orElse("eq").toLowerCase(Locale.ROOT);
-        switch (type) {
-            case "ENUM":
-                var optionJoin = subRoot.join("option");
-                if ("in".equals(op) && filter.values() != null && !filter.values().isEmpty()) {
-                    List<String> lowerCaseValues = filter.values().stream().map(String::toLowerCase).toList();
-                    return cb.lower(optionJoin.get("value")).in(lowerCaseValues);
-                }
-                return cb.equal(cb.lower(optionJoin.get("value")), filter.value().toLowerCase(Locale.ROOT));
-            case "NUMBER":
-                if ("between".equals(op)) {
-                    return cb.between(subRoot.get("vNumber"), new java.math.BigDecimal(filter.from()), new java.math.BigDecimal(filter.to()));
-                } else if ("gte".equals(op)) {
-                    return cb.greaterThanOrEqualTo(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
-                } else if ("lte".equals(op)) {
-                    return cb.lessThanOrEqualTo(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
-                }
-                return cb.equal(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
-            case "BOOLEAN":
-                return cb.equal(subRoot.get("vBoolean"), "true".equalsIgnoreCase(filter.value()) || "1".equals(filter.value()));
-            default:
-                if ("like".equals(op)) {
-                    return cb.like(cb.lower(subRoot.get("vText")), "%" + filter.value().toLowerCase() + "%");
-                }
-                return cb.equal(cb.lower(subRoot.get("vText")), filter.value().toLowerCase());
-        }
-    }
-
-    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> {
-            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
-            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
-                    .map(ListingMedia::getMediaUrl)
-                    .orElse(null);
-            return new ListingCoverDto(l.getId(), l.getPublicId(), l.getTitle(), sellerInfo, l.getPriceAmount(), l.getNegotiable(), coverImageUrl);
-        });
-    }
-
-    // ... (reszta metod bez zmian)
     @Transactional
     public ListingDto create(ListingCreateRequest req, String sellerUserId) {
         Category category = categoryRepository.findById(req.categoryId())
@@ -225,7 +167,6 @@ public class ListingService {
         Listing l = listingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Listing not found"));
         // TODO: Dodać weryfikację właściciela ogłoszenia
         if (req.title() != null) l.setTitle(req.title().trim());
-        // ... (reszta logiki update)
         Listing saved = listingRepository.save(l);
         return toDto(saved);
     }
@@ -238,6 +179,9 @@ public class ListingService {
         listingMediaRepository.deleteByListingId(id);
         listingRepository.deleteById(id);
     }
+
+
+    //private
 
     private Page<ListingDto> toDtoPage(Page<Listing> listings) {
         List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
@@ -318,5 +262,61 @@ public class ListingService {
             orders.add(new Sort.Order(Sort.Direction.DESC, "createdAt"));
         }
         return Sort.by(orders);
+    }
+    private Specification<Listing> hasAttribute(ListingSearchRequest.AttributeFilter filter) {
+        return (root, query, cb) -> {
+            var subquery = query.subquery(Long.class);
+            var subRoot = subquery.from(ListingAttribute.class);
+            var attributeDefJoin = subRoot.join("attribute");
+            Predicate listingMatch = cb.equal(subRoot.get("listing"), root);
+            Predicate keyMatch = cb.equal(cb.lower(attributeDefJoin.get("key")), filter.key().toLowerCase(Locale.ROOT));
+            Predicate valueMatch = buildValuePredicate(filter, subRoot, cb);
+            subquery.select(cb.literal(1L)).where(cb.and(listingMatch, keyMatch, valueMatch));
+            return cb.exists(subquery);
+        };
+    }
+
+    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, jakarta.persistence.criteria.Root<ListingAttribute> subRoot, jakarta.persistence.criteria.CriteriaBuilder cb) {
+        String type = Optional.ofNullable(filter.type()).orElse("STRING").toUpperCase(Locale.ROOT);
+        String op = Optional.ofNullable(filter.op()).orElse("eq").toLowerCase(Locale.ROOT);
+        switch (type) {
+            case "ENUM":
+                var optionJoin = subRoot.join("option");
+                if ("in".equals(op) && filter.values() != null && !filter.values().isEmpty()) {
+                    List<String> lowerCaseValues = filter.values().stream().map(String::toLowerCase).toList();
+                    return cb.lower(optionJoin.get("value")).in(lowerCaseValues);
+                }
+                return cb.equal(cb.lower(optionJoin.get("value")), filter.value().toLowerCase(Locale.ROOT));
+            case "NUMBER":
+                if ("between".equals(op)) {
+                    return cb.between(subRoot.get("vNumber"), new java.math.BigDecimal(filter.from()), new java.math.BigDecimal(filter.to()));
+                } else if ("gte".equals(op)) {
+                    return cb.greaterThanOrEqualTo(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
+                } else if ("lte".equals(op)) {
+                    return cb.lessThanOrEqualTo(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
+                }
+                return cb.equal(subRoot.get("vNumber"), new java.math.BigDecimal(filter.value()));
+            case "BOOLEAN":
+                return cb.equal(subRoot.get("vBoolean"), "true".equalsIgnoreCase(filter.value()) || "1".equals(filter.value()));
+            default:
+                if ("like".equals(op)) {
+                    return cb.like(cb.lower(subRoot.get("vText")), "%" + filter.value().toLowerCase() + "%");
+                }
+                return cb.equal(cb.lower(subRoot.get("vText")), filter.value().toLowerCase());
+        }
+    }
+
+    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> {
+            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
+            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
+            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
+                    .map(ListingMedia::getMediaUrl)
+                    .orElse(null);
+            return new ListingCoverDto(l.getId(), l.getPublicId(), l.getTitle(), sellerInfo, l.getPriceAmount(), l.getNegotiable(), coverImageUrl);
+        });
     }
 }
