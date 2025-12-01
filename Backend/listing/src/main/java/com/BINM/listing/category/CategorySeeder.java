@@ -1,13 +1,13 @@
 package com.BINM.listing.category;
 
+import com.BINM.listing.category.model.Category;
+import com.BINM.listing.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.annotation.Order;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor

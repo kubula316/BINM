@@ -6,7 +6,14 @@
       <list>
         <option value="$PROJECT_DIR$/Backend/user/pom.xml" />
         <option value="$PROJECT_DIR$/Backend/listing/pom.xml" />
+        <option value="$PROJECT_DIR$/Backend/media/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/Backend/media/pom.xml" />
+        <option value="$PROJECT_DIR$/Backend/user/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_24" default="true" project-jdk-name="openjdk-24" project-jdk-type="JavaSDK">

@@ -1,42 +1,25 @@
 package com.BINM.listing.listing.dto;
 
-import jakarta.validation.constraints.*;
-import lombok.Data;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Data
-public class ListingCreateRequest {
-    @NotNull
-    private Long categoryId;
-
-    @NotBlank
-    private String title;
-
-    @Size(max = 5000)
-    private String description;
-
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = true)
-    private BigDecimal priceAmount;
-
-    @Size(min = 3, max = 3)
-    private String currency = "PLN";
-
-    private Boolean negotiable = false;
-
-    private String conditionLabel;
-
-    private String locationCity;
-
-    private String locationRegion;
-
-    private Double latitude;
-
-    private Double longitude;
-
-    private List<String> mediaUrls;
-
-    private List<ListingAttributeRequest> attributes;
+public record ListingCreateRequest(
+        @NotNull Long categoryId,
+        @NotBlank String title,
+        @Size(max = 5000) String description,
+        @NotNull @DecimalMin(value = "0.0", inclusive = true) BigDecimal priceAmount,
+        @Size(min = 3, max = 3) String currency,
+        Boolean negotiable,
+        String locationCity,
+        String locationRegion,
+        Double latitude,
+        Double longitude,
+        List<String> mediaUrls,
+        List<ListingAttributeRequest> attributes
+) {
 }

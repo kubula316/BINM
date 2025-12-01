@@ -1,4 +1,0 @@
-DATASOURCE_URL=jdbc:postgresql://ep-dark-mountain-ags60oae-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-DATASOURCE_USERNAME=neondb_owner
-DATASOURCE_PASSWORD=npg_nqTfCIdHs16J
-EUREKA_URL=http://localhost:8761/eureka/
