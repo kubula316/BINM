@@ -18,10 +18,7 @@ import com.BINM.user.service.ProfileFacade;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -41,6 +38,11 @@ public class ListingService {
     private final AttributeOptionRepository optionRepository;
     private final ListingMediaRepository listingMediaRepository;
     private final ProfileFacade profileFacade;
+
+    public List<ListingCoverDto> getListingCoversByIds(List<UUID> publicIds) {
+        List<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds);
+        return toCoverDtoPage(new PageImpl<>(listings)).getContent();
+    }
 
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
