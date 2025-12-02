@@ -16,6 +16,7 @@ Endpointy do rejestracji, logowania i zarządzania profilem użytkownika.
 > Tworzy nowego użytkownika, ale nie aktywuje konta. Wysyła email z kodem OTP do weryfikacji.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Używane w formularzu rejestracji.
 *   **Body:**
     ```json
     {
@@ -38,6 +39,7 @@ Endpointy do rejestracji, logowania i zarządzania profilem użytkownika.
 > Loguje użytkownika i zwraca token JWT w ciasteczku HTTPOnly.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Używane w formularzu logowania.
 *   **Body:**
     ```json
     {
@@ -58,7 +60,8 @@ Endpointy do rejestracji, logowania i zarządzania profilem użytkownika.
 ### `POST /user/verify-otp`
 > Weryfikuje konto użytkownika za pomocą kodu OTP otrzymanego w mailu.
 
-*   **Authentication:** Zabezpieczony (wymaga tokenu z logowania)
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Używane na stronie, na którą trafia użytkownik po rejestracji, prosząc o podanie kodu z maila.
 *   **Body:**
     ```json
     {
@@ -71,6 +74,7 @@ Endpointy do rejestracji, logowania i zarządzania profilem użytkownika.
 > Pobiera dane zalogowanego użytkownika.
 
 *   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Do wyświetlania nazwy użytkownika w nagłówku strony, w panelu 'Moje Konto'.
 *   **Success Response (200 OK):**
     ```json
     {
@@ -91,6 +95,7 @@ CRUD dla ogłoszeń zalogowanego użytkownika.
 > Tworzy nowe ogłoszenie.
 
 *   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Główny endpoint dla formularza dodawania nowego ogłoszenia.
 *   **Body:**
     ```json
     {
@@ -113,11 +118,12 @@ CRUD dla ogłoszeń zalogowanego użytkownika.
     ```
 *   **Success Response (200 OK):** Pełne `ListingDto` nowo stworzonego ogłoszenia.
 
-### `PUT /user/listing/update`
+### `PUT /user/listing/{publicId}/update`
 > Aktualizuje istniejące ogłoszenie.
 
 *   **Authentication:** Zabezpieczony
-*   **URL Params:** `?id=<ID_OGŁOSZENIA>` (np. `?id=76`)
+*   **Zastosowanie na Froncie:** Używane w formularzu edycji ogłoszenia.
+*   **URL Path Variable:** `publicId` (np. `/user/listing/d888cad2-9fc6-4629-ba86-4c106b5382b1/update`)
 *   **Body:** Zawiera tylko te pola, które mają zostać zmienione.
     ```json
     {
@@ -131,24 +137,25 @@ CRUD dla ogłoszeń zalogowanego użytkownika.
     ```
 *   **Success Response (200 OK):** Pełne `ListingDto` zaktualizowanego ogłoszenia.
 
-### `DELETE /user/listing/delete`
+### `DELETE /user/listing/{publicId}/delete`
 > Usuwa ogłoszenie.
 
 *   **Authentication:** Zabezpieczony
-*   **URL Params:** `?id=<ID_OGŁOSZENIA>` (np. `?id=76`)
+*   **Zastosowanie na Froncie:** Przycisk 'Usuń' w panelu 'Moje Ogłoszenia' lub na stronie edycji.
+*   **URL Path Variable:** `publicId` (np. `/user/listing/d888cad2-9fc6-4629-ba86-4c106b5382b1/delete`)
 *   **Success Response:** `204 No Content` (puste body)
 
 ### `GET /user/listing/my`
 > Pobiera listę ogłoszeń zalogowanego użytkownika.
 
 *   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Główny endpoint do zasilania panelu 'Moje Ogłoszenia'.
 *   **URL Params:** `?page=0&size=10` (opcjonalne)
 *   **Success Response (200 OK):** Stronicowana lista "okładek" ogłoszeń (`ListingCoverDto`).
     ```json
     {
       "content": [
         {
-          "id": 76,
           "publicId": "d888cad2-9fc6-4629-ba86-4c106b5382b1",
           "title": "Audi A4 B8 2.0 TDI S-Line",
           "seller": { "id": "89bc977b-c63f-448d-896c-8174d75ab708", "name": "kulmaniak" },
@@ -157,16 +164,7 @@ CRUD dla ogłoszeń zalogowanego użytkownika.
           "coverImageUrl": "https://twoj-storage.blob.core.windows.net/media/audi-a4-1.jpg"
         }
       ],
-      "pageable": { ... },
-      "totalPages": 1,
-      "totalElements": 1,
-      "last": true,
-      "size": 10,
-      "number": 0,
-      "sort": { ... },
-      "numberOfElements": 1,
-      "first": true,
-      "empty": false
+      "pageable": { ... }, "totalPages": 1, "totalElements": 1, ...
     }
     ```
 
@@ -176,17 +174,19 @@ CRUD dla ogłoszeń zalogowanego użytkownika.
 
 Endpointy do przeglądania i wyszukiwania ogłoszeń dostępne dla wszystkich.
 
-### `GET /public/listings/get`
+### `GET /public/listings/{publicId}`
 > Pobiera szczegółowe dane jednego ogłoszenia.
 
 *   **Authentication:** Publiczny
-*   **URL Params:** `?id=<ID_OGŁOSZENIA>` (np. `?id=76`)
+*   **Zastosowanie na Froncie:** Do wyświetlania strony ze szczegółami konkretnego ogłoszenia.
+*   **URL Path Variable:** `publicId` (np. `/public/listings/d888cad2-9fc6-4629-ba86-4c106b5382b1`)
 *   **Success Response (200 OK):** Pełne `ListingDto` z wszystkimi atrybutami, mediami i danymi sprzedawcy.
 
 ### `POST /public/listings/search`
 > Wyszukuje i filtruje ogłoszenia. Może służyć jako główny endpoint do listowania.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Główny silnik wyszukiwarki. Używany na stronach kategorii, wynikach wyszukiwania, wszędzie tam, gdzie jest filtrowana lista ogłoszeń.
 *   **Body:**
     ```json
     {
@@ -204,9 +204,10 @@ Endpointy do przeglądania i wyszukiwania ogłoszeń dostępne dla wszystkich.
 *   **Success Response (200 OK):** Stronicowana lista "okładek" ogłoszeń (`ListingCoverDto`).
 
 ### `GET /public/listings/random`
-> Zwraca stronę z losowymi ogłoszeniami. Idealne na stronę główną.
+> Zwraca stronę z losowymi ogłoszeniami.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Do wyświetlania sekcji 'Proponowane dla Ciebie' lub 'Losowe Ogłoszenia' na stronie głównej.
 *   **URL Params:** `?page=0&size=10` (opcjonalne)
 *   **Success Response (200 OK):** Stronicowana lista "okładek" ogłoszeń (`ListingCoverDto`).
 
@@ -220,12 +221,14 @@ Endpointy pomocnicze do budowania interfejsu wyszukiwania i dodawania ogłoszeń
 > Pobiera pełne drzewo wszystkich kategorii.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Do budowania menu nawigacyjnego z kategoriami.
 *   **Success Response (200 OK):** Lista kategorii z zagnieżdżonymi dziećmi.
 
 ### `GET /public/category/attributes`
 > Pobiera listę atrybutów (wraz z opcjami) dostępnych dla danej kategorii.
 
 *   **Authentication:** Publiczny
+*   **Zastosowanie na Froncie:** Kluczowy endpoint. Po tym, jak użytkownik wybierze kategorię w formularzu dodawania/wyszukiwania, wołamy ten endpoint, aby dynamicznie zbudować resztę formularza (filtry marki, roku, stanu itp.).
 *   **URL Params:** `?categoryId=<ID_KATEGORII>` (np. `?categoryId=72`)
 *   **Success Response (200 OK):** Lista definicji atrybutów.
     ```json

@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/user/listing")
@@ -38,16 +40,16 @@ public class ListingUserController {
     @PutMapping("/update")
     public ResponseEntity<ListingDto> update(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
-            @RequestParam Long id,
+            @RequestParam UUID publicId,
             @RequestBody ListingUpdateRequest req) {
-        return ResponseEntity.ok(listingService.update(id, req, userId));
+        return ResponseEntity.ok(listingService.update(publicId, req, userId));
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<Void> delete(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
-            @RequestParam Long id) {
-        listingService.delete(id, userId);
+            @RequestParam UUID publicId) {
+        listingService.delete(publicId, userId);
         return ResponseEntity.noContent().build();
     }
 }

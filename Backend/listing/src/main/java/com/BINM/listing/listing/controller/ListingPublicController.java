@@ -9,6 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.rmi.server.UID;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/public/listings")
 @RequiredArgsConstructor
@@ -17,7 +20,7 @@ public class ListingPublicController {
 
 
     @GetMapping("/get")
-    public ResponseEntity<ListingDto> get(@RequestParam Long id) {
+    public ResponseEntity<ListingDto> get(@RequestParam UUID id) {
         return ResponseEntity.ok(listingService.get(id));
     }
 

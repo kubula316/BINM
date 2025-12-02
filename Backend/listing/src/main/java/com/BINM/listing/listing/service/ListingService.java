@@ -43,43 +43,16 @@ public class ListingService {
     private final ProfileFacade profileFacade;
 
     @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
-        return toCoverDtoPage(listings);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listRandom(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Listing> randomListings = listingRepository.findRandom(pageable);
-        return toCoverDtoPage(randomListings);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> search(ListingSearchRequest req) {
-        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
-        Specification<Listing> spec = Specification.where(null);
-        if (req.categoryId() != null) {
-            List<Long> ids = collectDescendantIds(req.categoryId());
-            if (ids.isEmpty()) return Page.empty(pageable);
-            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
-        }
-        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
-        }
-        if (req.attributes() != null && !req.attributes().isEmpty()) {
-            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
-                spec = spec.and(hasAttribute(filter));
-            }
-        }
-        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
+    public ListingDto get(UUID publicId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+        return toDto(l);
     }
 
     @Transactional
-    public ListingDto update(Long id, ListingUpdateRequest req, String currentUserId) {
-        Listing l = listingRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+    public ListingDto update(UUID publicId, ListingUpdateRequest req, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
         if (!l.getSellerUserId().equals(currentUserId)) {
             throw new AccessDeniedException("You are not the owner of this listing");
@@ -116,9 +89,7 @@ public class ListingService {
                 if (ar.key() == null) continue;
                 String k = ar.key().trim().toLowerCase(Locale.ROOT);
                 AttributeDefinition def = defs.get(k);
-                if (def == null) {
-                    continue;
-                }
+                if (def == null) continue;
                 ListingAttribute lav = ListingAttribute.builder().listing(l).attribute(def).build();
                 String val = ar.value();
                 switch (def.getType()) {
@@ -143,19 +114,100 @@ public class ListingService {
         Listing saved = listingRepository.save(l);
         return toDto(saved);
     }
-    
+
     @Transactional
-    public void delete(Long id, String currentUserId) {
-        Listing l = listingRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+    public void delete(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
         if (!l.getSellerUserId().equals(currentUserId)) {
             throw new AccessDeniedException("You are not the owner of this listing");
         }
 
-        listingAttributeRepository.deleteByListingId(id);
-        listingMediaRepository.deleteByListingId(id);
-        listingRepository.deleteById(id);
+        listingAttributeRepository.deleteByListingId(l.getId());
+        listingMediaRepository.deleteByListingId(l.getId());
+        listingRepository.deleteById(l.getId());
+    }
+
+    private Page<ListingDto> toDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> toDto(l, sellerProfiles.get(l.getSellerUserId())));
+    }
+
+    private ListingDto toDto(Listing l) {
+        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
+        return toDto(l, sellerProfile);
+    }
+
+    private ListingDto toDto(Listing l, ProfileResponse sellerProfile) {
+        SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
+        return new ListingDto(
+                l.getPublicId(),
+                l.getCategory() != null ? l.getCategory().getId() : null,
+                sellerInfo,
+                l.getTitle(), l.getDescription(),
+                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
+                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
+                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
+                loadAttributes(l), loadMedia(l)
+        );
+    }
+
+    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> {
+            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
+            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
+            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
+                    .map(ListingMedia::getMediaUrl)
+                    .orElse(null);
+            return new ListingCoverDto(
+                    l.getPublicId(),
+                    l.getTitle(),
+                    sellerInfo,
+                    l.getPriceAmount(),
+                    l.getNegotiable(),
+                    coverImageUrl
+            );
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+        return toCoverDtoPage(listings);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listRandom(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Listing> randomListings = listingRepository.findRandom(pageable);
+        return toCoverDtoPage(randomListings);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> search(ListingSearchRequest req) {
+        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
+        Specification<Listing> spec = Specification.where(null);
+        if (req.categoryId() != null) {
+            List<Long> ids = collectDescendantIds(req.categoryId());
+            if (ids.isEmpty()) return Page.empty(pageable);
+            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
+        }
+        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
+        }
+        if (req.attributes() != null && !req.attributes().isEmpty()) {
+            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
+                spec = spec.and(hasAttribute(filter));
+            }
+        }
+        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
     }
 
     @Transactional
@@ -231,38 +283,6 @@ public class ListingService {
             listingMediaRepository.saveAll(mediaToSave);
         }
         return toDto(saved);
-    }
-
-    @Transactional(readOnly = true)
-    public ListingDto get(Long id) {
-        Listing l = listingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Listing not found"));
-        return toDto(l);
-    }
-
-    private Page<ListingDto> toDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> toDto(l, sellerProfiles.get(l.getSellerUserId())));
-    }
-
-    private ListingDto toDto(Listing l) {
-        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
-        return toDto(l, sellerProfile);
-    }
-
-    private ListingDto toDto(Listing l, ProfileResponse sellerProfile) {
-        SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-        return new ListingDto(
-                l.getId(), l.getPublicId(),
-                l.getCategory() != null ? l.getCategory().getId() : null,
-                sellerInfo,
-                l.getTitle(), l.getDescription(),
-                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
-                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
-                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
-                loadAttributes(l), loadMedia(l)
-        );
     }
 
     private List<ListingAttributeDto> loadAttributes(Listing l) {
@@ -360,19 +380,5 @@ public class ListingService {
                 }
                 return cb.equal(cb.lower(subRoot.get("vText")), filter.value().toLowerCase());
         }
-    }
-
-    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> {
-            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
-            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
-                    .map(ListingMedia::getMediaUrl)
-                    .orElse(null);
-            return new ListingCoverDto(l.getId(), l.getPublicId(), l.getTitle(), sellerInfo, l.getPriceAmount(), l.getNegotiable(), coverImageUrl);
-        });
     }
 }
