@@ -7,6 +7,7 @@ import com.BINM.user.exception.UserAlreadyExistsException;
 import com.BINM.user.io.AuthResponse;
 import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
+import com.BINM.user.io.PublicProfileResponse;
 import com.BINM.user.model.UserEntity;
 import com.BINM.user.repository.UserRepository;
 import com.BINM.user.util.JwtUtil;
@@ -24,6 +25,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,6 +43,22 @@ public class ProfileService implements ProfileFacade {
     private final AppUserDetailsService appUserDetailsService;
     private final JwtUtil jwtUtil;
 
+    @Override
+    public PublicProfileResponse getPublicProfile(String userId) {
+        UserEntity existingUser = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+        return convertToPublicProfileResponse(existingUser);
+    }
+
+    private PublicProfileResponse convertToPublicProfileResponse(UserEntity userEntity) {
+        return new PublicProfileResponse(
+                userEntity.getUserId(),
+                userEntity.getName(),
+                OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC)
+        );
+    }
+    
+    // ... (reszta metod bez zmian)
     @Override
     @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {

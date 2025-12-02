@@ -3,6 +3,7 @@ package com.BINM.listing.listing.controller;
 import com.BINM.listing.listing.dto.ListingCoverDto;
 import com.BINM.listing.listing.dto.ListingCreateRequest;
 import com.BINM.listing.listing.dto.ListingDto;
+import com.BINM.listing.listing.dto.ListingEditDto;
 import com.BINM.listing.listing.dto.ListingUpdateRequest;
 import com.BINM.listing.listing.service.ListingService;
 import jakarta.validation.Valid;
@@ -30,6 +31,13 @@ public class ListingUserController {
         return ResponseEntity.ok(listingService.listForUser(userId, page, size));
     }
 
+    @GetMapping("/{publicId}/edit-data")
+    public ResponseEntity<ListingEditDto> getListingForEdit(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
+            @PathVariable UUID publicId) {
+        return ResponseEntity.ok(listingService.getListingForEdit(publicId, userId));
+    }
+
     @PostMapping("/create")
     public ResponseEntity<ListingDto> create(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
@@ -37,18 +45,18 @@ public class ListingUserController {
         return ResponseEntity.ok(listingService.create(req, userId));
     }
 
-    @PutMapping("/update")
+    @PutMapping("/{publicId}/update")
     public ResponseEntity<ListingDto> update(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
-            @RequestParam UUID publicId,
+            @PathVariable UUID publicId,
             @RequestBody ListingUpdateRequest req) {
         return ResponseEntity.ok(listingService.update(publicId, req, userId));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/{publicId}/delete")
     public ResponseEntity<Void> delete(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
-            @RequestParam UUID publicId) {
+            @PathVariable UUID publicId) {
         listingService.delete(publicId, userId);
         return ResponseEntity.noContent().build();
     }

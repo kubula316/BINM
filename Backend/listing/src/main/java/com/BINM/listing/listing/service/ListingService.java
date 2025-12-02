@@ -43,6 +43,36 @@ public class ListingService {
     private final ProfileFacade profileFacade;
 
     @Transactional(readOnly = true)
+    public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+
+        if (!l.getSellerUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("You are not the owner of this listing");
+        }
+
+        return toEditDto(l);
+    }
+
+    private ListingEditDto toEditDto(Listing l) {
+        return new ListingEditDto(
+                l.getPublicId(),
+                l.getCategory().getId(),
+                l.getTitle(),
+                l.getDescription(),
+                l.getPriceAmount(),
+                l.getCurrency(),
+                l.getNegotiable(),
+                l.getLocationCity(),
+                l.getLocationRegion(),
+                l.getLatitude(),
+                l.getLongitude(),
+                loadAttributes(l),
+                loadMedia(l)
+        );
+    }
+
+    @Transactional(readOnly = true)
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
@@ -128,7 +158,7 @@ public class ListingService {
         listingMediaRepository.deleteByListingId(l.getId());
         listingRepository.deleteById(l.getId());
     }
-
+    
     private Page<ListingDto> toDtoPage(Page<Listing> listings) {
         List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
         Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
