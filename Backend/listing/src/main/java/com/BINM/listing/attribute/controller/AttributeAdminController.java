@@ -23,9 +23,20 @@ public class AttributeAdminController {
         return attributeService.updateAttribute(id, req);
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/{id}/options")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AttributeOptionDto addOption(@PathVariable Long id, @RequestBody AttributeOptionCreateRequest req) {
+        return attributeService.addOption(id, req);
+    }
+
+    @PutMapping("/options/{optionId}")
+    public AttributeOptionDto updateOption(@PathVariable Long optionId, @RequestBody AttributeOptionUpdateRequest req) {
+        return attributeService.updateOption(optionId, req);
+    }
+
+    @DeleteMapping("/options/{optionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        attributeService.deleteAttribute(id);
+    public void deleteOption(@PathVariable Long optionId) {
+        attributeService.deleteOption(optionId);
     }
 }

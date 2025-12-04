@@ -20,6 +20,9 @@ import com.BINM.listing.attribute.dto.AttributeCreateRequest;
 import com.BINM.listing.attribute.dto.AttributeUpdateRequest;
 import com.BINM.listing.attribute.model.AttributeType;
 
+import com.BINM.listing.attribute.dto.AttributeOptionCreateRequest;
+import com.BINM.listing.attribute.dto.AttributeOptionUpdateRequest;
+
 @Service
 @RequiredArgsConstructor
 public class AttributeService {
@@ -29,6 +32,7 @@ public class AttributeService {
 
     @Transactional
     public AttributeDefinitionDto createAttribute(AttributeCreateRequest req) {
+    // ... existing createAttribute code ...
         Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
@@ -60,7 +64,47 @@ public class AttributeService {
     }
 
     @Transactional
+    public AttributeOptionDto addOption(Long attributeId, AttributeOptionCreateRequest req) {
+        AttributeDefinition def = definitionRepository.findById(attributeId)
+                .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
+        
+        if (def.getType() != AttributeType.ENUM) {
+            throw new IllegalArgumentException("Cannot add options to non-ENUM attribute");
+        }
+
+        AttributeOption opt = AttributeOption.builder()
+                .attribute(def)
+                .value(req.value().trim().toLowerCase(Locale.ROOT))
+                .label(req.label())
+                .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
+                .build();
+        opt = optionRepository.save(opt);
+        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+    }
+
+    @Transactional
+    public AttributeOptionDto updateOption(Long optionId, AttributeOptionUpdateRequest req) {
+        AttributeOption opt = optionRepository.findById(optionId)
+                .orElseThrow(() -> new EntityNotFoundException("Option not found"));
+        
+        if (req.label() != null) opt.setLabel(req.label());
+        if (req.sortOrder() != null) opt.setSortOrder(req.sortOrder());
+        
+        opt = optionRepository.save(opt);
+        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+    }
+
+    @Transactional
+    public void deleteOption(Long optionId) {
+        if (!optionRepository.existsById(optionId)) {
+             throw new EntityNotFoundException("Option not found");
+        }
+        optionRepository.deleteById(optionId);
+    }
+
+    @Transactional
     public AttributeDefinitionDto updateAttribute(Long id, AttributeUpdateRequest req) {
+    // ... existing updateAttribute code ...
         AttributeDefinition def = definitionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
 
@@ -74,24 +118,15 @@ public class AttributeService {
         return toDto(def, options);
     }
 
-    @Transactional
-    public void deleteAttribute(Long id) {
-        AttributeDefinition def = definitionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
-        // Opcje usuną się kaskadowo jeśli baza tak jest ustawiona, albo trzeba ręcznie.
-        // Zakładam, że JPA nie ma CascadeType.ALL w modelu (było FetchType.LAZY), więc usuwam ręcznie.
-        List<AttributeOption> opts = optionRepository.findByAttributeIdOrderBySortOrderAscIdAsc(id);
-        optionRepository.deleteAll(opts);
-        definitionRepository.delete(def);
-    }
-
     @Transactional(readOnly = true)
     public List<AttributeDefinitionDto> getEffectiveDefinitions(Long categoryId) {
         List<Category> path = getPathEntities(categoryId);
         Map<String, AttributeDefinition> byKey = new LinkedHashMap<>();
         for (Category c : path) {
             for (AttributeDefinition def : definitionRepository.findByCategoryIdOrderBySortOrderAscIdAsc(c.getId())) {
-                byKey.put(def.getKey().toLowerCase(Locale.ROOT), def); // child overrides parent
+                if (Boolean.TRUE.equals(def.getActive())) {
+                    byKey.put(def.getKey().toLowerCase(Locale.ROOT), def); // child overrides parent
+                }
             }
         }
         List<AttributeDefinition> defs = new ArrayList<>(byKey.values());
@@ -107,7 +142,9 @@ public class AttributeService {
         Map<String, AttributeDefinition> byKey = new LinkedHashMap<>();
         for (Category c : path) {
             for (AttributeDefinition def : definitionRepository.findByCategoryIdOrderBySortOrderAscIdAsc(c.getId())) {
-                byKey.put(def.getKey().toLowerCase(Locale.ROOT), def);
+                if (Boolean.TRUE.equals(def.getActive())) {
+                    byKey.put(def.getKey().toLowerCase(Locale.ROOT), def);
+                }
             }
         }
         return byKey;
