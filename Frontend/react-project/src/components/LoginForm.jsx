@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import './LoginForm.css'
 
+const API_BASE_URL = 'http://localhost:8081'
+
 function LoginForm({ onLogin, onClose }) {
   const [mode, setMode] = useState('login') // 'login' | 'register'
   const [username, setUsername] = useState('')
@@ -8,22 +10,48 @@ function LoginForm({ onLogin, onClose }) {
   const [email, setEmail] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const submitLogin = (e) => {
+  const submitLogin = async (e) => {
     e.preventDefault()
     if (!username || !password) {
       setError('Wypełnij wszystkie pola')
       return
     }
-    if (username === 'admin' && password === 'admin') {
+    try {
+      setLoading(true)
       setError('')
+      const response = await fetch(`${API_BASE_URL}/public/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: username,
+          password,
+        }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Nieprawidłowy email lub hasło')
+        } else {
+          setError('Wystąpił błąd podczas logowania')
+        }
+        return
+      }
+
       onLogin(username)
-    } else {
-      setError('Nieprawidłowa nazwa użytkownika lub hasło')
+      onClose()
+    } catch {
+      setError('Brak połączenia z serwerem')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const submitRegister = (e) => {
+  const submitRegister = async (e) => {
     e.preventDefault()
     if (!username || !email || !password || !confirm) {
       setError('Wypełnij wszystkie pola')
@@ -33,9 +61,38 @@ function LoginForm({ onLogin, onClose }) {
       setError('Hasła nie są takie same')
       return
     }
-    // Statyczna rejestracja (bez backendu): przyjmujemy dane i logujemy użytkownika
-    setError('')
-    onLogin(username)
+
+    try {
+      setLoading(true)
+      setError('')
+      const response = await fetch(`${API_BASE_URL}/public/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: username,
+          email,
+          password,
+        }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setError('Użytkownik z takim adresem email już istnieje')
+        } else {
+          setError('Wystąpił błąd podczas rejestracji')
+        }
+        return
+      }
+
+      onLogin(username)
+      onClose()
+    } catch {
+      setError('Brak połączenia z serwerem')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -60,13 +117,13 @@ function LoginForm({ onLogin, onClose }) {
           {error && <div className="error-message">{error}</div>}
           
           <div className="form-group">
-            <label htmlFor="username">Nazwa użytkownika:</label>
+            <label htmlFor="username"> Email:</label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Wpisz nazwę użytkownika"
+              placeholder="Wpisz email"
             />
           </div>
 
@@ -81,13 +138,9 @@ function LoginForm({ onLogin, onClose }) {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Zaloguj się
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Logowanie...' : 'Zaloguj się'}
           </button>
-
-          <div className="login-hint">
-            <small>DEMO: Login: admin, Hasło: admin</small>
-          </div>
         </form>
         ) : (
         <form className="login-form" onSubmit={submitRegister}>
@@ -139,7 +192,9 @@ function LoginForm({ onLogin, onClose }) {
             />
           </div>
 
-          <button type="submit" className="login-button">Zarejestruj i zaloguj</button>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Rejestrowanie...' : 'Zarejestruj'}
+          </button>
         </form>
         )}
       </div>

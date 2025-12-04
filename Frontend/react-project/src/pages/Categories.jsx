@@ -1,30 +1,64 @@
 import './Categories.css'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+const API_BASE_URL = 'http://localhost:8081'
+
 function Categories() {
-  const cats = [
-    { name: 'Odzież', slug: 'odziez', desc: 'Odkryj naszą kolekcję ubrań' },
-    { name: 'Obuwie', slug: 'obuwie', desc: 'Znajdź idealne buty' },
-    { name: 'Akcesoria', slug: 'akcesoria', desc: 'Uzupełnij swój styl' },
-    { name: 'Elektronika', slug: 'elektronika', desc: 'Komputery, RTV i AGD, audio i więcej' },
-    { name: 'Torby', slug: 'torby', desc: 'Praktyczne rozwiązania' },
-    { name: 'Okulary', slug: 'okulary', desc: 'Ochrona i styl' }
-  ]
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const response = await fetch(`${API_BASE_URL}/public/category/all`)
+
+        if (!response.ok) {
+          setError('Nie udało się pobrać kategorii')
+          return
+        }
+
+        const data = await response.json()
+        setCategories(data || [])
+      } catch {
+        setError('Brak połączenia z serwerem')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  const renderTopLevelCategories = (nodes) => {
+    if (!Array.isArray(nodes)) return null
+
+    return nodes
+      .filter((node) => node.parentId === null)
+      .map((node) => (
+        <Link key={node.id} className="category-card" to={`/categories/${node.id}`}>
+          <h3>{node.name}</h3>
+          {node.description && <p>{node.description}</p>}
+        </Link>
+      ))
+  }
 
   return (
     <div className="categories-page">
       <div className="categories-container">
         <h1>Kategorie produktów</h1>
-        {/* <p className="subtitle">Przeglądaj nasze kategorie</p> */}
 
-        <div className="categories-grid">
-          {cats.map(c => (
-            <Link key={c.slug} className="category-card" to={`/categories/${c.slug}`}>
-              <h3>{c.name}</h3>
-              <p>{c.desc}</p>
-            </Link>
-          ))}
-        </div>
+        {loading && <p className="subtitle">Ładowanie kategorii...</p>}
+        {error && <p className="subtitle" style={{ color: '#ff6b6b' }}>{error}</p>}
+
+        <section className="electronics-section">
+          <div className="categories-grid">
+            {!loading && !error && renderTopLevelCategories(categories)}
+          </div>
+        </section>
       </div>
     </div>
   )
