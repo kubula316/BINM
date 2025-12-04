@@ -22,10 +22,4 @@ public class AttributeAdminController {
     public AttributeDefinitionDto update(@PathVariable Long id, @RequestBody AttributeUpdateRequest req) {
         return attributeService.updateAttribute(id, req);
     }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        attributeService.deleteAttribute(id);
-    }
 }

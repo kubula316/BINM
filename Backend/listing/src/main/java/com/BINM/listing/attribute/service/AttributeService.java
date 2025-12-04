@@ -74,24 +74,15 @@ public class AttributeService {
         return toDto(def, options);
     }
 
-    @Transactional
-    public void deleteAttribute(Long id) {
-        AttributeDefinition def = definitionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
-        // Opcje usuną się kaskadowo jeśli baza tak jest ustawiona, albo trzeba ręcznie.
-        // Zakładam, że JPA nie ma CascadeType.ALL w modelu (było FetchType.LAZY), więc usuwam ręcznie.
-        List<AttributeOption> opts = optionRepository.findByAttributeIdOrderBySortOrderAscIdAsc(id);
-        optionRepository.deleteAll(opts);
-        definitionRepository.delete(def);
-    }
-
     @Transactional(readOnly = true)
     public List<AttributeDefinitionDto> getEffectiveDefinitions(Long categoryId) {
         List<Category> path = getPathEntities(categoryId);
         Map<String, AttributeDefinition> byKey = new LinkedHashMap<>();
         for (Category c : path) {
             for (AttributeDefinition def : definitionRepository.findByCategoryIdOrderBySortOrderAscIdAsc(c.getId())) {
-                byKey.put(def.getKey().toLowerCase(Locale.ROOT), def); // child overrides parent
+                if (Boolean.TRUE.equals(def.getActive())) {
+                    byKey.put(def.getKey().toLowerCase(Locale.ROOT), def); // child overrides parent
+                }
             }
         }
         List<AttributeDefinition> defs = new ArrayList<>(byKey.values());
@@ -107,7 +98,9 @@ public class AttributeService {
         Map<String, AttributeDefinition> byKey = new LinkedHashMap<>();
         for (Category c : path) {
             for (AttributeDefinition def : definitionRepository.findByCategoryIdOrderBySortOrderAscIdAsc(c.getId())) {
-                byKey.put(def.getKey().toLowerCase(Locale.ROOT), def);
+                if (Boolean.TRUE.equals(def.getActive())) {
+                    byKey.put(def.getKey().toLowerCase(Locale.ROOT), def);
+                }
             }
         }
         return byKey;
