@@ -20,6 +20,9 @@ import com.BINM.listing.attribute.dto.AttributeCreateRequest;
 import com.BINM.listing.attribute.dto.AttributeUpdateRequest;
 import com.BINM.listing.attribute.model.AttributeType;
 
+import com.BINM.listing.attribute.dto.AttributeOptionCreateRequest;
+import com.BINM.listing.attribute.dto.AttributeOptionUpdateRequest;
+
 @Service
 @RequiredArgsConstructor
 public class AttributeService {
@@ -29,6 +32,7 @@ public class AttributeService {
 
     @Transactional
     public AttributeDefinitionDto createAttribute(AttributeCreateRequest req) {
+    // ... existing createAttribute code ...
         Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
@@ -60,7 +64,47 @@ public class AttributeService {
     }
 
     @Transactional
+    public AttributeOptionDto addOption(Long attributeId, AttributeOptionCreateRequest req) {
+        AttributeDefinition def = definitionRepository.findById(attributeId)
+                .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
+        
+        if (def.getType() != AttributeType.ENUM) {
+            throw new IllegalArgumentException("Cannot add options to non-ENUM attribute");
+        }
+
+        AttributeOption opt = AttributeOption.builder()
+                .attribute(def)
+                .value(req.value().trim().toLowerCase(Locale.ROOT))
+                .label(req.label())
+                .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
+                .build();
+        opt = optionRepository.save(opt);
+        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+    }
+
+    @Transactional
+    public AttributeOptionDto updateOption(Long optionId, AttributeOptionUpdateRequest req) {
+        AttributeOption opt = optionRepository.findById(optionId)
+                .orElseThrow(() -> new EntityNotFoundException("Option not found"));
+        
+        if (req.label() != null) opt.setLabel(req.label());
+        if (req.sortOrder() != null) opt.setSortOrder(req.sortOrder());
+        
+        opt = optionRepository.save(opt);
+        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+    }
+
+    @Transactional
+    public void deleteOption(Long optionId) {
+        if (!optionRepository.existsById(optionId)) {
+             throw new EntityNotFoundException("Option not found");
+        }
+        optionRepository.deleteById(optionId);
+    }
+
+    @Transactional
     public AttributeDefinitionDto updateAttribute(Long id, AttributeUpdateRequest req) {
+    // ... existing updateAttribute code ...
         AttributeDefinition def = definitionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Attribute not found"));
 

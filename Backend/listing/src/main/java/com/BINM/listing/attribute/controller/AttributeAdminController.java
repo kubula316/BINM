@@ -22,4 +22,21 @@ public class AttributeAdminController {
     public AttributeDefinitionDto update(@PathVariable Long id, @RequestBody AttributeUpdateRequest req) {
         return attributeService.updateAttribute(id, req);
     }
+
+    @PostMapping("/{id}/options")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AttributeOptionDto addOption(@PathVariable Long id, @RequestBody AttributeOptionCreateRequest req) {
+        return attributeService.addOption(id, req);
+    }
+
+    @PutMapping("/options/{optionId}")
+    public AttributeOptionDto updateOption(@PathVariable Long optionId, @RequestBody AttributeOptionUpdateRequest req) {
+        return attributeService.updateOption(optionId, req);
+    }
+
+    @DeleteMapping("/options/{optionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOption(@PathVariable Long optionId) {
+        attributeService.deleteOption(optionId);
+    }
 }
