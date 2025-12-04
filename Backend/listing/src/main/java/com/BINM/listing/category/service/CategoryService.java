@@ -40,6 +40,7 @@ public class CategoryService {
         Category cat = Category.builder()
                 .parent(parent)
                 .name(req.name())
+                .imageUrl(req.imageUrl())
                 .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
                 .depth(depth)
                 .isLeaf(true) // Newly created category is always a leaf initially
@@ -54,6 +55,7 @@ public class CategoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
         if (req.name() != null) cat.setName(req.name());
+        if (req.imageUrl() != null) cat.setImageUrl(req.imageUrl());
         if (req.sortOrder() != null) cat.setSortOrder(req.sortOrder());
 
         return toDto(categoryRepository.save(cat));
@@ -111,6 +113,7 @@ public class CategoryService {
                     c.getId(),
                     c.getParent() != null ? c.getParent().getId() : null,
                     c.getName(),
+                    c.getImageUrl(),
                     c.getSortOrder(),
                     c.getDepth(),
                     c.getIsLeaf(),
@@ -158,6 +161,7 @@ public class CategoryService {
                 c.getId(),
                 c.getParent() != null ? c.getParent().getId() : null,
                 c.getName(),
+                c.getImageUrl(),
                 c.getSortOrder(),
                 c.getDepth(),
                 c.getIsLeaf()

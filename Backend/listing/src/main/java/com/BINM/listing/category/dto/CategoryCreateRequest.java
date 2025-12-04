@@ -7,6 +7,7 @@ public record CategoryCreateRequest(
         @NotBlank
         String name,
         Long parentId,
+        String imageUrl,
         Integer sortOrder
 ) {
 }
