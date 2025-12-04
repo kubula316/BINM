@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ListingService {
+
     private final ListingRepository listingRepository;
     private final CategoryRepository categoryRepository;
     private final ListingAttributeRepository listingAttributeRepository;
@@ -298,12 +299,6 @@ public class ListingService {
                 attributesToSave.add(lav);
             }
             listingAttributeRepository.saveAll(attributesToSave);
-            var providedKeys = req.attributes().stream().map(a -> a.key() == null ? "" : a.key().trim().toLowerCase(Locale.ROOT)).collect(Collectors.toSet());
-            defs.values().stream().filter(AttributeDefinition::getRequired).forEach(d -> {
-                if (!providedKeys.contains(d.getKey().toLowerCase(Locale.ROOT))) {
-                    throw new IllegalArgumentException("Missing required attribute: " + d.getKey());
-                }
-            });
         }
         if (req.mediaUrls() != null && !req.mediaUrls().isEmpty()) {
             List<ListingMedia> mediaToSave = new ArrayList<>();

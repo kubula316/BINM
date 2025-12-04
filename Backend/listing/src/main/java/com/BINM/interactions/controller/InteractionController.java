@@ -40,13 +40,6 @@ public class InteractionController {
         interactionFacade.removeFavorite(userId, entityId, entityType);
     }
 
-    @GetMapping("/favorites/listings")
-    public ResponseEntity<Page<ListingCoverDto>> getFavoriteListings(
-            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
-            Pageable pageable) {
-        return ResponseEntity.ok(interactionFacade.getFavoriteListingsForUser(userId, pageable));
-    }
-
     @GetMapping("/favorites/status")
     public ResponseEntity<Map<String, Boolean>> isFavorite(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,

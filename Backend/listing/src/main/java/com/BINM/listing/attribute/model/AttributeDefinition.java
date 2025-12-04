@@ -31,9 +31,6 @@ public class AttributeDefinition {
     @Column(nullable = false)
     private AttributeType type;
 
-    @Column(nullable = false)
-    private Boolean required;
-
     @Column(name = "unit")
     private String unit; //  cm3, KM, PLN
 

@@ -20,7 +20,6 @@ import java.util.UUID;
 public class InteractionService implements InteractionFacade {
 
     private final FavoriteRepository favoriteRepository;
-    private final ListingService listingService;
 
     @Override
     public void addFavorite(String userId, String entityId, EntityType entityType) {
@@ -39,24 +38,6 @@ public class InteractionService implements InteractionFacade {
     @Transactional
     public void removeFavorite(String userId, String entityId, EntityType entityType) {
         favoriteRepository.deleteByUserIdAndEntityIdAndEntityType(userId, entityId, entityType);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> getFavoriteListingsForUser(String userId, Pageable pageable) {
-        Page<Favorite> favoritePage = favoriteRepository.findByUserIdAndEntityType(userId, EntityType.LISTING, pageable);
-
-        List<UUID> listingIds = favoritePage.getContent().stream()
-                .map(fav -> UUID.fromString(fav.getEntityId()))
-                .toList();
-
-        if (listingIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        List<ListingCoverDto> covers = listingService.getListingCoversByIds(listingIds);
-
-        return new PageImpl<>(covers, pageable, favoritePage.getTotalElements());
     }
 
     @Override

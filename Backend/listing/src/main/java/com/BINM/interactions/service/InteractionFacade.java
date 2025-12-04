@@ -11,7 +11,5 @@ public interface InteractionFacade {
 
     void removeFavorite(String userId, String entityId, EntityType entityType);
 
-    Page<ListingCoverDto> getFavoriteListingsForUser(String userId, Pageable pageable);
-
     boolean isFavorite(String userId, String entityId, EntityType entityType);
 }
