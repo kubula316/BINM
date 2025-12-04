@@ -1,0 +1,24 @@
+# Environment files with secrets
+
+#exe
+ps1
+*.ps1
+
+env.txt
+*.env
+
+# IDE
+.idea/
+*.iml
+
+# Build
+target/
+build/
+*.class
+
+# Node
+node_modules/
+dist/
+
+# Logs
+*.log
