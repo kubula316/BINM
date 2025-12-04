@@ -13,11 +13,73 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import com.BINM.listing.category.dto.CategoryCreateRequest;
+import com.BINM.listing.category.dto.CategoryUpdateRequest;
+import org.springframework.cache.annotation.CacheEvict;
+
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
+    @Transactional
+    @CacheEvict(value = "categoryTree", allEntries = true)
+    public CategoryDto createCategory(CategoryCreateRequest req) {
+        Category parent = null;
+        int depth = 0;
+        if (req.parentId() != null) {
+            parent = categoryRepository.findById(req.parentId())
+                    .orElseThrow(() -> new EntityNotFoundException("Parent category not found"));
+            depth = parent.getDepth() + 1;
+            if (Boolean.TRUE.equals(parent.getIsLeaf())) {
+                parent.setIsLeaf(false);
+                categoryRepository.save(parent);
+            }
+        }
+
+        Category cat = Category.builder()
+                .parent(parent)
+                .name(req.name())
+                .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
+                .depth(depth)
+                .isLeaf(true) // Newly created category is always a leaf initially
+                .build();
+        return toDto(categoryRepository.save(cat));
+    }
+
+    @Transactional
+    @CacheEvict(value = "categoryTree", allEntries = true)
+    public CategoryDto updateCategory(Long id, CategoryUpdateRequest req) {
+        Category cat = categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+
+        if (req.name() != null) cat.setName(req.name());
+        if (req.sortOrder() != null) cat.setSortOrder(req.sortOrder());
+
+        return toDto(categoryRepository.save(cat));
+    }
+
+    @Transactional
+    @CacheEvict(value = "categoryTree", allEntries = true)
+    public void deleteCategory(Long id) {
+        Category cat = categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        if (!Boolean.TRUE.equals(cat.getIsLeaf())) {
+             if (!categoryRepository.findByParentIdOrderBySortOrderAscNameAsc(id).isEmpty()) {
+                 throw new IllegalStateException("Cannot delete category with children");
+             }
+        }
+        categoryRepository.delete(cat);
+
+        if (cat.getParent() != null) {
+             Category parent = cat.getParent();
+             List<Category> siblings = categoryRepository.findByParentIdOrderBySortOrderAscNameAsc(parent.getId());
+             if (siblings.isEmpty()) {
+                 // Checking count is safer before delete or after
+             }
+
+        }
+    }
 
     @Transactional(readOnly = true)
     public List<CategoryDto> getPath(Long id) {

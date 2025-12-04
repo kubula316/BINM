@@ -40,7 +40,7 @@ public class AttributeSeeder {
 
         for (Category rootCategory : rootCategories) {
             Map<String, AttributeDefinition> commonDefs = ensureDefinitions(rootCategory, new Object[][]{
-                    {"condition", "Stan", AttributeType.ENUM, true, null, 1}
+                    {"condition", "Stan", AttributeType.ENUM, null, 1}
             });
             ensureOptions(commonDefs.get("condition"), new String[][]{
                     {"new", "Nowy"}, {"used", "Używany"}, {"damaged", "Uszkodzony"}
@@ -94,19 +94,19 @@ public class AttributeSeeder {
 
     private void addPhoneAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, true, null, 10},
-                {"model", "Model", AttributeType.STRING, false, null, 20},
-                {"memory", "Pamięć wbudowana", AttributeType.NUMBER, false, "GB", 30}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"model", "Model", AttributeType.STRING, null, 20},
+                {"memory", "Pamięć wbudowana", AttributeType.NUMBER, "GB", 30}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"apple", "Apple"}, {"samsung", "Samsung"}, {"xiaomi", "Xiaomi"}});
     }
 
     private void addComputerAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"type", "Typ komputera", AttributeType.ENUM, true, null, 5},
-                {"brand", "Marka", AttributeType.ENUM, true, null, 10},
-                {"processor", "Procesor", AttributeType.STRING, false, null, 20},
-                {"ram", "Pamięć RAM", AttributeType.NUMBER, true, "GB", 30}
+                {"type", "Typ komputera", AttributeType.ENUM, null, 5},
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"processor", "Procesor", AttributeType.STRING, null, 20},
+                {"ram", "Pamięć RAM", AttributeType.NUMBER, "GB", 30}
         });
         ensureOptions(defs.get("type"), new String[][]{{"laptop", "Laptop"}, {"desktop", "Stacjonarny"}});
         ensureOptions(defs.get("brand"), new String[][]{{"dell", "Dell"}, {"hp", "HP"}, {"lenovo", "Lenovo"}, {"apple", "Apple"}});
@@ -114,8 +114,8 @@ public class AttributeSeeder {
 
     private void addHomeApplianceAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"type", "Rodzaj", AttributeType.ENUM, true, null, 10},
-                {"brand", "Marka", AttributeType.ENUM, false, null, 20}
+                {"type", "Rodzaj", AttributeType.ENUM, null, 10},
+                {"brand", "Marka", AttributeType.ENUM, null, 20}
         });
         ensureOptions(defs.get("type"), new String[][]{{"fridge", "Lodówka"}, {"washing_machine", "Pralka"}, {"tv", "Telewizor"}});
         ensureOptions(defs.get("brand"), new String[][]{{"samsung", "Samsung"}, {"lg", "LG"}, {"bosch", "Bosch"}});
@@ -123,108 +123,108 @@ public class AttributeSeeder {
 
     private void addGamingAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"platform", "Platforma", AttributeType.ENUM, true, null, 10}
+                {"platform", "Platforma", AttributeType.ENUM, null, 10}
         });
         ensureOptions(defs.get("platform"), new String[][]{{"pc", "PC"}, {"playstation", "PlayStation"}, {"xbox", "Xbox"}, {"nintendo", "Nintendo"}});
     }
 
     private void addClothingAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, false, null, 10},
-                {"size", "Rozmiar", AttributeType.STRING, true, null, 20},
-                {"color", "Kolor", AttributeType.STRING, false, null, 30}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"size", "Rozmiar", AttributeType.STRING, null, 20},
+                {"color", "Kolor", AttributeType.STRING, null, 30}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"zara", "Zara"}, {"h&m", "H&M"}, {"reserved", "Reserved"}});
     }
 
     private void addFootwearAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, false, null, 10},
-                {"size", "Rozmiar", AttributeType.STRING, true, null, 20}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"size", "Rozmiar", AttributeType.STRING, null, 20}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"nike", "Nike"}, {"adidas", "Adidas"}, {"new-balance", "New Balance"}});
     }
 
     private void addJewelryAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"material", "Materiał", AttributeType.ENUM, true, null, 10}
+                {"material", "Materiał", AttributeType.ENUM, null, 10}
         });
         ensureOptions(defs.get("material"), new String[][]{{"gold", "Złoto"}, {"silver", "Srebro"}, {"platinum", "Platyna"}});
     }
 
     private void addFurnitureAttributes(Category cat) {
         ensureDefinitions(cat, new Object[][]{
-                {"material", "Materiał", AttributeType.STRING, false, null, 10},
-                {"color", "Kolor", AttributeType.STRING, false, null, 20}
+                {"material", "Materiał", AttributeType.STRING, null, 10},
+                {"color", "Kolor", AttributeType.STRING, null, 20}
         });
     }
 
     private void addToolAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"power_source", "Zasilanie", AttributeType.ENUM, true, null, 10}
+                {"power_source", "Zasilanie", AttributeType.ENUM, null, 10}
         });
         ensureOptions(defs.get("power_source"), new String[][]{{"cordless", "Akumulatorowe"}, {"corded", "Sieciowe"}, {"manual", "Ręczne"}});
     }
 
     private void addFoodAttributes(Category cat) {
         ensureDefinitions(cat, new Object[][]{
-                {"expiry_date", "Data ważności", AttributeType.STRING, false, null, 10},
-                {"weight", "Waga", AttributeType.NUMBER, false, "g", 20}
+                {"expiry_date", "Data ważności", AttributeType.STRING, null, 10},
+                {"weight", "Waga", AttributeType.NUMBER, "g", 20}
         });
     }
 
     private void addPetAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"animal_type", "Dla zwierzęcia", AttributeType.ENUM, true, null, 10}
+                {"animal_type", "Dla zwierzęcia", AttributeType.ENUM, null, 10}
         });
         ensureOptions(defs.get("animal_type"), new String[][]{{"dog", "Pies"}, {"cat", "Kot"}, {"rodent", "Gryzoń"}});
     }
 
     private void addToyAttributes(Category cat) {
         ensureDefinitions(cat, new Object[][]{
-                {"age_range", "Wiek", AttributeType.STRING, false, null, 10}
+                {"age_range", "Wiek", AttributeType.STRING, null, 10}
         });
     }
 
     private void addBookAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"author", "Autor", AttributeType.STRING, true, null, 10},
-                {"cover_type", "Okładka", AttributeType.ENUM, false, null, 20}
+                {"author", "Autor", AttributeType.STRING, null, 10},
+                {"cover_type", "Okładka", AttributeType.ENUM, null, 20}
         });
         ensureOptions(defs.get("cover_type"), new String[][]{{"hard", "Twarda"}, {"soft", "Miękka"}});
     }
 
     private void addGuitarAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, false, null, 10},
-                {"strings_count", "Liczba strun", AttributeType.NUMBER, false, null, 20}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"strings_count", "Liczba strun", AttributeType.NUMBER, null, 20}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"yamaha", "Yamaha"}, {"fender", "Fender"}, {"gibson", "Gibson"}});
     }
 
     private void addKeyboardInstrumentAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, false, null, 10},
-                {"keys_count", "Liczba klawiszy", AttributeType.NUMBER, true, null, 20}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"keys_count", "Liczba klawiszy", AttributeType.NUMBER, null, 20}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"yamaha", "Yamaha"}, {"roland", "Roland"}, {"casio", "Casio"}});
     }
 
     private void addBikeAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, false, null, 10},
-                {"frame_size", "Rozmiar ramy", AttributeType.STRING, true, null, 20}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"frame_size", "Rozmiar ramy", AttributeType.STRING, null, 20}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"kross", "Kross"}, {"trek", "Trek"}, {"giant", "Giant"}});
     }
 
     private void addCarAdAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"brand", "Marka", AttributeType.ENUM, true, null, 10},
-                {"model", "Model", AttributeType.STRING, true, null, 20},
-                {"year", "Rok produkcji", AttributeType.NUMBER, true, null, 30},
-                {"mileage", "Przebieg", AttributeType.NUMBER, false, "km", 40},
-                {"fuel", "Paliwo", AttributeType.ENUM, true, null, 50}
+                {"brand", "Marka", AttributeType.ENUM, null, 10},
+                {"model", "Model", AttributeType.STRING, null, 20},
+                {"year", "Rok produkcji", AttributeType.NUMBER, null, 30},
+                {"mileage", "Przebieg", AttributeType.NUMBER, "km", 40},
+                {"fuel", "Paliwo", AttributeType.ENUM, null, 50}
         });
         ensureOptions(defs.get("brand"), new String[][]{{"audi", "Audi"}, {"bmw", "BMW"}, {"mercedes-benz", "Mercedes-Benz"}});
         ensureOptions(defs.get("fuel"), new String[][]{{"diesel", "Diesel"}, {"petrol", "Benzyna"}, {"hybrid", "Hybryda"}});
@@ -232,8 +232,8 @@ public class AttributeSeeder {
 
     private void addCarPartAttributes(Category cat) {
         Map<String, AttributeDefinition> defs = ensureDefinitions(cat, new Object[][]{
-                {"part_type", "Rodzaj części", AttributeType.ENUM, true, null, 10},
-                {"fits_brand", "Pasuje do marki", AttributeType.ENUM, false, null, 20}
+                {"part_type", "Rodzaj części", AttributeType.ENUM, null, 10},
+                {"fits_brand", "Pasuje do marki", AttributeType.ENUM, null, 20}
         });
         ensureOptions(defs.get("part_type"), new String[][]{{"engine", "Silnik"}, {"brakes", "Hamulce"}, {"suspension", "Zawieszenie"}});
         ensureOptions(defs.get("fits_brand"), new String[][]{{"audi", "Audi"}, {"bmw", "BMW"}, {"volkswagen", "Volkswagen"}});
@@ -241,17 +241,17 @@ public class AttributeSeeder {
 
     private void addApartmentAttributes(Category cat) {
         ensureDefinitions(cat, new Object[][]{
-                {"area", "Powierzchnia", AttributeType.NUMBER, true, "m²", 10},
-                {"rooms", "Liczba pokoi", AttributeType.NUMBER, true, null, 20},
-                {"floor", "Piętro", AttributeType.NUMBER, false, null, 30}
+                {"area", "Powierzchnia", AttributeType.NUMBER, "m²", 10},
+                {"rooms", "Liczba pokoi", AttributeType.NUMBER, null, 20},
+                {"floor", "Piętro", AttributeType.NUMBER, null, 30}
         });
     }
 
     private void addHouseAttributes(Category cat) {
         ensureDefinitions(cat, new Object[][]{
-                {"area", "Powierzchnia domu", AttributeType.NUMBER, true, "m²", 10},
-                {"plot_area", "Powierzchnia działki", AttributeType.NUMBER, true, "m²", 20},
-                {"rooms", "Liczba pokoi", AttributeType.NUMBER, true, null, 30}
+                {"area", "Powierzchnia domu", AttributeType.NUMBER, "m²", 10},
+                {"plot_area", "Powierzchnia działki", AttributeType.NUMBER, "m²", 20},
+                {"rooms", "Liczba pokoi", AttributeType.NUMBER, null, 30}
         });
     }
 
@@ -275,9 +275,8 @@ public class AttributeSeeder {
             String key = (String) row[0];
             String label = (String) row[1];
             AttributeType type = (AttributeType) row[2];
-            Boolean required = (Boolean) row[3];
-            String unit = (String) row[4];
-            Integer sortOrder = (Integer) row[5];
+            String unit = (String) row[3];
+            Integer sortOrder = (Integer) row[4];
             AttributeDefinition def = existing.get(key.toLowerCase(Locale.ROOT));
             if (def == null) {
                 def = AttributeDefinition.builder()
@@ -285,7 +284,6 @@ public class AttributeSeeder {
                         .key(key)
                         .label(label)
                         .type(type)
-                        .required(required)
                         .unit(unit)
                         .sortOrder(sortOrder)
                         .active(true)

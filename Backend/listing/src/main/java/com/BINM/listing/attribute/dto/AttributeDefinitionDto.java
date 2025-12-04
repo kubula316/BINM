@@ -10,7 +10,6 @@ public record AttributeDefinitionDto(
         String key,
         String label,
         AttributeType type,
-        Boolean required,
         String unit,
         Integer sortOrder,
         List<AttributeOptionDto> options
