@@ -6,6 +6,7 @@ import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
 import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
+import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.listing.dto.*;
 import com.BINM.listing.listing.mapper.ListingMapper;
 import com.BINM.listing.listing.model.Listing;
@@ -34,7 +35,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 class ListingService implements ListingFacade{
-
     //Repo
     private final ListingRepository listingRepository;
     private final CategoryRepository categoryRepository;
@@ -44,17 +44,19 @@ class ListingService implements ListingFacade{
     //Facade
     private final AttributeFacade attributeService;
     private final ProfileFacade profileFacade;
+    private final CategoryFacade categoryService;
     //Mapper
     private final ListingMapper listingMapper;
+    //Validator
+    private final ListingValidator listingValidator;
+
 
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
@@ -65,9 +67,11 @@ class ListingService implements ListingFacade{
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
         ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
+
         return listingMapper.toDto(l, sellerProfile, attributes, media);
     }
 
@@ -76,9 +80,7 @@ class ListingService implements ListingFacade{
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
         if (req.title() != null) l.setTitle(req.title().trim());
         if (req.description() != null) l.setDescription(req.description());
@@ -146,78 +148,20 @@ class ListingService implements ListingFacade{
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
         listingAttributeRepository.deleteByListingId(l.getId());
         listingMediaRepository.deleteByListingId(l.getId());
         listingRepository.deleteById(l.getId());
     }
 
-    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> {
-            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
-            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
-                    .map(ListingMedia::getMediaUrl)
-                    .orElse(null);
-            return new ListingCoverDto(
-                    l.getPublicId(),
-                    l.getTitle(),
-                    sellerInfo,
-                    l.getPriceAmount(),
-                    l.getNegotiable(),
-                    coverImageUrl
-            );
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
-
-        return toCoverDtoPage(listings);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listRandom(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Listing> randomListings = listingRepository.findRandom(pageable);
-        return toCoverDtoPage(randomListings);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> search(ListingSearchRequest req) {
-        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
-        Specification<Listing> spec = Specification.where(null);
-        if (req.categoryId() != null) {
-            List<Long> ids = collectDescendantIds(req.categoryId());
-            if (ids.isEmpty()) return Page.empty(pageable);
-            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
-        }
-        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
-        }
-        if (req.attributes() != null && !req.attributes().isEmpty()) {
-            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
-                spec = spec.and(hasAttribute(filter));
-            }
-        }
-        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
-    }
-
     @Transactional
     public ListingDto create(ListingCreateRequest req, String sellerUserId) {
         Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        if (!Boolean.TRUE.equals(category.getIsLeaf())) {
-            throw new IllegalArgumentException("Listing must be assigned to a leaf category");
-        }
+
+        listingValidator.validateCategoryIsLeaf(category);
+
         Listing entity = Listing.builder()
                 .sellerUserId(sellerUserId)
                 .category(category)
@@ -277,26 +221,59 @@ class ListingService implements ListingFacade{
             }
             listingMediaRepository.saveAll(mediaToSave);
         }
+
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
         ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
         return listingMapper.toDto(saved, sellerProfile, attributes, media);
     }
 
-    private List<Long> collectDescendantIds(Long rootId) {
-        Optional<Category> rootOpt = categoryRepository.findById(rootId);
-        if (rootOpt.isEmpty()) return List.of();
-        List<Long> ids = new ArrayList<>();
-        Deque<Long> stack = new ArrayDeque<>();
-        stack.push(rootOpt.get().getId());
-        while (!stack.isEmpty()) {
-            Long id = stack.pop();
-            ids.add(id);
-            for (Category child : categoryRepository.findByParentIdOrderBySortOrderAscNameAsc(id)) {
-                stack.push(child.getId());
+    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> {
+            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
+            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
+                    .map(ListingMedia::getMediaUrl)
+                    .orElse(null);
+            return listingMapper.toCoverDto(l, sellerProfile, coverImageUrl);
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+
+        return toCoverDtoPage(listings);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listRandom(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Listing> randomListings = listingRepository.findRandom(pageable);
+        return toCoverDtoPage(randomListings);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> search(ListingSearchRequest req) {
+        Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
+        Specification<Listing> spec = Specification.where(null);
+        if (req.categoryId() != null) {
+            List<Long> ids = categoryService.collectDescendantIds(req.categoryId());
+            if (ids.isEmpty()) return Page.empty(pageable);
+            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
+        }
+        if (req.sellerUserId() != null && !req.sellerUserId().isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("sellerUserId"), req.sellerUserId()));
+        }
+        if (req.attributes() != null && !req.attributes().isEmpty()) {
+            for (ListingSearchRequest.AttributeFilter filter : req.attributes()) {
+                spec = spec.and(hasAttribute(filter));
             }
         }
-        return ids;
+        return toCoverDtoPage(listingRepository.findAll(spec, pageable));
     }
 
     private Sort resolveSort(ListingSearchRequest req) {

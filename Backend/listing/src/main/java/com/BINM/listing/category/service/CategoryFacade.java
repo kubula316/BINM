@@ -11,6 +11,7 @@ public interface CategoryFacade {
     List<CategoryTreeDto> getAllTree();
     CategoryDto createCategory(CategoryCreateRequest req);
     CategoryDto updateCategory(Long id, CategoryUpdateRequest req);
-    public void deleteCategory(Long id);
-    public List<CategoryDto> getPath(Long id);
+    void deleteCategory(Long id);
+    List<CategoryDto> getPath(Long id);
+    List<Long> collectDescendantIds(Long rootId);
 }

@@ -147,6 +147,23 @@ class CategoryService implements CategoryFacade {
         return roots;
     }
 
+    @Override
+    public List<Long> collectDescendantIds(Long rootId) {
+        Optional<Category> rootOpt = categoryRepository.findById(rootId);
+        if (rootOpt.isEmpty()) return List.of();
+        List<Long> ids = new ArrayList<>();
+        Deque<Long> stack = new ArrayDeque<>();
+        stack.push(rootOpt.get().getId());
+        while (!stack.isEmpty()) {
+            Long id = stack.pop();
+            ids.add(id);
+            for (Category child : categoryRepository.findByParentIdOrderBySortOrderAscNameAsc(id)) {
+                stack.push(child.getId());
+            }
+        }
+        return ids;
+    }
+
     private void sortRecursively(List<CategoryTreeDto> nodes, Comparator<CategoryTreeDto> cmp) {
         nodes.sort(cmp);
         for (CategoryTreeDto n : nodes) {
