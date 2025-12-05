@@ -25,7 +25,7 @@ import com.BINM.listing.attribute.dto.AttributeOptionUpdateRequest;
 
 @Service
 @RequiredArgsConstructor
-public class AttributeService {
+class AttributeService implements AttributeFacade {
     private final CategoryRepository categoryRepository;
     private final AttributeDefinitionRepository definitionRepository;
     private final AttributeOptionRepository optionRepository;

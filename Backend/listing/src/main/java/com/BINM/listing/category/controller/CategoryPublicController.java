@@ -1,8 +1,8 @@
 package com.BINM.listing.category.controller;
 
-import com.BINM.listing.attribute.service.AttributeService;
+import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
-import com.BINM.listing.category.service.CategoryService;
+import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.category.dto.CategoryDto;
 import com.BINM.listing.category.dto.CategoryTreeDto;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ import java.util.List;
 @RequestMapping("/public/category")
 @RequiredArgsConstructor
 public class CategoryPublicController {
-    private final CategoryService categoryService;
-    private final AttributeService attributeService;
+    private final CategoryFacade categoryService;
+    private final AttributeFacade attributeService;
 
     // Ścieżka path od root do danej kategorii
     @GetMapping("/path")

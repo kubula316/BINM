@@ -3,7 +3,7 @@ package com.BINM.listing.listing.controller;
 import com.BINM.listing.listing.dto.ListingCoverDto;
 import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingSearchRequest;
-import com.BINM.listing.listing.service.ListingService;
+import com.BINM.listing.listing.service.ListingFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,8 @@ import java.util.UUID;
 @RequestMapping("/public/listings")
 @RequiredArgsConstructor
 public class ListingPublicController {
-    private final ListingService listingService;
+
+    private final ListingFacade listingService;
 
 
     @GetMapping("/get/{id}")

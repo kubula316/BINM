@@ -19,7 +19,7 @@ import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
-public class CategoryService {
+class CategoryService implements CategoryFacade {
     private final CategoryRepository categoryRepository;
 
     @Transactional

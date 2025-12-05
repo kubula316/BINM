@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService implements EmailFacade {
+class EmailService implements EmailFacade {
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.properties.mail.smtp.from}")

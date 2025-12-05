@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProfileService implements ProfileFacade {
+class ProfileService implements ProfileFacade {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -57,8 +57,7 @@ public class ProfileService implements ProfileFacade {
                 OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC)
         );
     }
-    
-    // ... (reszta metod bez zmian)
+
     @Override
     @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {

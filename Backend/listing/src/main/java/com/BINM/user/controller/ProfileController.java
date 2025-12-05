@@ -1,13 +1,10 @@
 package com.BINM.user.controller;
 
-import com.BINM.mailing.EmailService;
-import com.BINM.user.io.ProfileRequest;
+
 import com.BINM.user.io.ProfileResponse;
 import com.BINM.user.service.ProfileFacade;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;

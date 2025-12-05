@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
-public class MediaService implements MediaFacade {
+class MediaService implements MediaFacade {
 
     private final ImageStorageClient imageStorageClient;
 

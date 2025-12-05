@@ -5,7 +5,7 @@ import com.BINM.listing.listing.dto.ListingCreateRequest;
 import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingEditDto;
 import com.BINM.listing.listing.dto.ListingUpdateRequest;
-import com.BINM.listing.listing.service.ListingService;
+import com.BINM.listing.listing.service.ListingFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ListingUserController {
 
-    private final ListingService listingService;
+    private final ListingFacade listingService;
 
     @GetMapping("/my")
     public ResponseEntity<Page<ListingCoverDto>> getMyListings(

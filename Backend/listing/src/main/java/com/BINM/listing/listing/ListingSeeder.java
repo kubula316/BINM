@@ -3,7 +3,7 @@ package com.BINM.listing.listing;
 import com.BINM.listing.attribute.model.AttributeDefinition;
 import com.BINM.listing.attribute.model.AttributeOption;
 import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
-import com.BINM.listing.attribute.service.AttributeService;
+import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import com.BINM.listing.listing.model.Listing;
@@ -32,7 +32,7 @@ public class ListingSeeder {
     private final ListingRepository listingRepository;
     private final ListingAttributeRepository listingAttributeRepository;
     private final ListingMediaRepository listingMediaRepository;
-    private final AttributeService attributeService;
+    private final AttributeFacade attributeService;
     private final AttributeOptionRepository optionRepository;
     private final CategoryRepository categoryRepository;
 
