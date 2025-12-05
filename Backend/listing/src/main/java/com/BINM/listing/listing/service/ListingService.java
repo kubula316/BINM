@@ -7,6 +7,7 @@ import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.listing.mapper.ListingMapper;
 import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingAttribute;
 import com.BINM.listing.listing.model.ListingMedia;
@@ -16,7 +17,9 @@ import com.BINM.listing.listing.repository.ListingRepository;
 import com.BINM.user.io.ProfileResponse;
 import com.BINM.user.service.ProfileFacade;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,18 +35,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 class ListingService implements ListingFacade{
 
+    //Repo
     private final ListingRepository listingRepository;
     private final CategoryRepository categoryRepository;
     private final ListingAttributeRepository listingAttributeRepository;
-    private final AttributeFacade attributeService;
     private final AttributeOptionRepository optionRepository;
     private final ListingMediaRepository listingMediaRepository;
+    //Facade
+    private final AttributeFacade attributeService;
     private final ProfileFacade profileFacade;
-
-    public List<ListingCoverDto> getListingCoversByIds(List<UUID> publicIds) {
-        List<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds);
-        return toCoverDtoPage(new PageImpl<>(listings)).getContent();
-    }
+    //Mapper
+    private final ListingMapper listingMapper;
 
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
@@ -54,32 +56,19 @@ class ListingService implements ListingFacade{
             throw new AccessDeniedException("You are not the owner of this listing");
         }
 
-        return toEditDto(l);
-    }
-
-    private ListingEditDto toEditDto(Listing l) {
-        return new ListingEditDto(
-                l.getPublicId(),
-                l.getCategory().getId(),
-                l.getTitle(),
-                l.getDescription(),
-                l.getPriceAmount(),
-                l.getCurrency(),
-                l.getNegotiable(),
-                l.getLocationCity(),
-                l.getLocationRegion(),
-                l.getLatitude(),
-                l.getLongitude(),
-                loadAttributes(l),
-                loadMedia(l)
-        );
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
+        return listingMapper.toEditDto(l, attributes, media);
     }
 
     @Transactional(readOnly = true)
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
-        return toDto(l);
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
+        return listingMapper.toDto(l, sellerProfile, attributes, media);
     }
 
     @Transactional
@@ -145,7 +134,11 @@ class ListingService implements ListingFacade{
         }
 
         Listing saved = listingRepository.save(l);
-        return toDto(saved);
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
+        return listingMapper.toDto(saved, sellerProfile, attributes, media);
+
     }
 
     @Transactional
@@ -160,32 +153,6 @@ class ListingService implements ListingFacade{
         listingAttributeRepository.deleteByListingId(l.getId());
         listingMediaRepository.deleteByListingId(l.getId());
         listingRepository.deleteById(l.getId());
-    }
-    
-    private Page<ListingDto> toDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> toDto(l, sellerProfiles.get(l.getSellerUserId())));
-    }
-
-    private ListingDto toDto(Listing l) {
-        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
-        return toDto(l, sellerProfile);
-    }
-
-    private ListingDto toDto(Listing l, ProfileResponse sellerProfile) {
-        SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-        return new ListingDto(
-                l.getPublicId(),
-                l.getCategory() != null ? l.getCategory().getId() : null,
-                sellerInfo,
-                l.getTitle(), l.getDescription(),
-                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
-                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
-                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
-                loadAttributes(l), loadMedia(l)
-        );
     }
 
     private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
@@ -213,6 +180,7 @@ class ListingService implements ListingFacade{
     public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+
         return toCoverDtoPage(listings);
     }
 
@@ -309,26 +277,10 @@ class ListingService implements ListingFacade{
             }
             listingMediaRepository.saveAll(mediaToSave);
         }
-        return toDto(saved);
-    }
-
-    private List<ListingAttributeDto> loadAttributes(Listing l) {
-        return listingAttributeRepository.findByListingId(l.getId()).stream()
-                .map(a -> {
-                    var def = a.getAttribute();
-                    return new ListingAttributeDto(
-                            def.getKey(), def.getLabel(), def.getType(),
-                            a.getVText(), a.getVNumber(), a.getVBoolean(),
-                            a.getOption() != null ? a.getOption().getValue() : null,
-                            a.getOption() != null ? a.getOption().getLabel() : null
-                    );
-                }).toList();
-    }
-
-    private List<ListingMediaDto> loadMedia(Listing l) {
-        return listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId()).stream()
-                .map(m -> new ListingMediaDto(m.getMediaUrl(), m.getMediaType(), m.getPosition()))
-                .toList();
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
+        return listingMapper.toDto(saved, sellerProfile, attributes, media);
     }
 
     private List<Long> collectDescendantIds(Long rootId) {
@@ -366,6 +318,7 @@ class ListingService implements ListingFacade{
         }
         return Sort.by(orders);
     }
+
     private Specification<Listing> hasAttribute(ListingSearchRequest.AttributeFilter filter) {
         return (root, query, cb) -> {
             var subquery = query.subquery(Long.class);
@@ -379,7 +332,7 @@ class ListingService implements ListingFacade{
         };
     }
 
-    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, jakarta.persistence.criteria.Root<ListingAttribute> subRoot, jakarta.persistence.criteria.CriteriaBuilder cb) {
+    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, Root<ListingAttribute> subRoot, CriteriaBuilder cb) {
         String type = Optional.ofNullable(filter.type()).orElse("STRING").toUpperCase(Locale.ROOT);
         String op = Optional.ofNullable(filter.op()).orElse("eq").toLowerCase(Locale.ROOT);
         switch (type) {
