@@ -14,7 +14,7 @@ public interface ProfileFacade {
 
     ProfileResponse getProfile(String userId);
 
-    PublicProfileResponse getPublicProfile(String userId); // Nowa metoda
+    PublicProfileResponse getPublicProfile(String userId);
 
     List<ProfileResponse> getProfilesById(List<String> userIds);
 
@@ -25,6 +25,4 @@ public interface ProfileFacade {
     void sendOtp(String email);
 
     void verifyOtp(String email, String otp);
-
-    String getLoggedInUserId(String email);
 }

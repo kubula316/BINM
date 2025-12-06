@@ -179,13 +179,6 @@ class ProfileService implements ProfileFacade {
         userRepository.save(existingUser);
     }
 
-    @Override
-    public String getLoggedInUserId(String email) {
-        UserEntity existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found for the email: " + email));
-        return existingUser.getUserId();
-    }
-
     private ProfileResponse convertToProfileResponse(UserEntity userEntity) {
         return new ProfileResponse(
                 userEntity.getUserId(),
