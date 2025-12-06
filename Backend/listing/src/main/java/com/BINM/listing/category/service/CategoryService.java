@@ -2,6 +2,7 @@ package com.BINM.listing.category.service;
 
 import com.BINM.listing.category.dto.CategoryDto;
 import com.BINM.listing.category.dto.CategoryTreeDto;
+import com.BINM.listing.category.mapper.CategoryMapper;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +22,7 @@ import org.springframework.cache.annotation.CacheEvict;
 @RequiredArgsConstructor
 class CategoryService implements CategoryFacade {
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Transactional
     @CacheEvict(value = "categoryTree", allEntries = true)
@@ -43,9 +45,12 @@ class CategoryService implements CategoryFacade {
                 .imageUrl(req.imageUrl())
                 .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
                 .depth(depth)
-                .isLeaf(true) // Newly created category is always a leaf initially
+                .isLeaf(true)
                 .build();
-        return toDto(categoryRepository.save(cat));
+
+        cat = categoryRepository.save(cat);
+
+        return categoryMapper.toDto(cat);
     }
 
     @Transactional
@@ -58,7 +63,8 @@ class CategoryService implements CategoryFacade {
         if (req.imageUrl() != null) cat.setImageUrl(req.imageUrl());
         if (req.sortOrder() != null) cat.setSortOrder(req.sortOrder());
 
-        return toDto(categoryRepository.save(cat));
+        categoryRepository.save(cat);
+        return categoryMapper.toDto(cat);
     }
 
     @Transactional
@@ -89,7 +95,7 @@ class CategoryService implements CategoryFacade {
         List<CategoryDto> path = new ArrayList<>();
         Category cur = node;
         while (cur != null) {
-            path.add(0, toDto(cur));
+            path.add(0, categoryMapper.toDto(cur));
             cur = cur.getParent();
         }
         return path;
@@ -107,7 +113,6 @@ class CategoryService implements CategoryFacade {
         Map<Long, CategoryTreeDto> byId = new HashMap<>();
         List<CategoryTreeDto> roots = new ArrayList<>();
 
-        // First pass: create DTOs
         for (Category c : all) {
             CategoryTreeDto node = new CategoryTreeDto(
                     c.getId(),
@@ -122,7 +127,6 @@ class CategoryService implements CategoryFacade {
             byId.put(node.id(), node);
         }
 
-        // Second pass: attach to parents
         for (Category c : all) {
             Long pid = c.getParent() != null ? c.getParent().getId() : null;
             CategoryTreeDto node = byId.get(c.getId());
@@ -138,7 +142,6 @@ class CategoryService implements CategoryFacade {
             }
         }
 
-        // Sort children lists consistently
         Comparator<CategoryTreeDto> cmp = Comparator
                 .comparing(CategoryTreeDto::sortOrder)
                 .thenComparing(CategoryTreeDto::name, String.CASE_INSENSITIVE_ORDER);
@@ -173,15 +176,4 @@ class CategoryService implements CategoryFacade {
         }
     }
 
-    private CategoryDto toDto(Category c) {
-        return new CategoryDto(
-                c.getId(),
-                c.getParent() != null ? c.getParent().getId() : null,
-                c.getName(),
-                c.getImageUrl(),
-                c.getSortOrder(),
-                c.getDepth(),
-                c.getIsLeaf()
-        );
-    }
 }

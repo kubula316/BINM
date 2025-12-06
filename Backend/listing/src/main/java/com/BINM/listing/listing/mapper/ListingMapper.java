@@ -1,5 +1,6 @@
 package com.BINM.listing.listing.mapper;
 
+import com.BINM.listing.category.model.Category;
 import com.BINM.listing.listing.dto.*;
 import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingAttribute;
@@ -12,6 +13,26 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ListingMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "publicId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "publishedAt", ignore = true)
+    @Mapping(target = "expiresAt", ignore = true)
+    @Mapping(target = "status", constant = "active")
+    @Mapping(target = "currency", expression = "java(req.currency() != null ? req.currency() : \"PLN\")")
+    @Mapping(target = "negotiable", expression = "java(req.negotiable() != null && req.negotiable())")
+    @Mapping(target = "sellerUserId", source = "sellerUserId")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "title", source = "req.title")
+    @Mapping(target = "description", source = "req.description")
+    @Mapping(target = "priceAmount", source = "req.priceAmount")
+    @Mapping(target = "locationCity", source = "req.locationCity")
+    @Mapping(target = "locationRegion", source = "req.locationRegion")
+    @Mapping(target = "latitude", source = "req.latitude")
+    @Mapping(target = "longitude", source = "req.longitude")
+    Listing toEntity(ListingCreateRequest req, String sellerUserId, Category category);
 
     @Mapping(target = "categoryId", source = "listing.category.id")
     @Mapping(target = "seller", source = "sellerProfile")

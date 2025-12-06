@@ -24,11 +24,11 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,7 +49,6 @@ class ListingService implements ListingFacade{
     private final ListingMapper listingMapper;
     //Validator
     private final ListingValidator listingValidator;
-
 
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
@@ -95,47 +94,17 @@ class ListingService implements ListingFacade{
         if (req.mediaUrls() != null) {
             listingMediaRepository.deleteByListingId(l.getId());
             listingMediaRepository.flush();
-            List<ListingMedia> mediaToSave = new ArrayList<>();
-            int pos = 0;
-            for (String url : req.mediaUrls()) {
-                if (url == null || url.isBlank()) continue;
-                mediaToSave.add(ListingMedia.builder().listing(l).mediaUrl(url).mediaType("image").position(pos++).build());
-            }
-            listingMediaRepository.saveAll(mediaToSave);
+            saveMedia(req.mediaUrls(), l);
         }
 
         if (req.attributes() != null) {
             listingAttributeRepository.deleteByListingId(l.getId());
             listingAttributeRepository.flush();
-            List<ListingAttribute> attributesToSave = new ArrayList<>();
-            Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(l.getCategory().getId());
-            for (ListingAttributeRequest ar : req.attributes()) {
-                if (ar.key() == null) continue;
-                String k = ar.key().trim().toLowerCase(Locale.ROOT);
-                AttributeDefinition def = defs.get(k);
-                if (def == null) continue;
-                ListingAttribute lav = ListingAttribute.builder().listing(l).attribute(def).build();
-                String val = ar.value();
-                switch (def.getType()) {
-                    case STRING -> lav.setVText(val);
-                    case NUMBER -> {
-                        try {
-                            lav.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
-                        } catch (NumberFormatException ignored) {}
-                    }
-                    case BOOLEAN -> lav.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
-                    case ENUM -> {
-                        if (val != null && !val.isBlank()) {
-                            optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val).ifPresent(lav::setOption);
-                        }
-                    }
-                }
-                attributesToSave.add(lav);
-            }
-            listingAttributeRepository.saveAll(attributesToSave);
+            saveAttributes(req.attributes(), l, l.getCategory());
         }
 
         Listing saved = listingRepository.save(l);
+
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
         ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
@@ -159,86 +128,18 @@ class ListingService implements ListingFacade{
     public ListingDto create(ListingCreateRequest req, String sellerUserId) {
         Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-
+        
         listingValidator.validateCategoryIsLeaf(category);
 
-        Listing entity = Listing.builder()
-                .sellerUserId(sellerUserId)
-                .category(category)
-                .title(req.title().trim())
-                .description(req.description())
-                .priceAmount(req.priceAmount())
-                .currency(req.currency() != null ? req.currency() : "PLN")
-                .negotiable(req.negotiable() != null && req.negotiable())
-                .locationCity(req.locationCity())
-                .locationRegion(req.locationRegion())
-                .latitude(req.latitude())
-                .longitude(req.longitude())
-                .status("active")
-                .build();
-        Listing saved = listingRepository.save(entity);
+        Listing saved = listingRepository.save(listingMapper.toEntity(req, sellerUserId, category));
 
-        if (req.attributes() != null && !req.attributes().isEmpty()) {
-            List<ListingAttribute> attributesToSave = new ArrayList<>();
-            Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
-            for (ListingAttributeRequest ar : req.attributes()) {
-                if (ar.key() == null) continue;
-                String k = ar.key().trim().toLowerCase(Locale.ROOT);
-                AttributeDefinition def = defs.get(k);
-                if (def == null) {
-                    throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
-                }
-                ListingAttribute lav = ListingAttribute.builder().listing(saved).attribute(def).build();
-                String val = ar.value();
-                switch (def.getType()) {
-                    case STRING -> lav.setVText(val);
-                    case NUMBER -> {
-                        try {
-                            lav.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
-                        } catch (NumberFormatException ex) {
-                            throw new IllegalArgumentException("Invalid number for attribute: " + def.getKey());
-                        }
-                    }
-                    case BOOLEAN -> lav.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
-                    case ENUM -> {
-                        if (val != null && !val.isBlank()) {
-                            AttributeOption opt = optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val)
-                                    .orElseThrow(() -> new IllegalArgumentException("Invalid enum value for attribute: " + def.getKey()));
-                            lav.setOption(opt);
-                        }
-                    }
-                }
-                attributesToSave.add(lav);
-            }
-            listingAttributeRepository.saveAll(attributesToSave);
-        }
-        if (req.mediaUrls() != null && !req.mediaUrls().isEmpty()) {
-            List<ListingMedia> mediaToSave = new ArrayList<>();
-            int pos = 0;
-            for (String url : req.mediaUrls()) {
-                if (url == null || url.isBlank()) continue;
-                mediaToSave.add(ListingMedia.builder().listing(saved).mediaUrl(url).mediaType("image").position(pos++).build());
-            }
-            listingMediaRepository.saveAll(mediaToSave);
-        }
+        saveAttributes(req.attributes(), saved, category);
+        saveMedia(req.mediaUrls(), saved);
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
         ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
         return listingMapper.toDto(saved, sellerProfile, attributes, media);
-    }
-
-    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> {
-            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
-            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
-                    .map(ListingMedia::getMediaUrl)
-                    .orElse(null);
-            return listingMapper.toCoverDto(l, sellerProfile, coverImageUrl);
-        });
     }
 
     @Transactional(readOnly = true)
@@ -274,6 +175,78 @@ class ListingService implements ListingFacade{
             }
         }
         return toCoverDtoPage(listingRepository.findAll(spec, pageable));
+    }
+
+    private void saveAttributes(List<ListingAttributeRequest> attributeRequests, Listing listing, Category category) {
+        Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
+
+        List<ListingAttribute> attributesToSave = attributeRequests.stream()
+                .map(ar -> buildAttribute(ar, listing, defs))
+                .filter(Objects::nonNull)
+                .toList();
+
+        listingAttributeRepository.saveAll(attributesToSave);
+    }
+
+    private ListingAttribute buildAttribute(ListingAttributeRequest ar, Listing listing, Map<String, AttributeDefinition> defs) {
+        if (ar.key() == null) return null;
+
+        String key = ar.key().trim().toLowerCase(Locale.ROOT);
+        AttributeDefinition def = defs.get(key);
+        if (def == null) {
+            throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
+        }
+
+        ListingAttribute la = ListingAttribute.builder().listing(listing).attribute(def).build();
+        String val = ar.value();
+
+        switch (def.getType()) {
+            case STRING -> la.setVText(val);
+            case NUMBER -> {
+                try {
+                    la.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
+                } catch (NumberFormatException ex) {
+                    throw new IllegalArgumentException("Invalid number for attribute: " + def.getKey());
+                }
+            }
+            case BOOLEAN -> la.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
+            case ENUM -> {
+                if (val != null && !val.isBlank()) {
+                    AttributeOption opt = optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val)
+                            .orElseThrow(() -> new IllegalArgumentException("Invalid enum value for attribute: " + def.getKey()));
+                    la.setOption(opt);
+                }
+            }
+        }
+        return la;
+    }
+
+    private void saveMedia(List<String> mediaUrls, Listing listing) {
+        AtomicInteger position = new AtomicInteger(0);
+        List<ListingMedia> mediaToSave = mediaUrls.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(url -> ListingMedia.builder()
+                        .listing(listing)
+                        .mediaUrl(url)
+                        .mediaType("image")
+                        .position(position.getAndIncrement())
+                        .build())
+                .toList();
+
+        listingMediaRepository.saveAll(mediaToSave);
+    }
+
+    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> {
+            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
+            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
+                    .map(ListingMedia::getMediaUrl)
+                    .orElse(null);
+            return listingMapper.toCoverDto(l, sellerProfile, coverImageUrl);
+        });
     }
 
     private Sort resolveSort(ListingSearchRequest req) {
