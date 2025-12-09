@@ -32,6 +32,7 @@ public interface ListingMapper {
     @Mapping(target = "locationRegion", source = "req.locationRegion")
     @Mapping(target = "latitude", source = "req.latitude")
     @Mapping(target = "longitude", source = "req.longitude")
+    @Mapping(target = "contactPhoneNumber", source = "req.contactPhoneNumber")
     Listing toEntity(ListingCreateRequest req, String sellerUserId, Category category);
 
     @Mapping(target = "categoryId", source = "listing.category.id")

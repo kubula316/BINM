@@ -26,4 +26,6 @@ public interface ListingFacade {
     boolean existsById(UUID publicId);
 
     Page<ListingCoverDto> getListingsByIds(List<UUID> publicIds, int page, int size);
+
+    ListingContactDto getContactInfo(UUID publicId);
 }

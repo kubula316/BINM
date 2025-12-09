@@ -14,6 +14,7 @@ public record ListingUpdateRequest(
         String locationRegion,
         Double latitude,
         Double longitude,
+        String contactPhoneNumber,
         List<String> mediaUrls,
         List<ListingAttributeRequest> attributes
 ) {

@@ -59,6 +59,9 @@ public class Listing {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "contact_phone_number")
+    private String contactPhoneNumber;
+
     @Column(nullable = false)
     private String status; // draft, active, expired, blocked, sold
 

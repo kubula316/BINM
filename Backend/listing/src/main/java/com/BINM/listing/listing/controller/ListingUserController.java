@@ -1,10 +1,6 @@
 package com.BINM.listing.listing.controller;
 
-import com.BINM.listing.listing.dto.ListingCoverDto;
-import com.BINM.listing.listing.dto.ListingCreateRequest;
-import com.BINM.listing.listing.dto.ListingDto;
-import com.BINM.listing.listing.dto.ListingEditDto;
-import com.BINM.listing.listing.dto.ListingUpdateRequest;
+import com.BINM.listing.listing.dto.*;
 import com.BINM.listing.listing.service.ListingFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,5 +55,12 @@ public class ListingUserController {
             @PathVariable UUID publicId) {
         listingService.delete(publicId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{publicId}/contact")
+    public ResponseEntity<ListingContactDto> getContactInfo(
+            @PathVariable UUID publicId
+    ) {
+        return ResponseEntity.ok(listingService.getContactInfo(publicId));
     }
 }

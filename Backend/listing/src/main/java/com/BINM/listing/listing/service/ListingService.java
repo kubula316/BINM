@@ -90,6 +90,7 @@ class ListingService implements ListingFacade{
         if (req.locationRegion() != null) l.setLocationRegion(req.locationRegion());
         if (req.latitude() != null) l.setLatitude(req.latitude());
         if (req.longitude() != null) l.setLongitude(req.longitude());
+        if (req.contactPhoneNumber() != null) l.setContactPhoneNumber(req.contactPhoneNumber());
 
         if (req.mediaUrls() != null) {
             listingMediaRepository.deleteByListingId(l.getId());
@@ -156,6 +157,14 @@ class ListingService implements ListingFacade{
         Pageable pageable = PageRequest.of(page, size);
         Page<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds, pageable);
         return toCoverDtoPage(listings);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ListingContactDto getContactInfo(UUID publicId) {
+        Listing listing = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+        return new ListingContactDto(listing.getContactPhoneNumber());
     }
 
     @Transactional(readOnly = true)

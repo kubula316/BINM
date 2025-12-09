@@ -19,6 +19,7 @@ public record ListingCreateRequest(
         String locationRegion,
         Double latitude,
         Double longitude,
+        String contactPhoneNumber,
         List<String> mediaUrls,
         List<ListingAttributeRequest> attributes
 ) {
