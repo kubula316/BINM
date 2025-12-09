@@ -19,7 +19,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
            nativeQuery = true)
     Page<Listing> findRandom(Pageable pageable);
 
-    List<Listing> findAllByPublicIdIn(List<UUID> publicIds);
+    Page<Listing> findAllByPublicIdIn(List<UUID> publicIds, Pageable page);
 
     Page<Listing> findByCategoryId(Long categoryId, Pageable pageable);
 
@@ -32,6 +32,8 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
     Page<Listing> findByCategoryIdInAndSellerUserId(Collection<Long> categoryIds, String sellerUserId, Pageable pageable);
 
     Optional<Listing> findByPublicId(UUID publicId);
+
+    boolean existsByPublicId(UUID publicId);
 
     long countByCategoryId(Long categoryId);
 }

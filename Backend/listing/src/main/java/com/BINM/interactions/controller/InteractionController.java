@@ -48,4 +48,13 @@ public class InteractionController {
         boolean isFavorite = interactionFacade.isFavorite(userId, entityId, entityType);
         return ResponseEntity.ok(Map.of("isFavorite", isFavorite));
     }
+
+    @GetMapping("/favorites")
+    public ResponseEntity<Page<ListingCoverDto>> getFavouritesListings(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        return ResponseEntity.ok(interactionFacade.getFavouritesListings(userId, page, size));
+    }
 }

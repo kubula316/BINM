@@ -49,7 +49,7 @@ class ListingService implements ListingFacade{
     private final ListingMapper listingMapper;
     //Validator
     private final ListingValidator listingValidator;
-
+    
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
@@ -140,6 +140,22 @@ class ListingService implements ListingFacade{
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
         ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
         return listingMapper.toDto(saved, sellerProfile, attributes, media);
+    }
+
+    @Override
+    public boolean existsById(UUID publicId) {
+        return listingRepository.existsByPublicId(publicId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> getListingsByIds(List<UUID> publicIds, int page, int size) {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return Page.empty();
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds, pageable);
+        return toCoverDtoPage(listings);
     }
 
     @Transactional(readOnly = true)
