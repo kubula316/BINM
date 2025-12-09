@@ -1,8 +1,8 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.1)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
-**Ważna uwaga:** Wszystkie endpointy, których ścieżka zaczyna się od `/user/`, są **zabezpieczone** i wymagają wysłania w nagłówku poprawnego tokenu autoryzacyjnego: `Authorization: Bearer <TWÓJ_TOKEN_JWT>`.
+**Ważna uwaga:** Wszystkie endpointy, których ścieżka **nie** zaczyna się od `/public/`, są **zabezpieczone** i wymagają wysłania w nagłówku poprawnego tokenu autoryzacyjnego: `Authorization: Bearer <TWÓJ_TOKEN_JWT>`.
 
 ---
 
@@ -125,10 +125,11 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Body:**
     ```json
     {
+      "query": "gitara elektryczna", // Opcjonalne, wyszukuje w tytule i opisie
       "categoryId": 72,       // Opcjonalne
       "sellerUserId": null,   // Opcjonalne
       "attributes": [         // Opcjonalne
-        { "key": "brand", "type": "ENUM", "op": "eq", "value": "audi" },
+        { "key": "brand", "type": "ENUM", "op": "eq", "value": "fender" },
         { "key": "year",  "type": "NUMBER", "op": "between", "from": "2008", "to": "2015" }
       ],
       "sort": [{ "field": "priceAmount", "dir": "asc" }], // Opcjonalne
@@ -178,15 +179,16 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Body:**
     ```json
     {
-      "categoryId": 72,                   // Wymagane
-      "title": "Nowe Audi A4",              // Wymagane
-      "description": "Super opis...",       // Opcjonalne
-      "priceAmount": 50000.00,            // Wymagane
-      "negotiable": true,                 // Opcjonalne
-      "locationCity": "Gdańsk",             // Opcjonalne
-      "locationRegion": "Pomorskie",        // Opcjonalne
-      "mediaUrls": [],                    // Opcjonalne
-      "attributes": [                     // Opcjonalne
+      "categoryId": 72,
+      "title": "Nowe Audi A4",
+      "description": "Super opis...",
+      "priceAmount": 50000.00,
+      "negotiable": true,
+      "locationCity": "Gdańsk",
+      "locationRegion": "Pomorskie",
+      "contactPhoneNumber": "123456789", // Opcjonalne
+      "mediaUrls": [],
+      "attributes": [
         { "key": "condition", "value": "new" }
       ]
     }
@@ -199,6 +201,12 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Zastosowanie na Froncie:** Formularz edycji ogłoszenia.
 *   **URL Path Variable:** `publicId` (Wymagane)
 *   **Body:** Zawiera tylko te pola, które mają zostać zmienione.
+    ```json
+    {
+      "title": "Zaktualizowany tytuł",
+      "contactPhoneNumber": "987654321"
+    }
+    ```
 
 ### `DELETE /user/listing/{publicId}/delete`
 > Usuwa ogłoszenie.
@@ -206,6 +214,19 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Przycisk 'Usuń' w panelu 'Moje Ogłoszenia'.
 *   **URL Path Variable:** `publicId` (Wymagane)
+
+### `GET /user/listing/{publicId}/contact`
+> Pobiera numer telefonu kontaktowego dla ogłoszenia.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Wywoływany po kliknięciu przycisku "Pokaż numer telefonu".
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Success Response (200 OK):**
+    ```json
+    {
+      "phoneNumber": "123456789"
+    }
+    ```
 
 ---
 
@@ -233,7 +254,57 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ---
 
-## 6. Media (Zabezpieczone)
+## 6. Interakcje (Ulubione) - Zabezpieczone
+
+### `GET /user/interactions/favorites`
+> Pobiera listę ulubionych ogłoszeń zalogowanego użytkownika.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Strona "Moje ulubione".
+*   **URL Params:** `?page=0&size=10` (Opcjonalne)
+
+### `POST /user/interactions/favorites`
+> Dodaje ogłoszenie do ulubionych.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Przycisk "Dodaj do ulubionych" (serduszko) na karcie ogłoszenia.
+*   **Body:**
+    ```json
+    {
+      "entityId": "d888cad2-9fc6-4629-ba86-4c106b5382b1",
+      "entityType": "LISTING"
+    }
+    ```
+
+### `DELETE /user/interactions/favorites`
+> Usuwa ogłoszenie z ulubionych.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Przycisk "Usuń z ulubionych" (wypełnione serduszko) na karcie ogłoszenia.
+*   **Body:**
+    ```json
+    {
+      "entityId": "d888cad2-9fc6-4629-ba86-4c106b5382b1",
+      "entityType": "LISTING"
+    }
+    ```
+
+### `GET /user/interactions/favorites/status`
+> Sprawdza, czy dane ogłoszenie jest w ulubionych.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Do ustalenia początkowego stanu przycisku "serduszka" przy renderowaniu ogłoszenia.
+*   **URL Params:** `?entityId=<UUID_OGŁOSZENIA>&entityType=LISTING` (Wymagane)
+*   **Success Response (200 OK):**
+    ```json
+    {
+      "isFavorite": true
+    }
+    ```
+
+---
+
+## 7. Media (Zabezpieczone)
 
 ### `POST /user/upload/media-image`
 > Wysyła plik z obrazkiem ogłoszenia i zwraca jego URL.
