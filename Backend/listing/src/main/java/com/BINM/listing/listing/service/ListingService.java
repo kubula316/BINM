@@ -186,6 +186,17 @@ class ListingService implements ListingFacade{
     public Page<ListingCoverDto> search(ListingSearchRequest req) {
         Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
         Specification<Listing> spec = Specification.where(null);
+
+        if (req.query() != null && !req.query().isBlank()) {
+            String searchText = "%" + req.query().toLowerCase() + "%";
+            Specification<Listing> textSpec = (root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("title")), searchText),
+                            cb.like(cb.lower(root.get("description")), searchText)
+                    );
+            spec = spec.and(textSpec);
+        }
+
         if (req.categoryId() != null) {
             List<Long> ids = categoryService.collectDescendantIds(req.categoryId());
             if (ids.isEmpty()) return Page.empty(pageable);
