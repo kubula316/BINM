@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './LoginForm.css'
 
 const API_BASE_URL = 'http://localhost:8081'
@@ -11,6 +12,7 @@ function LoginForm({ onLogin, onClose }) {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
   const submitLogin = async (e) => {
     e.preventDefault()
@@ -70,6 +72,7 @@ function LoginForm({ onLogin, onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           name: username,
           email,
@@ -86,7 +89,26 @@ function LoginForm({ onLogin, onClose }) {
         return
       }
 
-      onLogin(username)
+      // Po poprawnej rejestracji: automatyczne logowanie tylko do weryfikacji OTP
+      const loginResponse = await fetch(`${API_BASE_URL}/public/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      if (!loginResponse.ok) {
+        setError('Rejestracja udana, ale nie udało się automatycznie zalogować. Spróbuj zalogować się ręcznie.')
+        return
+      }
+
+      // Nie ustawiamy globalnego stanu zalogowania – logujemy się tylko technicznie, żeby mieć cookie JWT
+      navigate('/verify-otp')
       onClose()
     } catch {
       setError('Brak połączenia z serwerem')

@@ -57,8 +57,7 @@ function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
               </button>
               {menuOpen && (
                 <div className="user-dropdown">
-                  <button className="dropdown-item" type="button">Obserwowane</button>
-                  <button className="dropdown-item" type="button">Mój koszyk</button>
+                  <Link to="/my-listings" className="dropdown-item">Moje ogłoszenia</Link>
                   <button className="dropdown-item" type="button">Konto</button>
                 </div>
               )}
