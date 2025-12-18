@@ -116,6 +116,13 @@ class ProfileService implements ProfileFacade {
     }
 
     @Override
+    public List<PublicProfileResponse> getPublicProfilesByIds(List<String> userIds) {
+        return userRepository.findAllByUserIdIn(userIds).stream()
+                .map(this::convertToPublicProfileResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void sendResetOtp(String email) {
         UserEntity existingEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));

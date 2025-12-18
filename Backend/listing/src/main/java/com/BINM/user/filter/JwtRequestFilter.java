@@ -47,7 +47,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-
+            System.out.println("Wykyto token z dposkiem bearted, token to:" + jwt);
         }
         //check for token in cookies
         if (jwt == null) {

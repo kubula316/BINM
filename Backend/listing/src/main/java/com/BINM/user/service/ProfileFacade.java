@@ -18,6 +18,8 @@ public interface ProfileFacade {
 
     List<ProfileResponse> getProfilesById(List<String> userIds);
 
+    List<PublicProfileResponse> getPublicProfilesByIds(List<String> userIds);
+
     void sendResetOtp(String email);
 
     void resetPassword(String email, String otp, String newPassword);
