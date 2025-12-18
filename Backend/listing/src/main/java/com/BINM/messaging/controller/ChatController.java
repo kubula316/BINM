@@ -1,18 +1,15 @@
 package com.BINM.messaging.controller;
 
+import com.BINM.messaging.config.WebSocketUserPrincipal;
 import com.BINM.messaging.dto.ChatMessageDto;
 import com.BINM.messaging.model.Message;
 import com.BINM.messaging.service.MessagingFacade;
-import com.BINM.user.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
-
-import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
@@ -23,14 +20,13 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.sendMessage")
-    public void sendMessage(@Payload ChatMessageDto chatMessage, Principal principal) {
+    public void sendMessage(@Payload ChatMessageDto chatMessage, WebSocketUserPrincipal principal) {
         if (principal == null) {
             log.error("Principal is null in sendMessage!");
             return;
         }
 
-        CustomUserDetails userDetails = (CustomUserDetails) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
-        String senderId = userDetails.getUserId();
+        String senderId = principal.getName(); // getName() zwraca teraz nasze userId
 
         log.info("Received message from: {}", senderId);
         log.info("Sending to recipient: {}", chatMessage.recipientId());

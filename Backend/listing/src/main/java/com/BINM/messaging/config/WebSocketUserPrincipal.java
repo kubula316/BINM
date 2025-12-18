@@ -1,0 +1,18 @@
+package com.BINM.messaging.config;
+
+import java.security.Principal;
+
+public class WebSocketUserPrincipal implements Principal {
+
+    private final String userId;
+
+    public WebSocketUserPrincipal(String userId) {
+        this.userId = userId;
+    }
+
+    @Override
+    public String getName() {
+        // To jest kluczowe: getName() zwraca nasze userId (UUID jako String)
+        return userId;
+    }
+}

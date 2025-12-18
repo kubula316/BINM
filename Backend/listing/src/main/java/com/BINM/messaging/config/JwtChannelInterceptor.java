@@ -1,6 +1,7 @@
 package com.BINM.messaging.config;
 
 import com.BINM.user.service.AppUserDetailsService;
+import com.BINM.user.service.CustomUserDetails;
 import com.BINM.user.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +11,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,7 +26,6 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            // Szukamy nagłówka Authorization
             String authHeader = accessor.getFirstNativeHeader("Authorization");
             log.info("Authorization header: {}", authHeader);
 
@@ -36,15 +34,15 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 String email = jwtUtil.extractEmail(jwt);
 
                 if (email != null) {
-                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+                    CustomUserDetails userDetails = (CustomUserDetails) this.userDetailsService.loadUserByUsername(email);
                     if (jwtUtil.validateToken(jwt, userDetails)) {
-                        // Tworzymy obiekt autentykacji
-                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
                         
-                        // Ustawiamy użytkownika w sesji WebSocket
-                        accessor.setUser(authentication);
-                        log.info("Authenticated user {} for WebSocket session", email);
+                        // Tworzymy nasz własny Principal, który przechowuje userId
+                        WebSocketUserPrincipal principal = new WebSocketUserPrincipal(userDetails.getUserId());
+                        
+                        // Ustawiamy go jako użytkownika sesji WebSocket
+                        accessor.setUser(principal);
+                        log.info("Authenticated user with ID {} for WebSocket session", principal.getName());
                     }
                 }
             }
