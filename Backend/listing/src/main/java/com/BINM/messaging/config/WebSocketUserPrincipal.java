@@ -12,7 +12,6 @@ public class WebSocketUserPrincipal implements Principal {
 
     @Override
     public String getName() {
-        // To jest kluczowe: getName() zwraca nasze userId (UUID jako String)
         return userId;
     }
 }

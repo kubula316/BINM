@@ -1,8 +1,8 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2.1)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.2)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
-**Ważna uwaga:** Wszystkie endpointy, których ścieżka **nie** zaczyna się od `/public/`, są **zabezpieczone** i wymagają wysłania w nagłówku poprawnego tokenu autoryzacyjnego: `Authorization: Bearer <TWÓJ_TOKEN_JWT>`.
+**Ważna uwaga:** Wszystkie endpointy, których ścieżka **nie** zaczyna się od `/public/` (oraz endpoint WebSocket `/ws`), są **zabezpieczone** i wymagają wysłania w nagłówku poprawnego tokenu autoryzacyjnego: `Authorization: Bearer <TWÓJ_TOKEN_JWT>`.
 
 ---
 
@@ -18,7 +18,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     {
       "name": "Jan Kowalski",      // Wymagane
       "email": "jan.kowalski@example.com", // Wymagane, unikalny
-      "password": "password123"   // Wymagane, min. 8 znaków
+      "password": "password123"   // Wymagane, min. 6 znaków
     }
     ```
 
@@ -52,7 +52,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     {
       "email": "jan.kowalski@example.com", // Wymagane
       "otp": "123456",                     // Wymagane
-      "newPassword": "newPassword456"      // Wymagane
+      "newPassword": "newPassword456"      // Wymagane min 6
     }
     ```
 
@@ -110,12 +110,12 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ## 3. Ogłoszenia - Publiczne
 
-### `GET /public/listings/{publicId}`
+### `GET /public/listings/get/{id}`
 > Pobiera szczegółowe dane jednego ogłoszenia.
 
 *   **Authentication:** Publiczny
 *   **Zastosowanie na Froncie:** Strona ze szczegółami ogłoszenia.
-*   **URL Path Variable:** `publicId` (Wymagane, np. `/public/listings/d888cad2-9fc6-4629-ba86-4c106b5382b1`)
+*   **URL Path Variable:** `id` (Wymagane, publiczne UUID ogłoszenia, np. `/public/listings/get/d888cad2-9fc6-4629-ba86-4c106b5382b1`)
 
 ### `POST /public/listings/search`
 > Wyszukuje i filtruje ogłoszenia.
@@ -187,7 +187,9 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
       "locationCity": "Gdańsk",
       "locationRegion": "Pomorskie",
       "contactPhoneNumber": "123456789", // Opcjonalne
-      "mediaUrls": [],
+      "mediaUrls": [
+        "https://twoj-storage.blob.core.windows.net/media/audi-a4-1.jpg"
+      ],
       "attributes": [
         { "key": "condition", "value": "new" }
       ]
@@ -319,3 +321,69 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Używane w panelu edycji profilu użytkownika.
 *   **Body:** `form-data` z kluczem `file`.
+
+---
+
+## 8. Komunikator (WebSocket & REST)
+
+### 8.1. Konfiguracja WebSocket (STOMP)
+
+*   **Endpoint połączenia:** `http://localhost:8080/ws`
+*   **Biblioteki:** SockJS + StompJS
+*   **Autentykacja:** Token JWT musi być przekazany w nagłówku `Authorization` podczas nawiązywania połączenia STOMP (ramka `CONNECT`).
+    ```javascript
+    stompClient.connect({'Authorization': 'Bearer ' + token}, ...)
+    ```
+
+### 8.2. Odbieranie Wiadomości
+
+*   **Subskrypcja:** Klient powinien zasubskrybować kanał: `/user/queue/messages`.
+*   **Działanie:** Na ten kanał będą przychodzić **wszystkie** prywatne wiadomości skierowane do zalogowanego użytkownika, niezależnie od tego, z której konwersacji pochodzą.
+
+### 8.3. Wysyłanie Wiadomości
+
+*   **Destination:** `/app/chat.sendMessage`
+*   **Body (JSON):**
+    ```json
+    {
+      "listingId": "d888cad2-9fc6-4629-ba86-4c106b5382b1", // UUID ogłoszenia
+      "recipientId": "89bc977b-c63f-448d-896c-8174d75ab708", // User ID odbiorcy
+      "content": "Cześć, czy to ogłoszenie jest aktualne?"
+    }
+    ```
+
+### 8.4. Zarządzanie Konwersacjami (REST)
+
+### `GET /user/conversations`
+> Pobiera listę wszystkich konwersacji użytkownika.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Panel "Wiadomości" (lista czatów po lewej stronie).
+*   **Success Response (200 OK):**
+    ```json
+    [
+      {
+        "id": 123,
+        "listing": { ... }, // Skrócone dane ogłoszenia (CoverDto)
+        "otherParticipantName": "Janusz",
+        "lastMessageContent": "Tak, aktualne",
+        "lastMessageTimestamp": "2025-12-18T12:00:00Z"
+      }
+    ]
+    ```
+
+### `GET /user/conversations/{conversationId}/messages`
+> Pobiera historię wiadomości dla danej konwersacji.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Po kliknięciu w konkretną rozmowę, aby załadować historię czatu.
+*   **URL Path Variable:** `conversationId` (Wymagane)
+*   **URL Params:** `?page=0&size=20` (Opcjonalne)
+
+### `PATCH /user/conversations/{conversationId}/read`
+> Oznacza wszystkie wiadomości w konwersacji jako przeczytane.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Wywoływany automatycznie po wejściu użytkownika w okno czatu.
+*   **URL Path Variable:** `conversationId` (Wymagane)
+*   **Success Response:** `204 No Content`

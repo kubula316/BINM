@@ -33,4 +33,12 @@ public class ConversationController {
             @RequestParam(defaultValue = "20") int size) {
         return messagingFacade.getMessagesForConversation(conversationId, userId, page, size);
     }
+
+    @PatchMapping("/{conversationId}/read")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markAsRead(
+            @PathVariable Long conversationId,
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String userId) {
+        messagingFacade.markConversationAsRead(conversationId, userId);
+    }
 }

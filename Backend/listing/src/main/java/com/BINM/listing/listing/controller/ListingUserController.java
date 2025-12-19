@@ -20,33 +20,33 @@ public class ListingUserController {
     private final ListingFacade listingService;
 
     @GetMapping("/my")
-    public ResponseEntity<Page<ListingCoverDto>> getMyListings(
+    public Page<ListingCoverDto> getMyListings(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(listingService.listForUser(userId, page, size));
+        return listingService.listForUser(userId, page, size);
     }
 
     @GetMapping("/{publicId}/edit-data")
-    public ResponseEntity<ListingEditDto> getListingForEdit(
+    public ListingEditDto getListingForEdit(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @PathVariable UUID publicId) {
-        return ResponseEntity.ok(listingService.getListingForEdit(publicId, userId));
+        return listingService.getListingForEdit(publicId, userId);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ListingDto> create(
+    public ListingDto create(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @Valid @RequestBody ListingCreateRequest req) {
-        return ResponseEntity.ok(listingService.create(req, userId));
+        return listingService.create(req, userId);
     }
 
     @PutMapping("/{publicId}/update")
-    public ResponseEntity<ListingDto> update(
+    public ListingDto update(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @PathVariable UUID publicId,
             @RequestBody ListingUpdateRequest req) {
-        return ResponseEntity.ok(listingService.update(publicId, req, userId));
+        return listingService.update(publicId, req, userId);
     }
 
     @DeleteMapping("/{publicId}/delete")
@@ -58,9 +58,9 @@ public class ListingUserController {
     }
 
     @GetMapping("/{publicId}/contact")
-    public ResponseEntity<ListingContactDto> getContactInfo(
+    public ListingContactDto getContactInfo(
             @PathVariable UUID publicId
     ) {
-        return ResponseEntity.ok(listingService.getContactInfo(publicId));
+        return listingService.getContactInfo(publicId);
     }
 }

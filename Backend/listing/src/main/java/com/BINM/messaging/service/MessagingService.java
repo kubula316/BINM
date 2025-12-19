@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class MessagingService implements MessagingFacade {
+class MessagingService implements MessagingFacade {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
@@ -39,7 +39,6 @@ public class MessagingService implements MessagingFacade {
     @Override
     @Transactional
     public Message saveNewMessage(ChatMessageDto messageDto, String senderId) {
-        // 1. Pobierz ID właściciela ogłoszenia (Sprzedawcy)
         String listingOwnerId = listingFacade.get(messageDto.listingId()).seller().id();
 
         String buyerId;
@@ -83,13 +82,11 @@ public class MessagingService implements MessagingFacade {
             return Collections.emptyList();
         }
 
-        // Zbierz ID wszystkich potrzebnych encji
         List<UUID> listingIds = conversations.stream().map(Conversation::getListingId).distinct().toList();
         List<String> participantIds = conversations.stream()
                 .map(c -> c.getBuyerId().equals(userId) ? c.getSellerId() : c.getBuyerId())
                 .distinct().toList();
 
-        // Pobierz dane w jednej paczce
         Map<UUID, ListingCoverDto> listingsMap = listingFacade.getListingsByIds(listingIds, 0, listingIds.size()).getContent().stream()
                 .collect(Collectors.toMap(ListingCoverDto::publicId, Function.identity()));
         Map<String, PublicProfileResponse> profilesMap = profileFacade.getPublicProfilesByIds(participantIds).stream()
@@ -97,7 +94,6 @@ public class MessagingService implements MessagingFacade {
         Map<Long, Message> lastMessagesMap = messageRepository.findLastMessageForConversations(conversations.stream().map(Conversation::getId).toList())
                 .stream().collect(Collectors.toMap(m -> m.getConversation().getId(), Function.identity()));
 
-        // Zbuduj DTO
         return conversations.stream().map(c -> {
             String otherParticipantId = c.getBuyerId().equals(userId) ? c.getSellerId() : c.getBuyerId();
             ListingCoverDto listing = listingsMap.get(c.getListingId());
@@ -127,6 +123,17 @@ public class MessagingService implements MessagingFacade {
         Page<Message> messages = messageRepository.findByConversationId(conversationId, pageable);
 
         return messages.map(this::toMessageDto);
+    }
+
+    @Override
+    @Transactional
+    public void markConversationAsRead(Long conversationId, String userId) {
+        conversationRepository.findById(conversationId).ifPresent(conversation -> {
+            if (!conversation.getBuyerId().equals(userId) && !conversation.getSellerId().equals(userId)) {
+                throw new AccessDeniedException("You are not a participant of this conversation");
+            }
+            messageRepository.markAsRead(conversationId, userId);
+        });
     }
 
     private MessageDto toMessageDto(Message message) {

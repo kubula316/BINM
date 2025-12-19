@@ -35,4 +35,11 @@ public interface MessagingFacade {
      */
     Page<MessageDto> getMessagesForConversation(Long conversationId, String userId, int page, int size);
 
+    /**
+     * Oznacza wszystkie wiadomości w danej konwersacji jako przeczytane przez użytkownika.
+     * @param conversationId ID konwersacji.
+     * @param userId ID użytkownika, który odczytuje wiadomości.
+     */
+    void markConversationAsRead(Long conversationId, String userId);
+
 }

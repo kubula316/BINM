@@ -34,13 +34,11 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 String email = jwtUtil.extractEmail(jwt);
 
                 if (email != null) {
-                    CustomUserDetails userDetails = (CustomUserDetails) this.userDetailsService.loadUserByUsername(email);
+                    CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(email);
                     if (jwtUtil.validateToken(jwt, userDetails)) {
-                        
-                        // Tworzymy nasz własny Principal, który przechowuje userId
+
                         WebSocketUserPrincipal principal = new WebSocketUserPrincipal(userDetails.getUserId());
-                        
-                        // Ustawiamy go jako użytkownika sesji WebSocket
+
                         accessor.setUser(principal);
                         log.info("Authenticated user with ID {} for WebSocket session", principal.getName());
                     }

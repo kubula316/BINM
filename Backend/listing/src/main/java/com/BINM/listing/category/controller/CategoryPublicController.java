@@ -6,7 +6,6 @@ import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.category.dto.CategoryDto;
 import com.BINM.listing.category.dto.CategoryTreeDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,19 +22,19 @@ public class CategoryPublicController {
 
     // Ścieżka path od root do danej kategorii
     @GetMapping("/path")
-    public ResponseEntity<List<CategoryDto>> path(@RequestParam Long id) {
-        return ResponseEntity.ok(categoryService.getPath(id));
+    public List<CategoryDto> path(@RequestParam Long id) {
+        return categoryService.getPath(id);
     }
 
     // Pełne drzewo kategorii
     @GetMapping("/all")
-    public ResponseEntity<List<CategoryTreeDto>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllTree());
+    public List<CategoryTreeDto> getAllCategories() {
+        return categoryService.getAllTree();
     }
 
     // Pobiera atrybuty kategorii (efektywne, z dziedziczeniem)
     @GetMapping("/attributes")
-    public ResponseEntity<List<AttributeDefinitionDto>> getAttributes(@RequestParam("categoryId") Long categoryId) {
-        return ResponseEntity.ok(attributeService.getEffectiveDefinitions(categoryId));
+    public List<AttributeDefinitionDto> getAttributes(@RequestParam("categoryId") Long categoryId) {
+        return attributeService.getEffectiveDefinitions(categoryId);
     }
 }
