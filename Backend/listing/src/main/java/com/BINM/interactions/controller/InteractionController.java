@@ -38,20 +38,20 @@ public class InteractionController {
     }
 
     @GetMapping("/favorites/status")
-    public ResponseEntity<Map<String, Boolean>> isFavorite(
+    public Map<String, Boolean> isFavorite(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @RequestParam String entityId,
             @RequestParam EntityType entityType) {
         boolean isFavorite = interactionFacade.isFavorite(userId, entityId, entityType);
-        return ResponseEntity.ok(Map.of("isFavorite", isFavorite));
+        return Map.of("isFavorite", isFavorite);
     }
 
     @GetMapping("/favorites")
-    public ResponseEntity<Page<ListingCoverDto>> getFavouritesListings(
+    public Page<ListingCoverDto> getFavouritesListings(
             @CurrentSecurityContext(expression = "authentication.principal.userId") String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ){
-        return ResponseEntity.ok(interactionFacade.getFavouritesListings(userId, page, size));
+        return interactionFacade.getFavouritesListings(userId, page, size);
     }
 }

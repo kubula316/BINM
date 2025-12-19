@@ -36,7 +36,6 @@ public class CategoryAdminController {
     @PostMapping("/{id}/attributes")
     @ResponseStatus(HttpStatus.CREATED)
     public AttributeDefinitionDto addAttribute(@PathVariable Long id, @RequestBody AttributeCreateRequest req) {
-        // Ensure category ID matches the path variable
         AttributeCreateRequest effectiveReq = req;
         if (!id.equals(req.categoryId())) {
              effectiveReq = new AttributeCreateRequest(

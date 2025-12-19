@@ -24,8 +24,8 @@ public class ProfileController {
     }
 
     @GetMapping("/is-authenticated")
-    public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email) {
-        return ResponseEntity.ok(email != null);
+    public Boolean isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email) {
+        return email != null;
     }
 
     @PostMapping("/send-otp")
