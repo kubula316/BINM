@@ -7,6 +7,7 @@ import Help from './pages/Help'
 import Categories from './pages/Categories'
 import CategoryDetails from './pages/CategoryDetails'
 import AddListing from './pages/AddListing'
+import ListingDetails from './pages/ListingDetails'
 import './App.css'
 
 function App() {
@@ -46,7 +47,9 @@ function App() {
           <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
           <Route path="/help" element={<Help />} />
           <Route path="/categories" element={<Categories />} />
-          <Route path="/categories/:slug" element={<CategoryDetails />} />
+          <Route path="/categories/:categoryId" element={<CategoryDetails />} />
+          <Route path="/categories/:categoryId/:subCategoryId" element={<CategoryDetails />} />
+          <Route path="/listing/:publicId" element={<ListingDetails />} />
           <Route path="/add-listing" element={<AddListing username={username} isLoggedIn={isLoggedIn} />} />
         </Routes>
       </div>

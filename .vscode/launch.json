@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "ListingApplication",
+            "request": "launch",
+            "mainClass": "com.BINM.ListingApplication",
+            "projectName": "listing",
+            "envFile": "${workspaceFolder}/Backend/listing/env.txt"
+        }
+    ]
+}

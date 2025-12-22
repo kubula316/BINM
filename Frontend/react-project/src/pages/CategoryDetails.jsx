@@ -1,119 +1,342 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import './Categories.css'
 
-const DATA = {
-  elektronika: {
-    name: 'Elektronika',
-    subcategories: [
-      {
-        name: 'Komputery',
-        items: [
-          { id: 'komp-1', dateAdded: '2025-11-01', name: 'Laptop Dell XPS 13', price: 5499.0, currency: 'PLN', author: 'Jan Kowalski', location: 'Warszawa', imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop', description: 'Lekki ultrabook z procesorem i7, 16GB RAM i ekranem 13,4".' },
-          { id: 'komp-2', dateAdded: '2025-11-03', name: 'Komputer stacjonarny do gier', price: 4299.99, currency: 'PLN', author: 'Anna Nowak', location: 'Kraków', imageUrl: '', description: 'Ryzen 5, RTX 4060, 16GB RAM, SSD 1TB. Idealny do gier.' },
-          { id: 'komp-3', dateAdded: '2025-11-05', name: 'Monitor 27" 144Hz', price: 999.0, currency: 'PLN', author: 'Piotr Wiśniewski', location: 'Gdańsk', imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop', description: 'Szybki panel IPS 144Hz z FreeSync. Idealny do FPS.' }
-        ]
-      },
-      {
-        name: 'RTV i AGD',
-        items: [
-          { id: 'rtv-1', dateAdded: '2025-11-02', name: 'Telewizor 55" 4K', price: 2199.99, currency: 'PLN', author: 'Kasia Lis', location: 'Poznań', imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop', description: 'Matryca VA 120Hz, HDR10+, wbudowane aplikacje VOD.' },
-          { id: 'rtv-2', dateAdded: '2025-11-04', name: 'Odkurzacz bezprzewodowy', price: 699.0, currency: 'PLN', author: 'Michał Baran', location: 'Łódź', imageUrl: '', description: 'Lekki, z zestawem końcówek. Do 40 min pracy.' },
-          { id: 'rtv-3', dateAdded: '2025-11-06', name: 'Ekspres do kawy', price: 1299.0, currency: 'PLN', author: 'Ola Kaczmarek', location: 'Wrocław', imageUrl: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=800&auto=format&fit=crop', description: 'Automatyczny z młynkiem, cappuccino jednym przyciskiem.' }
-        ]
-      },
-      {
-        name: 'Fotografia',
-        items: [
-          { id: 'foto-1', dateAdded: '2025-11-01', name: 'Aparat bezlusterkowy', price: 3499.0, currency: 'PLN', author: 'Tomasz Lewandowski', location: 'Szczecin', imageUrl: 'https://images.unsplash.com/photo-1519183071298-a2962be96f83?w=800&auto=format&fit=crop', description: 'Matryca APS-C, 4K30, obiektyw 15-45mm.' },
-          { id: 'foto-2', dateAdded: '2025-11-03', name: 'Statyw fotograficzny', price: 199.99, currency: 'PLN', author: 'Ewa Jabłońska', location: 'Bydgoszcz', imageUrl: '', description: 'Aluminiowy, wys. do 160cm, głowica kulowa.' },
-          { id: 'foto-3', dateAdded: '2025-11-06', name: 'Lampa LED do vlogów', price: 299.0, currency: 'PLN', author: 'Kamil Duda', location: 'Lublin', imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop', description: 'Regulacja temperatury barwowej, zasilanie USB-C.' }
-        ]
-      },
-      {
-        name: 'Audio',
-        items: [
-          { id: 'audio-1', dateAdded: '2025-11-02', name: 'Słuchawki bezprzewodowe', price: 599.0, currency: 'PLN', author: 'Marta Pawlak', location: 'Katowice', imageUrl: 'https://images.unsplash.com/photo-1518444213232-6f1c2f3cae0a?w=800&auto=format&fit=crop', description: 'ANC, Bluetooth 5.3, do 30h pracy.' },
-          { id: 'audio-2', dateAdded: '2025-11-04', name: 'Głośnik przenośny', price: 349.99, currency: 'PLN', author: 'Adam Wójcik', location: 'Rzeszów', imageUrl: '', description: 'Wodoodporny IP67, basowy przetwornik pasywny.' },
-          { id: 'audio-3', dateAdded: '2025-11-05', name: 'Soundbar 2.1', price: 899.0, currency: 'PLN', author: 'Natalia Król', location: 'Gdynia', imageUrl: 'https://images.unsplash.com/photo-1523441344349-8c5ae80d40c2?w=800&auto=format&fit=crop', description: 'Z subwooferem, HDMI ARC, tryb nocny.' }
-        ]
-      },
-      {
-        name: 'Smart home',
-        items: [
-          { id: 'sm-1', dateAdded: '2025-11-02', name: 'Inteligentna żarówka Wi‑Fi', price: 59.99, currency: 'PLN', author: 'Paweł Zieliński', location: 'Opole', imageUrl: '', description: 'Sterowanie z aplikacji, integracja z Asystentem Google.' },
-          { id: 'sm-2', dateAdded: '2025-11-04', name: 'Kamera IP do domu', price: 229.0, currency: 'PLN', author: 'Joanna Bąk', location: 'Białystok', imageUrl: 'https://images.unsplash.com/photo-1582743158875-1b8b71bfa14f?w=800&auto=format&fit=crop', description: 'Detekcja ruchu, zapis w chmurze, tryb nocny.' },
-          { id: 'sm-3', dateAdded: '2025-11-06', name: 'Inteligentne gniazdko', price: 79.0, currency: 'PLN', author: 'Krzysztof Borowski', location: 'Toruń', imageUrl: '', description: 'Pomiar zużycia energii, harmonogramy, zdalne sterowanie.' }
-        ]
-      },
-      {
-        name: 'Inne',
-        items: [
-          { id: 'inne-1', dateAdded: '2025-11-01', name: 'Czytnik e-booków', price: 499.0, currency: 'PLN', author: 'Agnieszka Sikora', location: 'Kielce', imageUrl: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0ea?w=800&auto=format&fit=crop', description: 'Ekran E‑Ink 6", podświetlenie, Wi‑Fi.' },
-          { id: 'inne-2', dateAdded: '2025-11-03', name: 'Powerbank 20 000 mAh', price: 149.99, currency: 'PLN', author: 'Sebastian Mazur', location: 'Bielsko-Biała', imageUrl: '', description: 'Szybkie ładowanie PD 22,5W, 2x USB-A, 1x USB-C.' },
-          { id: 'inne-3', dateAdded: '2025-11-05', name: 'Router Wi‑Fi 6', price: 399.0, currency: 'PLN', author: 'Dorota Piątek', location: 'Olsztyn', imageUrl: 'https://images.unsplash.com/photo-1586816879360-95459b9d8b00?w=800&auto=format&fit=crop', description: 'Dwupasmowy, OFDMA, MU‑MIMO, aplikacja mobilna.' }
-        ]
-      }
-    ]
-  }
-}
+const API_BASE_URL = 'http://localhost:8081'
 
 export default function CategoryDetails() {
-  const { slug } = useParams()
-  const data = useMemo(() => DATA[slug], [slug])
+  const { categoryId, subCategoryId } = useParams()
+  const [categories, setCategories] = useState([])
+  const [items, setItems] = useState([])
+  const [attributes, setAttributes] = useState([])
+  const [filters, setFilters] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
+  const isListingView = Boolean(subCategoryId)
 
-  if (!data) {
-    return (
-      <div className="categories-page">
-        <div className="categories-container">
-          <h1>Brak danych dla tej kategorii</h1>
-          <Link to="/categories" className="item-image-link">Wróć do kategorii</Link>
-          <p style={{ color: '#fff' }}>Na razie przygotowaliśmy podstronę dla Elektroniki.</p>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError('')
+
+        if (!isListingView) {
+          const response = await fetch(`${API_BASE_URL}/public/category/all`)
+          if (!response.ok) {
+            setError('Nie udało się pobrać kategorii')
+            return
+          }
+          const data = await response.json()
+          setCategories(data || [])
+        } else {
+          const parsedId = Number(subCategoryId)
+          if (Number.isNaN(parsedId)) {
+            setError('Niepoprawne ID podkategorii')
+            return
+          }
+
+          // Pobierz atrybuty dla tej podkategorii
+          const attrsResponse = await fetch(
+            `${API_BASE_URL}/public/category/attributes?categoryId=${parsedId}`,
+          )
+
+          if (!attrsResponse.ok) {
+            setError('Nie udało się pobrać atrybutów kategorii')
+            return
+          }
+
+          const attrsData = await attrsResponse.json()
+          setAttributes(Array.isArray(attrsData) ? attrsData : [])
+
+          const response = await fetch(`${API_BASE_URL}/public/listings/search`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              categoryId: parsedId,
+              sellerUserId: null,
+              attributes: [],
+              sort: [],
+              page: 0,
+              size: 20,
+            }),
+          })
+
+          if (!response.ok) {
+            setError('Nie udało się pobrać ogłoszeń dla tej podkategorii')
+            return
+          }
+
+          const data = await response.json()
+          setItems(Array.isArray(data.content) ? data.content : [])
+        }
+      } catch {
+        setError('Brak połączenia z serwerem')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [categoryId, subCategoryId, isListingView])
+
+  const handleFilterChange = (key, value, type) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: { value, type },
+    }))
   }
+
+  const applyFilters = async () => {
+    if (!subCategoryId) return
+
+    try {
+      setLoading(true)
+      setError('')
+      const parsedId = Number(subCategoryId)
+      if (Number.isNaN(parsedId)) {
+        setError('Niepoprawne ID podkategorii')
+        return
+      }
+
+      const attributesPayload = Object.entries(filters)
+        .filter(([, v]) => v.value !== '' && v.value != null)
+        .map(([key, v]) => ({
+          key,
+          type: v.type,
+          op: 'eq',
+          value: v.value,
+        }))
+
+      const response = await fetch(`${API_BASE_URL}/public/listings/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          categoryId: parsedId,
+          sellerUserId: null,
+          attributes: attributesPayload,
+          sort: [],
+          page: 0,
+          size: 20,
+        }),
+      })
+
+      if (!response.ok) {
+        setError('Nie udało się pobrać ogłoszeń dla tej podkategorii')
+        return
+      }
+
+      const data = await response.json()
+      setItems(Array.isArray(data.content) ? data.content : [])
+    } catch {
+      setError('Brak połączenia z serwerem')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const findCategoryById = (nodes, id) => {
+    if (!Array.isArray(nodes)) return null
+    for (const node of nodes) {
+      if (node.id === id) return node
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        const found = findCategoryById(node.children, id)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const numericCategoryId = Number(categoryId)
+  const currentCategory = !Number.isNaN(numericCategoryId)
+    ? findCategoryById(categories, numericCategoryId)
+    : null
+
+  const numericSubCategoryId = subCategoryId ? Number(subCategoryId) : null
+  const currentSubCategory = numericSubCategoryId && currentCategory && Array.isArray(currentCategory.children)
+    ? currentCategory.children.find((c) => c.id === numericSubCategoryId)
+    : null
+
+  const baseBackLink = '/categories'
+  const backLink = isListingView ? `/categories/${categoryId}` : baseBackLink
 
   return (
     <div className="categories-page">
       <div className="categories-container">
-        <h1>{data.name}</h1>
-        <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>Podkategorie i przedmioty</p>
+        <h1>
+          {isListingView
+            ? currentSubCategory?.name || 'Ogłoszenia w podkategorii'
+            : currentCategory?.name || 'Podkategorie'}
+        </h1>
+        <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>
+          {isListingView ? 'Lista dostępnych ogłoszeń' : 'Wybierz podkategorię'}
+        </p>
 
         <section className="electronics-section">
-          <Link to="/categories" className="item-image-link">Wróć do kategorii</Link>
-          {data.subcategories.map(sub => (
-            <div key={sub.name} className="subcategory">
-              <h3 className="subcategory-title">{sub.name}</h3>
-              <div className="items-grid">
-                {sub.items.map(it => (
-                  <div key={it.id} className="item-card">
+          <Link to={backLink} className="item-image-link">
+            Wróć
+          </Link>
+
+          {loading && <p style={{ color: '#fff' }}>Ładowanie...</p>}
+          {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
+
+          {!loading && !error && !isListingView && (
+            <div className="categories-grid">
+              {currentCategory && Array.isArray(currentCategory.children) && currentCategory.children.length > 0 ? (
+                currentCategory.children
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map((child) => (
+                    <Link
+                      key={child.id}
+                      className="category-card"
+                      to={`/categories/${currentCategory.id}/${child.id}`}
+                    >
+                      <h3>{child.name}</h3>
+                    </Link>
+                  ))
+              ) : (
+                <p style={{ color: '#fff' }}>Brak podkategorii.</p>
+              )}
+            </div>
+          )}
+
+          {!loading && !error && isListingView && attributes.length > 0 && (
+            <div className="filters-panel">
+              <h3 style={{ color: '#fff' }}>Filtry</h3>
+              <div className="filters-grid">
+                {attributes
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map((attr) => (
+                    <div key={attr.id} className="filter-item">
+                      <label style={{ color: '#fff', display: 'block', marginBottom: 4 }}>
+                        {attr.label}
+                      </label>
+                      {attr.type === 'ENUM' ? (
+                        <select
+                          value={filters[attr.key]?.value ?? ''}
+                          onChange={(e) => handleFilterChange(attr.key, e.target.value, attr.type)}
+                        >
+                          <option value="">Wszystkie</option>
+                          {attr.options
+                            ?.slice()
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .map((opt) => (
+                              <option key={opt.id} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={filters[attr.key]?.value ?? ''}
+                          onChange={(e) => handleFilterChange(attr.key, e.target.value, attr.type)}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </div>
+              <div className="filters-actions">
+                <button
+                  type="button"
+                  className="filters-button clear"
+                  onClick={() => {
+                    setFilters({})
+                    applyFilters()
+                  }}
+                >
+                  Wyczyść
+                </button>
+                <button
+                  type="button"
+                  className="filters-button apply"
+                  onClick={applyFilters}
+                >
+                  Zastosuj filtry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && isListingView && items.length === 0 && (
+            <p style={{ color: '#fff' }}>Brak ogłoszeń w tej podkategorii.</p>
+          )}
+
+          {!loading && !error && isListingView && (
+            <div className="items-grid">
+              {items.map((it) => {
+                const priceLabel = (() => {
+                  if (!it.priceAmount) return 'Brak ceny'
+                  const raw =
+                    typeof it.priceAmount === 'number'
+                      ? it.priceAmount
+                      : it.priceAmount.parsedValue ?? Number(it.priceAmount.source)
+                  if (Number.isNaN(raw) || raw == null) return 'Brak ceny'
+                  return `${raw.toLocaleString('pl-PL', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} PLN`
+                })()
+
+                const createdLabel = it.createdAt
+                  ? new Date(it.createdAt).toLocaleDateString('pl-PL')
+                  : null
+
+                const locationLabel = [it.locationCity, it.locationRegion]
+                  .filter(Boolean)
+                  .join(', ')
+
+                const previewAttrs = Array.isArray(it.attributes)
+                  ? it.attributes.slice(0, 2)
+                  : []
+
+                return (
+                  <Link
+                    key={it.publicId}
+                    to={`/listing/${it.publicId}`}
+                    className="item-card"
+                    style={{ textDecoration: 'none' }}
+                  >
                     <div className="item-header">
                       <div>
-                        <div className="item-name">{it.name}</div>
-                        <div className="item-meta">Dodano: {it.dateAdded}</div>
-                        <div className="item-seller">Sprzedawca: {it.author}</div>
+                        <div className="item-name">{it.title}</div>
+                        {it.seller && it.seller.name && (
+                          <div className="item-seller">Sprzedawca: {it.seller.name}</div>
+                        )}
+                        {createdLabel && (
+                          <div className="item-meta">Dodano: {createdLabel}</div>
+                        )}
+                        {locationLabel && (
+                          <div className="item-location">Lokalizacja: {locationLabel}</div>
+                        )}
                       </div>
-                      {it.imageUrl && (
-                        <a className="item-image-link" href={it.imageUrl} target="_blank" rel="noreferrer">Zdjęcie</a>
+                      {it.coverImageUrl && (
+                        <span className="item-image-link">Zdjęcie</span>
                       )}
                     </div>
                     <div className="item-body">
-                      <div className="item-price">
-                        {it.price.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {it.currency}
-                      </div>
-                      <div className="item-location">Lokalizacja: {it.location}</div>
-                      <p className="item-desc">{it.description}</p>
+                      <div className="item-price">{priceLabel}</div>
+                      {previewAttrs.length > 0 && (
+                        <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0' }}>
+                          {previewAttrs.map((attr) => (
+                            <li key={attr.key} style={{ color: '#ddd', fontSize: 14 }}>
+                              <strong>{attr.label || attr.key}:</strong>{' '}
+                              {attr.displayValue || attr.value || attr.optionLabel}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </Link>
+                )
+              })}
             </div>
-          ))}
+          )}
         </section>
-
-        
       </div>
     </div>
   )
