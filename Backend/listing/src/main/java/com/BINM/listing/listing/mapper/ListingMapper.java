@@ -20,7 +20,7 @@ public interface ListingMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "expiresAt", ignore = true)
-    @Mapping(target = "status", constant = "active")
+    @Mapping(target = "status", ignore = true)
     @Mapping(target = "currency", expression = "java(req.currency() != null ? req.currency() : \"PLN\")")
     @Mapping(target = "negotiable", expression = "java(req.negotiable() != null && req.negotiable())")
     @Mapping(target = "sellerUserId", source = "sellerUserId")

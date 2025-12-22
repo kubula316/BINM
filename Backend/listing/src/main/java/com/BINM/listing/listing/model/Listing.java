@@ -62,8 +62,9 @@ public class Listing {
     @Column(name = "contact_phone_number")
     private String contactPhoneNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status; // draft, active, expired, blocked, sold
+    private ListingStatus status;
 
     @Column(name = "published_at")
     private OffsetDateTime publishedAt;
@@ -85,8 +86,7 @@ public class Listing {
         if (currency == null) currency = "PLN";
         if (negotiable == null) negotiable = false;
         if (status == null) {
-            status = "active";
-            publishedAt = OffsetDateTime.now();
+            status = ListingStatus.DRAFT;
         }
     }
 }

@@ -8,10 +8,12 @@ import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.listing.event.ListingFinishedEvent;
 import com.BINM.listing.listing.mapper.ListingMapper;
 import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingAttribute;
 import com.BINM.listing.listing.model.ListingMedia;
+import com.BINM.listing.listing.model.ListingStatus;
 import com.BINM.listing.listing.repository.ListingAttributeRepository;
 import com.BINM.listing.listing.repository.ListingMediaRepository;
 import com.BINM.listing.listing.repository.ListingRepository;
@@ -22,11 +24,14 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 class ListingService implements ListingFacade{
     //Repo
     private final ListingRepository listingRepository;
@@ -49,6 +55,8 @@ class ListingService implements ListingFacade{
     private final ListingMapper listingMapper;
     //Validator
     private final ListingValidator listingValidator;
+    //Publisher
+    private final ApplicationEventPublisher eventPublisher;
     
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
@@ -66,6 +74,11 @@ class ListingService implements ListingFacade{
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+
+        // Tylko aktywne ogłoszenia są widoczne publicznie
+        if (l.getStatus() != ListingStatus.ACTIVE) {
+            throw new EntityNotFoundException("Listing not found or not active");
+        }
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
@@ -104,6 +117,14 @@ class ListingService implements ListingFacade{
             saveAttributes(req.attributes(), l, l.getCategory());
         }
 
+        // Po edycji, jeśli ogłoszenie było aktywne lub odrzucone, wraca do statusu DRAFT
+        // i wymaga ponownego zatwierdzenia.
+        if (l.getStatus() == ListingStatus.ACTIVE) {
+            l.setStatus(ListingStatus.WAITING);
+        }else {
+            l.setStatus(ListingStatus.DRAFT);
+        }
+
         Listing saved = listingRepository.save(l);
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
@@ -123,6 +144,7 @@ class ListingService implements ListingFacade{
         listingAttributeRepository.deleteByListingId(l.getId());
         listingMediaRepository.deleteByListingId(l.getId());
         listingRepository.deleteById(l.getId());
+        eventPublisher.publishEvent(new ListingFinishedEvent(publicId));
     }
 
     @Transactional
@@ -132,7 +154,9 @@ class ListingService implements ListingFacade{
         
         listingValidator.validateCategoryIsLeaf(category);
 
-        Listing saved = listingRepository.save(listingMapper.toEntity(req, sellerUserId, category));
+        Listing entity = listingMapper.toEntity(req, sellerUserId, category);
+        entity.setStatus(ListingStatus.DRAFT); // Explicitly set to DRAFT
+        Listing saved = listingRepository.save(entity);
 
         saveAttributes(req.attributes(), saved, category);
         saveMedia(req.mediaUrls(), saved);
@@ -155,7 +179,8 @@ class ListingService implements ListingFacade{
             return Page.empty();
         }
         Pageable pageable = PageRequest.of(page, size);
-        Page<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds, pageable);
+        // Filtrujemy tylko aktywne ogłoszenia
+        Page<Listing> listings = listingRepository.findAllByPublicIdInAndStatus(publicIds, ListingStatus.ACTIVE, pageable);
         return toCoverDtoPage(listings);
     }
 
@@ -167,25 +192,116 @@ class ListingService implements ListingFacade{
         return new ListingContactDto(listing.getContactPhoneNumber());
     }
 
-    @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+    @Override
+    @Transactional
+    public void submitForApproval(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
 
+        listingValidator.validateOwnership(l, currentUserId);
+
+        if (l.getStatus() != ListingStatus.DRAFT && l.getStatus() != ListingStatus.REJECTED) {
+            throw new IllegalStateException("Only DRAFT or REJECTED listings can be submitted for approval");
+        }
+
+        l.setStatus(ListingStatus.WAITING);
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void approveListing(UUID publicId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        if (l.getStatus() != ListingStatus.WAITING) {
+            throw new IllegalStateException("Only WAITING listings can be approved");
+        }
+
+        l.setStatus(ListingStatus.ACTIVE);
+        l.setPublishedAt(OffsetDateTime.now());
+        // Ustawiamy datę wygaśnięcia na 30 dni od teraz
+        l.setExpiresAt(OffsetDateTime.now().plusDays(30));
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void rejectListing(UUID publicId, String reason) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        l.setStatus(ListingStatus.REJECTED);
+        // Tutaj można by dodać logikę wysyłania maila z powodem odrzucenia
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void finishListing(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        listingValidator.validateOwnership(l, currentUserId);
+
+        if (l.getStatus() != ListingStatus.ACTIVE && l.getStatus() != ListingStatus.WAITING) {
+            throw new IllegalStateException("Only ACTIVE or WAITING listings can be finished");
+        }
+
+        l.setStatus(ListingStatus.COMPLETED);
+        listingRepository.save(l);
+
+        eventPublisher.publishEvent(new ListingFinishedEvent(publicId));
+    }
+
+    @Override
+    @Transactional
+    public void expireOverdueListings() {
+        log.info("Starting job to expire overdue listings...");
+        List<Listing> overdueListings = listingRepository.findAllByStatusAndExpiresAtBefore(ListingStatus.ACTIVE, OffsetDateTime.now());
+
+        if (overdueListings.isEmpty()) {
+            log.info("No overdue listings found.");
+            return;
+        }
+
+        for (Listing listing : overdueListings) {
+            listing.setStatus(ListingStatus.EXPIRED);
+            log.info("Expiring listing with ID: {}", listing.getPublicId());
+            eventPublisher.publishEvent(new ListingFinishedEvent(listing.getPublicId()));
+        }
+
+        listingRepository.saveAll(overdueListings);
+        log.info("Finished job. Expired {} listings.", overdueListings.size());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> listForUser(String userId, int page, int size, ListingStatus status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Listing> listings;
+        if (status != null) {
+            listings = listingRepository.findBySellerUserIdAndStatus(userId, status, pageable);
+        } else {
+            listings = listingRepository.findBySellerUserId(userId, pageable);
+        }
         return toCoverDtoPage(listings);
     }
 
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> listRandom(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Listing> randomListings = listingRepository.findRandom(pageable);
+        // Dodajemy filtr statusu ACTIVE
+        Specification<Listing> spec = (root, query, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE);
+        Page<Listing> randomListings = listingRepository.findAll(spec, pageable);
         return toCoverDtoPage(randomListings);
     }
 
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> search(ListingSearchRequest req) {
         Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
-        Specification<Listing> spec = Specification.where(null);
+        
+        // Domyślnie szukamy tylko aktywnych ogłoszeń
+        Specification<Listing> spec = (root, query, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE);
 
         if (req.query() != null && !req.query().isBlank()) {
             String searchText = "%" + req.query().toLowerCase() + "%";

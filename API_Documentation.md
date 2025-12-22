@@ -1,4 +1,4 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2.2)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.5)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
@@ -18,7 +18,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     {
       "name": "Jan Kowalski",      // Wymagane
       "email": "jan.kowalski@example.com", // Wymagane, unikalny
-      "password": "password123"   // Wymagane, min. 6 znaków
+      "password": "password123"   // Wymagane, min. 8 znaków
     }
     ```
 
@@ -52,7 +52,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     {
       "email": "jan.kowalski@example.com", // Wymagane
       "otp": "123456",                     // Wymagane
-      "newPassword": "newPassword456"      // Wymagane min 6
+      "newPassword": "newPassword456"      // Wymagane
     }
     ```
 
@@ -112,6 +112,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `GET /public/listings/get/{id}`
 > Pobiera szczegółowe dane jednego ogłoszenia.
+> **Uwaga:** Zwraca tylko ogłoszenia o statusie `ACTIVE`.
 
 *   **Authentication:** Publiczny
 *   **Zastosowanie na Froncie:** Strona ze szczegółami ogłoszenia.
@@ -119,6 +120,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `POST /public/listings/search`
 > Wyszukuje i filtruje ogłoszenia.
+> **Uwaga:** Zwraca tylko ogłoszenia o statusie `ACTIVE`.
 
 *   **Authentication:** Publiczny
 *   **Zastosowanie na Froncie:** Główny silnik wyszukiwarki i listowania ogłoszeń.
@@ -140,6 +142,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `GET /public/listings/random`
 > Zwraca stronę z losowymi ogłoszeniami.
+> **Uwaga:** Zwraca tylko ogłoszenia o statusie `ACTIVE`.
 
 *   **Authentication:** Publiczny
 *   **Zastosowanie na Froncie:** Strona główna, sekcja "Proponowane".
@@ -159,10 +162,13 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `GET /user/listing/my`
 > Pobiera listę ogłoszeń zalogowanego użytkownika.
+> **Uwaga:** Zwraca ogłoszenia we wszystkich statusach (`DRAFT`, `WAITING`, `ACTIVE`, `REJECTED`, `SUSPENDED`, `COMPLETED`).
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Panel 'Moje Ogłoszenia'.
-*   **URL Params:** `?page=0&size=10` (Opcjonalne)
+*   **URL Params:**
+    *   `?page=0&size=10` (Opcjonalne)
+    *   `?status=ACTIVE` (Opcjonalne - filtruje po statusie)
 
 ### `GET /user/listing/{publicId}/edit-data`
 > Pobiera pełne dane ogłoszenia do wypełnienia formularza edycji.
@@ -173,6 +179,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `POST /user/listing/create`
 > Tworzy nowe ogłoszenie.
+> **Uwaga:** Nowe ogłoszenie ma status `DRAFT`.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Formularz dodawania ogłoszenia.
@@ -187,9 +194,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
       "locationCity": "Gdańsk",
       "locationRegion": "Pomorskie",
       "contactPhoneNumber": "123456789", // Opcjonalne
-      "mediaUrls": [
-        "https://twoj-storage.blob.core.windows.net/media/audi-a4-1.jpg"
-      ],
+      "mediaUrls": [],
       "attributes": [
         { "key": "condition", "value": "new" }
       ]
@@ -198,6 +203,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `PUT /user/listing/{publicId}/update`
 > Aktualizuje istniejące ogłoszenie.
+> **Uwaga:** Jeśli ogłoszenie było `ACTIVE` lub `REJECTED`, jego status zmienia się na `DRAFT`.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Formularz edycji ogłoszenia.
@@ -216,6 +222,22 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Przycisk 'Usuń' w panelu 'Moje Ogłoszenia'.
 *   **URL Path Variable:** `publicId` (Wymagane)
+
+### `POST /user/listing/{publicId}/submit-for-approval`
+> Przesyła ogłoszenie do weryfikacji (zmienia status z `DRAFT` na `WAITING`).
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Przycisk "Opublikuj" lub "Wyślij do weryfikacji" w panelu 'Moje Ogłoszenia' (widoczny tylko dla statusu `DRAFT`).
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Success Response:** `204 No Content`
+
+### `POST /user/listing/{publicId}/finish`
+> **(Nowy)** Kończy ogłoszenie (zmienia status na `COMPLETED`).
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Przycisk "Zakończ ogłoszenie" w panelu 'Moje Ogłoszenia'.
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Success Response:** `204 No Content`
 
 ### `GET /user/listing/{publicId}/contact`
 > Pobiera numer telefonu kontaktowego dla ogłoszenia.
@@ -265,31 +287,19 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Zastosowanie na Froncie:** Strona "Moje ulubione".
 *   **URL Params:** `?page=0&size=10` (Opcjonalne)
 
-### `POST /user/interactions/favorites`
+### `POST /user/interactions/favorites/{listingId}`
 > Dodaje ogłoszenie do ulubionych.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Przycisk "Dodaj do ulubionych" (serduszko) na karcie ogłoszenia.
-*   **Body:**
-    ```json
-    {
-      "entityId": "d888cad2-9fc6-4629-ba86-4c106b5382b1",
-      "entityType": "LISTING"
-    }
-    ```
+*   **URL Path Variable:** `listingId` (Wymagane, publiczne UUID ogłoszenia)
 
-### `DELETE /user/interactions/favorites`
+### `DELETE /user/interactions/favorites/{listingId}`
 > Usuwa ogłoszenie z ulubionych.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Przycisk "Usuń z ulubionych" (wypełnione serduszko) na karcie ogłoszenia.
-*   **Body:**
-    ```json
-    {
-      "entityId": "d888cad2-9fc6-4629-ba86-4c106b5382b1",
-      "entityType": "LISTING"
-    }
-    ```
+*   **URL Path Variable:** `listingId` (Wymagane, publiczne UUID ogłoszenia)
 
 ### `GET /user/interactions/favorites/status`
 > Sprawdza, czy dane ogłoszenie jest w ulubionych.
@@ -386,4 +396,44 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Wywoływany automatycznie po wejściu użytkownika w okno czatu.
 *   **URL Path Variable:** `conversationId` (Wymagane)
+*   **Success Response:** `204 No Content`
+
+---
+
+## 9. Ogłoszenia - Administracja (Zabezpieczone - Rola ADMIN)
+
+### `POST /admin/listings/{publicId}/approve`
+> Zatwierdza ogłoszenie (zmienia status z `WAITING` na `ACTIVE`).
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Zastosowanie na Froncie:** Panel Administratora.
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Success Response:** `204 No Content`
+
+### `POST /admin/listings/{publicId}/reject`
+> Odrzuca ogłoszenie (zmienia status z `WAITING` na `REJECTED`).
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Zastosowanie na Froncie:** Panel Administratora.
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Body:**
+    ```json
+    {
+      "reason": "Naruszenie regulaminu: spam"
+    }
+    ```
+*   **Success Response:** `204 No Content`
+
+### `POST /admin/listings/{publicId}/suspend`
+> Zawiesza ogłoszenie (zmienia status na `SUSPENDED`).
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Zastosowanie na Froncie:** Panel Administratora.
+*   **URL Path Variable:** `publicId` (Wymagane)
+*   **Body:**
+    ```json
+    {
+      "reason": "Zgłoszenie naruszenia"
+    }
+    ```
 *   **Success Response:** `204 No Content`

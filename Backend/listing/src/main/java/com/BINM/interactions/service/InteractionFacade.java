@@ -14,4 +14,6 @@ public interface InteractionFacade {
     boolean isFavorite(String userId, String entityId, EntityType entityType);
 
     Page<ListingCoverDto> getFavouritesListings(String userId, int page, int size);
+
+    void removeAllFavoritesForEntity(String entityId, EntityType entityType);
 }

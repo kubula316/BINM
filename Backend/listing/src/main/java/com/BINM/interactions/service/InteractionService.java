@@ -4,9 +4,11 @@ import com.BINM.interactions.model.EntityType;
 import com.BINM.interactions.model.Favorite;
 import com.BINM.interactions.repository.FavoriteRepository;
 import com.BINM.listing.listing.dto.ListingCoverDto;
+import com.BINM.listing.listing.event.ListingFinishedEvent;
 import com.BINM.listing.listing.service.ListingFacade;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,9 @@ public class InteractionService implements InteractionFacade {
                 throw new EntityNotFoundException("Invalid listing id format: " + entityId);
             }
         }
+        // W przyszłości można dodać walidację dla innych typów encji, np. USER
+        // else if (entityType == EntityType.USER) { ... }
+
         if (favoriteRepository.existsByUserIdAndEntityIdAndEntityType(userId, entityId, entityType)) {
             return;
         }
@@ -70,5 +75,16 @@ public class InteractionService implements InteractionFacade {
                 .collect(Collectors.toList());
 
         return listingFacade.getListingsByIds(favoriteIds, page, size);
+    }
+
+    @Override
+    @Transactional
+    public void removeAllFavoritesForEntity(String entityId, EntityType entityType) {
+        favoriteRepository.deleteAllByEntityIdAndEntityType(entityId, entityType);
+    }
+
+    @EventListener
+    public void handleListingFinished(ListingFinishedEvent event) {
+        this.removeAllFavoritesForEntity(event.listingId().toString(), EntityType.LISTING);
     }
 }

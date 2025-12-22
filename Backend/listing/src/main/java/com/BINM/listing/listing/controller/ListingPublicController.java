@@ -3,6 +3,7 @@ package com.BINM.listing.listing.controller;
 import com.BINM.listing.listing.dto.ListingCoverDto;
 import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingSearchRequest;
+import com.BINM.listing.listing.model.ListingStatus;
 import com.BINM.listing.listing.service.ListingFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,6 @@ public class ListingPublicController {
             @PathVariable String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return listingService.listForUser(userId, page, size);
+        return listingService.listForUser(userId, page, size, ListingStatus.ACTIVE);
     }
 }

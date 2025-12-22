@@ -1,6 +1,7 @@
 package com.BINM.listing.listing.service;
 
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.listing.model.ListingStatus;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface ListingFacade {
 
     ListingDto create(ListingCreateRequest req, String sellerUserId);
 
-    Page<ListingCoverDto> listForUser(String userId, int page, int size);
+    Page<ListingCoverDto> listForUser(String userId, int page, int size, ListingStatus status);
 
     Page<ListingCoverDto> listRandom(int page, int size);
 
@@ -28,4 +29,14 @@ public interface ListingFacade {
     Page<ListingCoverDto> getListingsByIds(List<UUID> publicIds, int page, int size);
 
     ListingContactDto getContactInfo(UUID publicId);
+
+    void submitForApproval(UUID publicId, String currentUserId);
+
+    void approveListing(UUID publicId);
+
+    void rejectListing(UUID publicId, String reason);
+
+    void finishListing(UUID publicId, String currentUserId);
+
+    void expireOverdueListings();
 }
