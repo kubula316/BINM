@@ -1,4 +1,4 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2.5)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.6)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
@@ -67,7 +67,8 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     {
       "userId": "89bc977b-c63f-448d-896c-8174d75ab708",
       "name": "kulmaniak",
-      "memberSince": "2025-11-30T16:03:27.35657Z"
+      "memberSince": "2025-11-30T16:03:27.35657Z",
+      "profileImageUrl": "https://storage.example.com/profiles/avatar.jpg" // Może być null
     }
     ```
 
@@ -80,6 +81,30 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Panel 'Moje Konto', wyświetlanie danych w formularzach.
+*   **Success Response (200 OK):**
+    ```json
+    {
+      "userId": "...",
+      "name": "Jan Kowalski",
+      "email": "jan@example.com",
+      "isAccountVerified": true,
+      "profileImageUrl": "https://storage.example.com/profiles/avatar.jpg" // Może być null
+    }
+    ```
+
+### `PATCH /user/profile`
+> **(Nowy)** Aktualizuje dane profilowe użytkownika.
+
+*   **Authentication:** Zabezpieczony
+*   **Zastosowanie na Froncie:** Formularz edycji profilu (zmiana imienia, ustawienie avatara).
+*   **Body:** (Wszystkie pola opcjonalne)
+    ```json
+    {
+      "name": "Janusz Kowalski",
+      "profileImageUrl": "https://storage.example.com/profiles/new-avatar.jpg"
+    }
+    ```
+*   **Success Response (200 OK):** Zwraca zaktualizowany obiekt profilu (jak w `GET /user/profile`).
 
 ### `GET /user/is-authenticated`
 > Szybkie sprawdzenie, czy użytkownik ma ważną sesję (token).
@@ -232,7 +257,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 *   **Success Response:** `204 No Content`
 
 ### `POST /user/listing/{publicId}/finish`
-> **(Nowy)** Kończy ogłoszenie (zmienia status na `COMPLETED`).
+> Kończy ogłoszenie (zmienia status na `COMPLETED`).
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Przycisk "Zakończ ogłoszenie" w panelu 'Moje Ogłoszenia'.
@@ -327,10 +352,12 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 ### `POST /user/upload/profile-image`
 > Wysyła plik z nowym zdjęciem profilowym.
+> **Uwaga:** Zwraca tylko URL. Aby zapisać go w profilu, należy użyć `PATCH /user/profile`.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Używane w panelu edycji profilu użytkownika.
 *   **Body:** `form-data` z kluczem `file`.
+*   **Success Response (201 Created):** String (URL do pliku)
 
 ---
 

@@ -31,6 +31,7 @@ public class UserEntity {
     private Long verifyOtpExpireAt;
     private String resetOtp;
     private Long resetOtpExpireAt;
+    private String profileImageUrl;
 
     @CreationTimestamp
     @Column(updatable = false)

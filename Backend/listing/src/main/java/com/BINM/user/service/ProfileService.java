@@ -4,10 +4,7 @@ import com.BINM.mailing.EmailFacade;
 import com.BINM.user.exception.LoginErrorException;
 import com.BINM.user.exception.OtpException;
 import com.BINM.user.exception.UserAlreadyExistsException;
-import com.BINM.user.io.AuthResponse;
-import com.BINM.user.io.ProfileRequest;
-import com.BINM.user.io.ProfileResponse;
-import com.BINM.user.io.PublicProfileResponse;
+import com.BINM.user.io.*;
 import com.BINM.user.model.UserEntity;
 import com.BINM.user.repository.UserRepository;
 import com.BINM.user.util.JwtUtil;
@@ -54,7 +51,8 @@ class ProfileService implements ProfileFacade {
         return new PublicProfileResponse(
                 userEntity.getUserId(),
                 userEntity.getName(),
-                OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC)
+                OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC),
+                userEntity.getProfileImageUrl()
         );
     }
 
@@ -186,12 +184,29 @@ class ProfileService implements ProfileFacade {
         userRepository.save(existingUser);
     }
 
+    @Override
+    @Transactional
+    public ProfileResponse updateProfile(String userId, ProfileUpdateRequest request) {
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        if (request.name() != null && !request.name().isBlank()) {
+            user.setName(request.name());
+        }
+        if (request.profileImageUrl() != null) {
+            user.setProfileImageUrl(request.profileImageUrl());
+        }
+
+        return convertToProfileResponse(userRepository.save(user));
+    }
+
     private ProfileResponse convertToProfileResponse(UserEntity userEntity) {
         return new ProfileResponse(
                 userEntity.getUserId(),
                 userEntity.getName(),
                 userEntity.getEmail(),
-                userEntity.getIsAccountVerified()
+                userEntity.getIsAccountVerified(),
+                userEntity.getProfileImageUrl()
         );
     }
 

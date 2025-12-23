@@ -2,6 +2,7 @@ package com.BINM.user.service;
 
 import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
+import com.BINM.user.io.ProfileUpdateRequest;
 import com.BINM.user.io.PublicProfileResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -27,4 +28,6 @@ public interface ProfileFacade {
     void sendOtp(String email);
 
     void verifyOtp(String email, String otp);
+
+    ProfileResponse updateProfile(String userId, ProfileUpdateRequest request);
 }

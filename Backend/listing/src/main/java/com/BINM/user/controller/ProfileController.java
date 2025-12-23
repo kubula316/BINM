@@ -2,6 +2,7 @@ package com.BINM.user.controller;
 
 
 import com.BINM.user.io.ProfileResponse;
+import com.BINM.user.io.ProfileUpdateRequest;
 import com.BINM.user.service.ProfileFacade;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,13 @@ public class ProfileController {
     @GetMapping("/profile")
     public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication.principal.userId") String id) {
         return profileService.getProfile(id);
+    }
+
+    @PatchMapping("/profile")
+    public ProfileResponse updateProfile(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String id,
+            @RequestBody ProfileUpdateRequest request) {
+        return profileService.updateProfile(id, request);
     }
 
     @GetMapping("/is-authenticated")

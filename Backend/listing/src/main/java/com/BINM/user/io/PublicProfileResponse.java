@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 public record PublicProfileResponse(
     String userId,
     String name,
-    OffsetDateTime memberSince
+    OffsetDateTime memberSince,
+    String profileImageUrl
 ) {
 }
