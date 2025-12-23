@@ -195,6 +195,11 @@ export default function CategoryDetails() {
                       className="category-card"
                       to={`/categories/${currentCategory.id}/${child.id}`}
                     >
+                      {child.imageUrl && (
+                        <div className="category-icon-wrapper">
+                          <img src={child.imageUrl} alt={child.name} className="category-icon" />
+                        </div>
+                      )}
                       <h3>{child.name}</h3>
                     </Link>
                   ))

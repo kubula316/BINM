@@ -40,6 +40,11 @@ function Categories() {
       .filter((node) => node.parentId === null)
       .map((node) => (
         <Link key={node.id} className="category-card" to={`/categories/${node.id}`}>
+          {node.imageUrl && (
+            <div className="category-icon-wrapper">
+              <img src={node.imageUrl} alt={node.name} className="category-icon" />
+            </div>
+          )}
           <h3>{node.name}</h3>
           {node.description && <p>{node.description}</p>}
         </Link>

@@ -66,6 +66,24 @@
   }
 }
 
+.category-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.category-icon {
+  max-width: 60px;
+  max-height: 60px;
+  object-fit: contain;
+}
+
 /* Sekcja Elektronika */
 .electronics-section {
   margin-top: 40px;
