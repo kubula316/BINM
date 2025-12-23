@@ -33,9 +33,20 @@ public class UserEntity {
     private Long resetOtpExpireAt;
     private String profileImageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+
     @CreationTimestamp
     @Column(updatable = false)
     private Timestamp createdAt;
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @PrePersist
+    void prePersist() {
+        if (role == null) {
+            role = UserRole.USER;
+        }
+    }
 }

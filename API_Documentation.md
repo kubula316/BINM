@@ -1,8 +1,12 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2.6)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.7)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
 **Ważna uwaga:** Wszystkie endpointy, których ścieżka **nie** zaczyna się od `/public/` (oraz endpoint WebSocket `/ws`), są **zabezpieczone** i wymagają wysłania w nagłówku poprawnego tokenu autoryzacyjnego: `Authorization: Bearer <TWÓJ_TOKEN_JWT>`.
+
+**Konto Administratora (Domyślne):**
+*   Email: `admin@binm.com`
+*   Hasło: `admin123`
 
 ---
 
@@ -93,7 +97,7 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
     ```
 
 ### `PATCH /user/profile`
-> **(Nowy)** Aktualizuje dane profilowe użytkownika.
+> Aktualizuje dane profilowe użytkownika.
 
 *   **Authentication:** Zabezpieczony
 *   **Zastosowanie na Froncie:** Formularz edycji profilu (zmiana imienia, ustawienie avatara).
