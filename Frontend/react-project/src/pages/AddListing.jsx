@@ -21,6 +21,9 @@ export default function AddListing({ username }) {
   const [submittedListing, setSubmittedListing] = useState(null)
   const [attributes, setAttributes] = useState([])
   const [attributeValues, setAttributeValues] = useState({})
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -120,6 +123,36 @@ export default function AddListing({ username }) {
       return
     }
 
+    setUploadError('')
+
+    let uploadedImageUrl = null
+
+    if (selectedFile) {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
+      try {
+        setUploadingImage(true)
+        const uploadResponse = await fetch(`${API_BASE_URL}/user/upload/media-image`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        })
+
+        if (!uploadResponse.ok) {
+          setUploadError('Nie udało się wysłać zdjęcia. Spróbuj ponownie lub wybierz inny plik.')
+          return
+        }
+
+        uploadedImageUrl = await uploadResponse.text()
+      } catch {
+        setUploadError('Błąd połączenia przy wysyłaniu zdjęcia.')
+        return
+      } finally {
+        setUploadingImage(false)
+      }
+    }
+
     const attributesPayload = Object.entries(attributeValues)
       .filter(([, value]) => value !== '' && value != null)
       .map(([key, value]) => ({
@@ -135,7 +168,7 @@ export default function AddListing({ username }) {
       negotiable: form.negotiable,
       locationCity: form.locationCity || undefined,
       locationRegion: form.locationRegion || undefined,
-      mediaUrls: [],
+      mediaUrls: uploadedImageUrl ? [uploadedImageUrl] : [],
       attributes: attributesPayload,
     }
 
@@ -322,11 +355,28 @@ export default function AddListing({ username }) {
                 </div>
               )}
             </div>
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Zdjęcie przedmiotu</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  setUploadError('')
+                  const file = e.target.files && e.target.files[0]
+                  setSelectedFile(file || null)
+                }}
+              />
+              {uploadError && (
+                <p style={{ color: '#ff6b6b', marginTop: 4 }}>{uploadError}</p>
+              )}
+              {selectedFile && !uploadError && (
+                <p style={{ color: '#fff', marginTop: 4, fontSize: 12 }}>
+                  Wybrany plik: {selectedFile.name}
+                </p>
+              )}
+            </div>
             <button type="submit" className="login-button" style={{ marginTop: 16 }} disabled={submitting}>
               {submitting ? 'Zapisywanie...' : 'Zapisz ogłoszenie'}
-            </button>
-            <button type="button" className="secondary-button add-photo-button" disabled>
-              Dodaj zdjęcie (wkrótce)
             </button>
           </form>
 
