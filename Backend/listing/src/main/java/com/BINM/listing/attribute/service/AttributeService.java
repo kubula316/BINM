@@ -1,5 +1,6 @@
 package com.BINM.listing.attribute.service;
 
+import com.BINM.listing.attribute.Mapper.AttributeMapper;
 import com.BINM.listing.attribute.repostiory.AttributeDefinitionRepository;
 import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
 import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
@@ -25,14 +26,14 @@ import com.BINM.listing.attribute.dto.AttributeOptionUpdateRequest;
 
 @Service
 @RequiredArgsConstructor
-public class AttributeService {
+class AttributeService implements AttributeFacade {
     private final CategoryRepository categoryRepository;
     private final AttributeDefinitionRepository definitionRepository;
     private final AttributeOptionRepository optionRepository;
+    private final AttributeMapper attributeMapper;
 
     @Transactional
     public AttributeDefinitionDto createAttribute(AttributeCreateRequest req) {
-    // ... existing createAttribute code ...
         Category category = categoryRepository.findById(req.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
@@ -60,7 +61,7 @@ public class AttributeService {
                 savedOptions.add(optionRepository.save(opt));
             }
         }
-        return toDto(def, savedOptions);
+        return attributeMapper.toDto(def, savedOptions);
     }
 
     @Transactional
@@ -79,7 +80,8 @@ public class AttributeService {
                 .sortOrder(req.sortOrder() != null ? req.sortOrder() : 0)
                 .build();
         opt = optionRepository.save(opt);
-        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+
+        return attributeMapper.toOptionDto(opt);
     }
 
     @Transactional
@@ -91,7 +93,7 @@ public class AttributeService {
         if (req.sortOrder() != null) opt.setSortOrder(req.sortOrder());
         
         opt = optionRepository.save(opt);
-        return new AttributeOptionDto(opt.getId(), opt.getValue(), opt.getLabel(), opt.getSortOrder());
+        return attributeMapper.toOptionDto(opt);
     }
 
     @Transactional
@@ -115,7 +117,7 @@ public class AttributeService {
 
         def = definitionRepository.save(def);
         List<AttributeOption> options = optionRepository.findByAttributeIdOrderBySortOrderAscIdAsc(def.getId());
-        return toDto(def, options);
+        return attributeMapper.toDto(def, options);
     }
 
     @Transactional(readOnly = true)
@@ -133,7 +135,7 @@ public class AttributeService {
         List<Long> defIds = defs.stream().map(AttributeDefinition::getId).toList();
         Map<Long, List<AttributeOption>> options = optionRepository.findByAttributeIdIn(defIds).stream()
                 .collect(Collectors.groupingBy(o -> o.getAttribute().getId()));
-        return defs.stream().map(d -> toDto(d, options.getOrDefault(d.getId(), List.of()))).toList();
+        return defs.stream().map(d -> attributeMapper.toDto(d, options.get(d.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -162,18 +164,4 @@ public class AttributeService {
         return path;
     }
 
-    private AttributeDefinitionDto toDto(AttributeDefinition d, List<AttributeOption> opts) {
-        return new AttributeDefinitionDto(
-                d.getId(),
-                d.getCategory().getId(),
-                d.getKey(),
-                d.getLabel(),
-                d.getType(),
-                d.getUnit(),
-                d.getSortOrder(),
-                opts.stream().map(o -> new AttributeOptionDto(
-                        o.getId(), o.getValue(), o.getLabel(), o.getSortOrder()
-                )).toList()
-        );
-    }
 }

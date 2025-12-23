@@ -1,8 +1,8 @@
 package com.BINM.listing.category.controller;
 
+import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.category.dto.*;
-import com.BINM.listing.category.service.CategoryService;
-import com.BINM.listing.attribute.service.AttributeService;
+import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.attribute.dto.AttributeCreateRequest;
 import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/categories")
 @RequiredArgsConstructor
 public class CategoryAdminController {
-    private final CategoryService categoryService;
-    private final AttributeService attributeService;
+    private final CategoryFacade categoryService;
+    private final AttributeFacade attributeService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,7 +36,6 @@ public class CategoryAdminController {
     @PostMapping("/{id}/attributes")
     @ResponseStatus(HttpStatus.CREATED)
     public AttributeDefinitionDto addAttribute(@PathVariable Long id, @RequestBody AttributeCreateRequest req) {
-        // Ensure category ID matches the path variable
         AttributeCreateRequest effectiveReq = req;
         if (!id.equals(req.categoryId())) {
              effectiveReq = new AttributeCreateRequest(

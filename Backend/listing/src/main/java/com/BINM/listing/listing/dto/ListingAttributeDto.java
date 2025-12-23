@@ -1,6 +1,9 @@
 package com.BINM.listing.listing.dto;
 
 import com.BINM.listing.attribute.model.AttributeType;
+import com.azure.core.annotation.Get;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 

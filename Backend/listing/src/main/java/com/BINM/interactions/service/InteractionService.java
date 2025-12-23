@@ -4,25 +4,40 @@ import com.BINM.interactions.model.EntityType;
 import com.BINM.interactions.model.Favorite;
 import com.BINM.interactions.repository.FavoriteRepository;
 import com.BINM.listing.listing.dto.ListingCoverDto;
-import com.BINM.listing.listing.service.ListingService;
+import com.BINM.listing.listing.event.ListingFinishedEvent;
+import com.BINM.listing.listing.service.ListingFacade;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class InteractionService implements InteractionFacade {
 
     private final FavoriteRepository favoriteRepository;
+    private final ListingFacade listingFacade;
 
     @Override
     public void addFavorite(String userId, String entityId, EntityType entityType) {
+        if (entityType == EntityType.LISTING) {
+            try {
+                if (!listingFacade.existsById(UUID.fromString(entityId))) {
+                    throw new EntityNotFoundException("Listing with id " + entityId + " not found.");
+                }
+            } catch (IllegalArgumentException e) {
+                throw new EntityNotFoundException("Invalid listing id format: " + entityId);
+            }
+        }
+        // W przyszłości można dodać walidację dla innych typów encji, np. USER
+        // else if (entityType == EntityType.USER) { ... }
+
         if (favoriteRepository.existsByUserIdAndEntityIdAndEntityType(userId, entityId, entityType)) {
             return;
         }
@@ -44,5 +59,32 @@ public class InteractionService implements InteractionFacade {
     @Transactional(readOnly = true)
     public boolean isFavorite(String userId, String entityId, EntityType entityType) {
         return favoriteRepository.existsByUserIdAndEntityIdAndEntityType(userId, entityId, entityType);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> getFavouritesListings(String userId, int page, int size) {
+        List<String> favoriteIdsAsString = favoriteRepository.findEntityIdsByUserIdAndEntityType(userId, EntityType.LISTING);
+
+        if (favoriteIdsAsString.isEmpty()) {
+            return Page.empty();
+        }
+
+        List<UUID> favoriteIds = favoriteIdsAsString.stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+
+        return listingFacade.getListingsByIds(favoriteIds, page, size);
+    }
+
+    @Override
+    @Transactional
+    public void removeAllFavoritesForEntity(String entityId, EntityType entityType) {
+        favoriteRepository.deleteAllByEntityIdAndEntityType(entityId, entityType);
+    }
+
+    @EventListener
+    public void handleListingFinished(ListingFinishedEvent event) {
+        this.removeAllFavoritesForEntity(event.listingId().toString(), EntityType.LISTING);
     }
 }

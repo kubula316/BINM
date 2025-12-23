@@ -3,6 +3,7 @@ package com.BINM.listing.listing.dto;
 import java.util.List;
 
 public record ListingSearchRequest(
+        String query,
         Long categoryId,
         String sellerUserId,
         List<AttributeFilter> attributes,

@@ -3,83 +3,88 @@ package com.BINM.listing.listing.service;
 import com.BINM.listing.attribute.model.AttributeDefinition;
 import com.BINM.listing.attribute.model.AttributeOption;
 import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
-import com.BINM.listing.attribute.service.AttributeService;
+import com.BINM.listing.attribute.service.AttributeFacade;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
+import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.listing.event.ListingFinishedEvent;
+import com.BINM.listing.listing.mapper.ListingMapper;
 import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingAttribute;
 import com.BINM.listing.listing.model.ListingMedia;
+import com.BINM.listing.listing.model.ListingStatus;
 import com.BINM.listing.listing.repository.ListingAttributeRepository;
 import com.BINM.listing.listing.repository.ListingMediaRepository;
 import com.BINM.listing.listing.repository.ListingRepository;
 import com.BINM.user.io.ProfileResponse;
 import com.BINM.user.service.ProfileFacade;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ListingService {
-
+@Slf4j
+class ListingService implements ListingFacade{
+    //Repo
     private final ListingRepository listingRepository;
     private final CategoryRepository categoryRepository;
     private final ListingAttributeRepository listingAttributeRepository;
-    private final AttributeService attributeService;
     private final AttributeOptionRepository optionRepository;
     private final ListingMediaRepository listingMediaRepository;
+    //Facade
+    private final AttributeFacade attributeService;
     private final ProfileFacade profileFacade;
-
-    public List<ListingCoverDto> getListingCoversByIds(List<UUID> publicIds) {
-        List<Listing> listings = listingRepository.findAllByPublicIdIn(publicIds);
-        return toCoverDtoPage(new PageImpl<>(listings)).getContent();
-    }
-
+    private final CategoryFacade categoryService;
+    //Mapper
+    private final ListingMapper listingMapper;
+    //Validator
+    private final ListingValidator listingValidator;
+    //Publisher
+    private final ApplicationEventPublisher eventPublisher;
+    
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
-        return toEditDto(l);
-    }
-
-    private ListingEditDto toEditDto(Listing l) {
-        return new ListingEditDto(
-                l.getPublicId(),
-                l.getCategory().getId(),
-                l.getTitle(),
-                l.getDescription(),
-                l.getPriceAmount(),
-                l.getCurrency(),
-                l.getNegotiable(),
-                l.getLocationCity(),
-                l.getLocationRegion(),
-                l.getLatitude(),
-                l.getLongitude(),
-                loadAttributes(l),
-                loadMedia(l)
-        );
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
+        return listingMapper.toEditDto(l, attributes, media);
     }
 
     @Transactional(readOnly = true)
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
-        return toDto(l);
+
+        // Tylko aktywne ogłoszenia są widoczne publicznie
+        if (l.getStatus() != ListingStatus.ACTIVE) {
+            throw new EntityNotFoundException("Listing not found or not active");
+        }
+
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
+
+        return listingMapper.toDto(l, sellerProfile, attributes, media);
     }
 
     @Transactional
@@ -87,9 +92,7 @@ public class ListingService {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
         if (req.title() != null) l.setTitle(req.title().trim());
         if (req.description() != null) l.setDescription(req.description());
@@ -100,52 +103,35 @@ public class ListingService {
         if (req.locationRegion() != null) l.setLocationRegion(req.locationRegion());
         if (req.latitude() != null) l.setLatitude(req.latitude());
         if (req.longitude() != null) l.setLongitude(req.longitude());
+        if (req.contactPhoneNumber() != null) l.setContactPhoneNumber(req.contactPhoneNumber());
 
         if (req.mediaUrls() != null) {
             listingMediaRepository.deleteByListingId(l.getId());
             listingMediaRepository.flush();
-            List<ListingMedia> mediaToSave = new ArrayList<>();
-            int pos = 0;
-            for (String url : req.mediaUrls()) {
-                if (url == null || url.isBlank()) continue;
-                mediaToSave.add(ListingMedia.builder().listing(l).mediaUrl(url).mediaType("image").position(pos++).build());
-            }
-            listingMediaRepository.saveAll(mediaToSave);
+            saveMedia(req.mediaUrls(), l);
         }
 
         if (req.attributes() != null) {
             listingAttributeRepository.deleteByListingId(l.getId());
             listingAttributeRepository.flush();
-            List<ListingAttribute> attributesToSave = new ArrayList<>();
-            Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(l.getCategory().getId());
-            for (ListingAttributeRequest ar : req.attributes()) {
-                if (ar.key() == null) continue;
-                String k = ar.key().trim().toLowerCase(Locale.ROOT);
-                AttributeDefinition def = defs.get(k);
-                if (def == null) continue;
-                ListingAttribute lav = ListingAttribute.builder().listing(l).attribute(def).build();
-                String val = ar.value();
-                switch (def.getType()) {
-                    case STRING -> lav.setVText(val);
-                    case NUMBER -> {
-                        try {
-                            lav.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
-                        } catch (NumberFormatException ignored) {}
-                    }
-                    case BOOLEAN -> lav.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
-                    case ENUM -> {
-                        if (val != null && !val.isBlank()) {
-                            optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val).ifPresent(lav::setOption);
-                        }
-                    }
-                }
-                attributesToSave.add(lav);
-            }
-            listingAttributeRepository.saveAll(attributesToSave);
+            saveAttributes(req.attributes(), l, l.getCategory());
+        }
+
+        // Po edycji, jeśli ogłoszenie było aktywne lub odrzucone, wraca do statusu DRAFT
+        // i wymaga ponownego zatwierdzenia.
+        if (l.getStatus() == ListingStatus.ACTIVE) {
+            l.setStatus(ListingStatus.WAITING);
+        }else {
+            l.setStatus(ListingStatus.DRAFT);
         }
 
         Listing saved = listingRepository.save(l);
-        return toDto(saved);
+
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
+        return listingMapper.toDto(saved, sellerProfile, attributes, media);
+
     }
 
     @Transactional
@@ -153,82 +139,182 @@ public class ListingService {
         Listing l = listingRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
 
-        if (!l.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
-        }
+        listingValidator.validateOwnership(l, currentUserId);
 
         listingAttributeRepository.deleteByListingId(l.getId());
         listingMediaRepository.deleteByListingId(l.getId());
         listingRepository.deleteById(l.getId());
-    }
-    
-    private Page<ListingDto> toDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> toDto(l, sellerProfiles.get(l.getSellerUserId())));
+        eventPublisher.publishEvent(new ListingFinishedEvent(publicId));
     }
 
-    private ListingDto toDto(Listing l) {
-        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
-        return toDto(l, sellerProfile);
+    @Transactional
+    public ListingDto create(ListingCreateRequest req, String sellerUserId) {
+        Category category = categoryRepository.findById(req.categoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        
+        listingValidator.validateCategoryIsLeaf(category);
+
+        Listing entity = listingMapper.toEntity(req, sellerUserId, category);
+        entity.setStatus(ListingStatus.DRAFT); // Explicitly set to DRAFT
+        Listing saved = listingRepository.save(entity);
+
+        saveAttributes(req.attributes(), saved, category);
+        saveMedia(req.mediaUrls(), saved);
+
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(saved.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(saved.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(saved.getSellerUserId());
+        return listingMapper.toDto(saved, sellerProfile, attributes, media);
     }
 
-    private ListingDto toDto(Listing l, ProfileResponse sellerProfile) {
-        SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-        return new ListingDto(
-                l.getPublicId(),
-                l.getCategory() != null ? l.getCategory().getId() : null,
-                sellerInfo,
-                l.getTitle(), l.getDescription(),
-                l.getPriceAmount(), l.getCurrency(), l.getNegotiable(),
-                l.getLocationCity(), l.getLocationRegion(), l.getLatitude(), l.getLongitude(),
-                l.getStatus(), l.getPublishedAt(), l.getExpiresAt(), l.getCreatedAt(), l.getUpdatedAt(),
-                loadAttributes(l), loadMedia(l)
-        );
+    @Override
+    public boolean existsById(UUID publicId) {
+        return listingRepository.existsByPublicId(publicId);
     }
 
-    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
-        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
-        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
-                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
-        return listings.map(l -> {
-            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
-            SellerInfo sellerInfo = (sellerProfile != null) ? new SellerInfo(sellerProfile.userId(), sellerProfile.name()) : null;
-            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
-                    .map(ListingMedia::getMediaUrl)
-                    .orElse(null);
-            return new ListingCoverDto(
-                    l.getPublicId(),
-                    l.getTitle(),
-                    sellerInfo,
-                    l.getPriceAmount(),
-                    l.getNegotiable(),
-                    coverImageUrl
-            );
-        });
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> getListingsByIds(List<UUID> publicIds, int page, int size) {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return Page.empty();
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        // Filtrujemy tylko aktywne ogłoszenia
+        Page<Listing> listings = listingRepository.findAllByPublicIdInAndStatus(publicIds, ListingStatus.ACTIVE, pageable);
+        return toCoverDtoPage(listings);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ListingContactDto getContactInfo(UUID publicId) {
+        Listing listing = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+        return new ListingContactDto(listing.getContactPhoneNumber());
+    }
+
+    @Override
+    @Transactional
+    public void submitForApproval(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        listingValidator.validateOwnership(l, currentUserId);
+
+        if (l.getStatus() != ListingStatus.DRAFT && l.getStatus() != ListingStatus.REJECTED) {
+            throw new IllegalStateException("Only DRAFT or REJECTED listings can be submitted for approval");
+        }
+
+        l.setStatus(ListingStatus.WAITING);
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void approveListing(UUID publicId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        if (l.getStatus() != ListingStatus.WAITING) {
+            throw new IllegalStateException("Only WAITING listings can be approved");
+        }
+
+        l.setStatus(ListingStatus.ACTIVE);
+        l.setPublishedAt(OffsetDateTime.now());
+        // Ustawiamy datę wygaśnięcia na 30 dni od teraz
+        l.setExpiresAt(OffsetDateTime.now().plusDays(30));
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void rejectListing(UUID publicId, String reason) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        l.setStatus(ListingStatus.REJECTED);
+        // Tutaj można by dodać logikę wysyłania maila z powodem odrzucenia
+        listingRepository.save(l);
+    }
+
+    @Override
+    @Transactional
+    public void finishListing(UUID publicId, String currentUserId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+
+        listingValidator.validateOwnership(l, currentUserId);
+
+        if (l.getStatus() != ListingStatus.ACTIVE && l.getStatus() != ListingStatus.WAITING) {
+            throw new IllegalStateException("Only ACTIVE or WAITING listings can be finished");
+        }
+
+        l.setStatus(ListingStatus.COMPLETED);
+        listingRepository.save(l);
+
+        eventPublisher.publishEvent(new ListingFinishedEvent(publicId));
+    }
+
+    @Override
+    @Transactional
+    public void expireOverdueListings() {
+        log.info("Starting job to expire overdue listings...");
+        List<Listing> overdueListings = listingRepository.findAllByStatusAndExpiresAtBefore(ListingStatus.ACTIVE, OffsetDateTime.now());
+
+        if (overdueListings.isEmpty()) {
+            log.info("No overdue listings found.");
+            return;
+        }
+
+        for (Listing listing : overdueListings) {
+            listing.setStatus(ListingStatus.EXPIRED);
+            log.info("Expiring listing with ID: {}", listing.getPublicId());
+            eventPublisher.publishEvent(new ListingFinishedEvent(listing.getPublicId()));
+        }
+
+        listingRepository.saveAll(overdueListings);
+        log.info("Finished job. Expired {} listings.", overdueListings.size());
     }
 
     @Transactional(readOnly = true)
-    public Page<ListingCoverDto> listForUser(String userId, int page, int size) {
+    public Page<ListingCoverDto> listForUser(String userId, int page, int size, ListingStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Listing> listings = listingRepository.findBySellerUserId(userId, pageable);
+        Page<Listing> listings;
+        if (status != null) {
+            listings = listingRepository.findBySellerUserIdAndStatus(userId, status, pageable);
+        } else {
+            listings = listingRepository.findBySellerUserId(userId, pageable);
+        }
         return toCoverDtoPage(listings);
     }
 
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> listRandom(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Listing> randomListings = listingRepository.findRandom(pageable);
+        // Dodajemy filtr statusu ACTIVE
+        Specification<Listing> spec = (root, query, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE);
+        Page<Listing> randomListings = listingRepository.findAll(spec, pageable);
         return toCoverDtoPage(randomListings);
     }
 
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> search(ListingSearchRequest req) {
         Pageable pageable = PageRequest.of(Optional.ofNullable(req.page()).orElse(0), Optional.ofNullable(req.size()).orElse(20), resolveSort(req));
-        Specification<Listing> spec = Specification.where(null);
+        
+        // Domyślnie szukamy tylko aktywnych ogłoszeń
+        Specification<Listing> spec = (root, query, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE);
+
+        if (req.query() != null && !req.query().isBlank()) {
+            String searchText = "%" + req.query().toLowerCase() + "%";
+            Specification<Listing> textSpec = (root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("title")), searchText),
+                            cb.like(cb.lower(root.get("description")), searchText)
+                    );
+            spec = spec.and(textSpec);
+        }
+
         if (req.categoryId() != null) {
-            List<Long> ids = collectDescendantIds(req.categoryId());
+            List<Long> ids = categoryService.collectDescendantIds(req.categoryId());
             if (ids.isEmpty()) return Page.empty(pageable);
             spec = spec.and((root, query, cb) -> root.get("category").get("id").in(ids));
         }
@@ -243,108 +329,76 @@ public class ListingService {
         return toCoverDtoPage(listingRepository.findAll(spec, pageable));
     }
 
-    @Transactional
-    public ListingDto create(ListingCreateRequest req, String sellerUserId) {
-        Category category = categoryRepository.findById(req.categoryId())
-                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        if (!Boolean.TRUE.equals(category.getIsLeaf())) {
-            throw new IllegalArgumentException("Listing must be assigned to a leaf category");
-        }
-        Listing entity = Listing.builder()
-                .sellerUserId(sellerUserId)
-                .category(category)
-                .title(req.title().trim())
-                .description(req.description())
-                .priceAmount(req.priceAmount())
-                .currency(req.currency() != null ? req.currency() : "PLN")
-                .negotiable(req.negotiable() != null && req.negotiable())
-                .locationCity(req.locationCity())
-                .locationRegion(req.locationRegion())
-                .latitude(req.latitude())
-                .longitude(req.longitude())
-                .status("active")
-                .build();
-        Listing saved = listingRepository.save(entity);
+    private void saveAttributes(List<ListingAttributeRequest> attributeRequests, Listing listing, Category category) {
+        Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
 
-        if (req.attributes() != null && !req.attributes().isEmpty()) {
-            List<ListingAttribute> attributesToSave = new ArrayList<>();
-            Map<String, AttributeDefinition> defs = attributeService.getEffectiveDefinitionsByKey(category.getId());
-            for (ListingAttributeRequest ar : req.attributes()) {
-                if (ar.key() == null) continue;
-                String k = ar.key().trim().toLowerCase(Locale.ROOT);
-                AttributeDefinition def = defs.get(k);
-                if (def == null) {
-                    throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
-                }
-                ListingAttribute lav = ListingAttribute.builder().listing(saved).attribute(def).build();
-                String val = ar.value();
-                switch (def.getType()) {
-                    case STRING -> lav.setVText(val);
-                    case NUMBER -> {
-                        try {
-                            lav.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
-                        } catch (NumberFormatException ex) {
-                            throw new IllegalArgumentException("Invalid number for attribute: " + def.getKey());
-                        }
-                    }
-                    case BOOLEAN -> lav.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
-                    case ENUM -> {
-                        if (val != null && !val.isBlank()) {
-                            AttributeOption opt = optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val)
-                                    .orElseThrow(() -> new IllegalArgumentException("Invalid enum value for attribute: " + def.getKey()));
-                            lav.setOption(opt);
-                        }
-                    }
-                }
-                attributesToSave.add(lav);
-            }
-            listingAttributeRepository.saveAll(attributesToSave);
-        }
-        if (req.mediaUrls() != null && !req.mediaUrls().isEmpty()) {
-            List<ListingMedia> mediaToSave = new ArrayList<>();
-            int pos = 0;
-            for (String url : req.mediaUrls()) {
-                if (url == null || url.isBlank()) continue;
-                mediaToSave.add(ListingMedia.builder().listing(saved).mediaUrl(url).mediaType("image").position(pos++).build());
-            }
-            listingMediaRepository.saveAll(mediaToSave);
-        }
-        return toDto(saved);
-    }
-
-    private List<ListingAttributeDto> loadAttributes(Listing l) {
-        return listingAttributeRepository.findByListingId(l.getId()).stream()
-                .map(a -> {
-                    var def = a.getAttribute();
-                    return new ListingAttributeDto(
-                            def.getKey(), def.getLabel(), def.getType(),
-                            a.getVText(), a.getVNumber(), a.getVBoolean(),
-                            a.getOption() != null ? a.getOption().getValue() : null,
-                            a.getOption() != null ? a.getOption().getLabel() : null
-                    );
-                }).toList();
-    }
-
-    private List<ListingMediaDto> loadMedia(Listing l) {
-        return listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId()).stream()
-                .map(m -> new ListingMediaDto(m.getMediaUrl(), m.getMediaType(), m.getPosition()))
+        List<ListingAttribute> attributesToSave = attributeRequests.stream()
+                .map(ar -> buildAttribute(ar, listing, defs))
+                .filter(Objects::nonNull)
                 .toList();
+
+        listingAttributeRepository.saveAll(attributesToSave);
     }
 
-    private List<Long> collectDescendantIds(Long rootId) {
-        Optional<Category> rootOpt = categoryRepository.findById(rootId);
-        if (rootOpt.isEmpty()) return List.of();
-        List<Long> ids = new ArrayList<>();
-        Deque<Long> stack = new ArrayDeque<>();
-        stack.push(rootOpt.get().getId());
-        while (!stack.isEmpty()) {
-            Long id = stack.pop();
-            ids.add(id);
-            for (Category child : categoryRepository.findByParentIdOrderBySortOrderAscNameAsc(id)) {
-                stack.push(child.getId());
+    private ListingAttribute buildAttribute(ListingAttributeRequest ar, Listing listing, Map<String, AttributeDefinition> defs) {
+        if (ar.key() == null) return null;
+
+        String key = ar.key().trim().toLowerCase(Locale.ROOT);
+        AttributeDefinition def = defs.get(key);
+        if (def == null) {
+            throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
+        }
+
+        ListingAttribute la = ListingAttribute.builder().listing(listing).attribute(def).build();
+        String val = ar.value();
+
+        switch (def.getType()) {
+            case STRING -> la.setVText(val);
+            case NUMBER -> {
+                try {
+                    la.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
+                } catch (NumberFormatException ex) {
+                    throw new IllegalArgumentException("Invalid number for attribute: " + def.getKey());
+                }
+            }
+            case BOOLEAN -> la.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
+            case ENUM -> {
+                if (val != null && !val.isBlank()) {
+                    AttributeOption opt = optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val)
+                            .orElseThrow(() -> new IllegalArgumentException("Invalid enum value for attribute: " + def.getKey()));
+                    la.setOption(opt);
+                }
             }
         }
-        return ids;
+        return la;
+    }
+
+    private void saveMedia(List<String> mediaUrls, Listing listing) {
+        AtomicInteger position = new AtomicInteger(0);
+        List<ListingMedia> mediaToSave = mediaUrls.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(url -> ListingMedia.builder()
+                        .listing(listing)
+                        .mediaUrl(url)
+                        .mediaType("image")
+                        .position(position.getAndIncrement())
+                        .build())
+                .toList();
+
+        listingMediaRepository.saveAll(mediaToSave);
+    }
+
+    private Page<ListingCoverDto> toCoverDtoPage(Page<Listing> listings) {
+        List<String> sellerIds = listings.getContent().stream().map(Listing::getSellerUserId).distinct().toList();
+        Map<String, ProfileResponse> sellerProfiles = profileFacade.getProfilesById(sellerIds).stream()
+                .collect(Collectors.toMap(ProfileResponse::userId, Function.identity()));
+        return listings.map(l -> {
+            ProfileResponse sellerProfile = sellerProfiles.get(l.getSellerUserId());
+            String coverImageUrl = listingMediaRepository.findFirstByListingIdOrderByPositionAsc(l.getId())
+                    .map(ListingMedia::getMediaUrl)
+                    .orElse(null);
+            return listingMapper.toCoverDto(l, sellerProfile, coverImageUrl);
+        });
     }
 
     private Sort resolveSort(ListingSearchRequest req) {
@@ -366,6 +420,7 @@ public class ListingService {
         }
         return Sort.by(orders);
     }
+
     private Specification<Listing> hasAttribute(ListingSearchRequest.AttributeFilter filter) {
         return (root, query, cb) -> {
             var subquery = query.subquery(Long.class);
@@ -379,7 +434,7 @@ public class ListingService {
         };
     }
 
-    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, jakarta.persistence.criteria.Root<ListingAttribute> subRoot, jakarta.persistence.criteria.CriteriaBuilder cb) {
+    private Predicate buildValuePredicate(ListingSearchRequest.AttributeFilter filter, Root<ListingAttribute> subRoot, CriteriaBuilder cb) {
         String type = Optional.ofNullable(filter.type()).orElse("STRING").toUpperCase(Locale.ROOT);
         String op = Optional.ofNullable(filter.op()).orElse("eq").toLowerCase(Locale.ROOT);
         switch (type) {

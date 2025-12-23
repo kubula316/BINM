@@ -2,6 +2,7 @@ package com.BINM.user.service;
 
 import com.BINM.user.io.ProfileRequest;
 import com.BINM.user.io.ProfileResponse;
+import com.BINM.user.io.ProfileUpdateRequest;
 import com.BINM.user.io.PublicProfileResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -14,9 +15,11 @@ public interface ProfileFacade {
 
     ProfileResponse getProfile(String userId);
 
-    PublicProfileResponse getPublicProfile(String userId); // Nowa metoda
+    PublicProfileResponse getPublicProfile(String userId);
 
     List<ProfileResponse> getProfilesById(List<String> userIds);
+
+    List<PublicProfileResponse> getPublicProfilesByIds(List<String> userIds);
 
     void sendResetOtp(String email);
 
@@ -26,5 +29,5 @@ public interface ProfileFacade {
 
     void verifyOtp(String email, String otp);
 
-    String getLoggedInUserId(String email);
+    ProfileResponse updateProfile(String userId, ProfileUpdateRequest request);
 }

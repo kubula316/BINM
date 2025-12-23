@@ -17,7 +17,7 @@ public class PublicUserController {
     private final ProfileFacade profileService;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<PublicProfileResponse> getPublicProfile(@PathVariable String userId) {
-        return ResponseEntity.ok(profileService.getPublicProfile(userId));
+    public PublicProfileResponse getPublicProfile(@PathVariable String userId) {
+        return profileService.getPublicProfile(userId);
     }
 }

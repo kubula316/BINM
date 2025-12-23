@@ -17,6 +17,7 @@ public record ListingEditDto(
         String locationRegion,
         Double latitude,
         Double longitude,
+        String contactPhoneNumber,
         List<ListingAttributeDto> attributes,
         List<ListingMediaDto> media
 ) {

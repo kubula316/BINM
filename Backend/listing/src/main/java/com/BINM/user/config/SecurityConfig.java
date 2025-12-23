@@ -3,6 +3,7 @@ package com.BINM.user.config;
 import com.BINM.user.filter.JwtRequestFilter;
 import com.BINM.user.service.AppUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,12 +34,16 @@ public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+    @Value("${cors.allowed-origins}")
+    private String[] allowedOriginsArray;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**", "logout").permitAll()
+                        .requestMatchers("/public/**", "/ws/**", "logout").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Tylko dla ADMIN
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .logout(AbstractHttpConfigurer::disable)
@@ -59,7 +64,7 @@ public class SecurityConfig {
 
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(allowedOriginsArray));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-User-Id"));
         config.setAllowCredentials(true);

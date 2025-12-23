@@ -4,10 +4,7 @@ import com.BINM.mailing.EmailFacade;
 import com.BINM.user.exception.LoginErrorException;
 import com.BINM.user.exception.OtpException;
 import com.BINM.user.exception.UserAlreadyExistsException;
-import com.BINM.user.io.AuthResponse;
-import com.BINM.user.io.ProfileRequest;
-import com.BINM.user.io.ProfileResponse;
-import com.BINM.user.io.PublicProfileResponse;
+import com.BINM.user.io.*;
 import com.BINM.user.model.UserEntity;
 import com.BINM.user.repository.UserRepository;
 import com.BINM.user.util.JwtUtil;
@@ -34,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProfileService implements ProfileFacade {
+class ProfileService implements ProfileFacade {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -54,11 +51,11 @@ public class ProfileService implements ProfileFacade {
         return new PublicProfileResponse(
                 userEntity.getUserId(),
                 userEntity.getName(),
-                OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC)
+                OffsetDateTime.ofInstant(userEntity.getCreatedAt().toInstant(), ZoneOffset.UTC),
+                userEntity.getProfileImageUrl()
         );
     }
-    
-    // ... (reszta metod bez zmian)
+
     @Override
     @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {
@@ -113,6 +110,13 @@ public class ProfileService implements ProfileFacade {
     public List<ProfileResponse> getProfilesById(List<String> userIds) {
         return userRepository.findAllByUserIdIn(userIds).stream()
                 .map(this::convertToProfileResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PublicProfileResponse> getPublicProfilesByIds(List<String> userIds) {
+        return userRepository.findAllByUserIdIn(userIds).stream()
+                .map(this::convertToPublicProfileResponse)
                 .collect(Collectors.toList());
     }
 
@@ -181,10 +185,19 @@ public class ProfileService implements ProfileFacade {
     }
 
     @Override
-    public String getLoggedInUserId(String email) {
-        UserEntity existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found for the email: " + email));
-        return existingUser.getUserId();
+    @Transactional
+    public ProfileResponse updateProfile(String userId, ProfileUpdateRequest request) {
+        UserEntity user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        if (request.name() != null && !request.name().isBlank()) {
+            user.setName(request.name());
+        }
+        if (request.profileImageUrl() != null) {
+            user.setProfileImageUrl(request.profileImageUrl());
+        }
+
+        return convertToProfileResponse(userRepository.save(user));
     }
 
     private ProfileResponse convertToProfileResponse(UserEntity userEntity) {
@@ -192,7 +205,8 @@ public class ProfileService implements ProfileFacade {
                 userEntity.getUserId(),
                 userEntity.getName(),
                 userEntity.getEmail(),
-                userEntity.getIsAccountVerified()
+                userEntity.getIsAccountVerified(),
+                userEntity.getProfileImageUrl()
         );
     }
 

@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ImageStorageClientImpl implements ImageStorageClient {
+class ImageStorageClientImpl implements ImageStorageClient {
 
     private final BlobServiceClient blobServiceClient;
 

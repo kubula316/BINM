@@ -1,13 +1,11 @@
 package com.BINM.user.controller;
 
-import com.BINM.mailing.EmailService;
-import com.BINM.user.io.ProfileRequest;
+
 import com.BINM.user.io.ProfileResponse;
+import com.BINM.user.io.ProfileUpdateRequest;
 import com.BINM.user.service.ProfileFacade;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +24,16 @@ public class ProfileController {
         return profileService.getProfile(id);
     }
 
+    @PatchMapping("/profile")
+    public ProfileResponse updateProfile(
+            @CurrentSecurityContext(expression = "authentication.principal.userId") String id,
+            @RequestBody ProfileUpdateRequest request) {
+        return profileService.updateProfile(id, request);
+    }
+
     @GetMapping("/is-authenticated")
-    public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email) {
-        return ResponseEntity.ok(email != null);
+    public Boolean isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email) {
+        return email != null;
     }
 
     @PostMapping("/send-otp")

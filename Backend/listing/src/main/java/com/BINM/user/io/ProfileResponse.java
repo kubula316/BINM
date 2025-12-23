@@ -4,6 +4,7 @@ public record ProfileResponse(
         String userId,
         String name,
         String email,
-        Boolean isAccountVerified
+        Boolean isAccountVerified,
+        String profileImageUrl
 ) {
 }

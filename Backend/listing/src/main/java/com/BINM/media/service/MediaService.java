@@ -5,6 +5,7 @@ import com.BINM.media.exception.UploadError;
 import com.BINM.media.exception.UploadException;
 import com.BINM.media.storage.ImageStorageClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,17 +14,20 @@ import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
-public class MediaService implements MediaFacade {
+class MediaService implements MediaFacade {
 
     private final ImageStorageClient imageStorageClient;
 
-    private static final String MEDIA_CONTAINER_NAME = "media-image-container";
-    private static final String PROFILE_CONTAINER_NAME = "profile-image-container";
+    @Value("${azure.storage.container.media}")
+    private String mediaContainerName;
+
+    @Value("${azure.storage.container.profile}")
+    private String profileContainerName;
 
     @Override
     public String UploadMediaImage(MultipartFile file) {
         try {
-            return uploadImage(MEDIA_CONTAINER_NAME, file);
+            return uploadImage(mediaContainerName, file);
         } catch (IOException e) {
             throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
         }
@@ -32,7 +36,7 @@ public class MediaService implements MediaFacade {
     @Override
     public String uploadProfileImage(MultipartFile file) {
         try {
-            return uploadImage(PROFILE_CONTAINER_NAME, file);
+            return uploadImage(profileContainerName, file);
         } catch (IOException e) {
             throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
         }
