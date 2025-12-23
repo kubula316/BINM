@@ -85,29 +85,29 @@ function ListingDetails() {
                 {listing.seller && (
                   <div className="item-seller">Sprzedawca: {listing.seller.name}</div>
                 )}
+                <div className="item-price" style={{ marginTop: 8 }}>
+                  {listing.priceAmount?.toLocaleString('pl-PL', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
+                </div>
+                <div className="item-location">
+                  Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
+                </div>
               </div>
               {mainImage && (
                 <div style={{ marginLeft: 16 }}>
                   <img
                     src={mainImage}
                     alt={listing.title}
-                    style={{ maxWidth: 180, maxHeight: 180, objectFit: 'cover', borderRadius: 8 }}
+                    style={{ maxWidth: 220, maxHeight: 220, objectFit: 'cover', borderRadius: 8 }}
                   />
                 </div>
               )}
             </div>
 
             <div className="item-body">
-              <div className="item-price">
-                {listing.priceAmount?.toLocaleString('pl-PL', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
-              </div>
-              <div className="item-location">
-                Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
-              </div>
               <p className="item-desc">{listing.description}</p>
 
               {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
