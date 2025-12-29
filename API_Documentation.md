@@ -1,4 +1,4 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v2.7)
+# Dokumentacja API - Serwis Ogłoszeniowy (v2.8)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
@@ -432,6 +432,20 @@ Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 ---
 
 ## 9. Ogłoszenia - Administracja (Zabezpieczone - Rola ADMIN)
+
+### `GET /admin/listings/waiting`
+> Pobiera listę ogłoszeń oczekujących na zatwierdzenie.
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Zastosowanie na Froncie:** Panel Administratora - Lista.
+*   **URL Params:** `?page=0&size=10` (Opcjonalne)
+
+### `GET /admin/listings/{publicId}`
+> Pobiera szczegóły ogłoszenia oczekującego na zatwierdzenie.
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Zastosowanie na Froncie:** Panel Administratora - Szczegóły.
+*   **URL Path Variable:** `publicId` (Wymagane)
 
 ### `POST /admin/listings/{publicId}/approve`
 > Zatwierdza ogłoszenie (zmienia status z `WAITING` na `ACTIVE`).

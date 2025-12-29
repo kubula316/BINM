@@ -275,6 +275,31 @@ class ListingService implements ListingFacade{
         log.info("Finished job. Expired {} listings.", overdueListings.size());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ListingCoverDto> getListingsForApproval(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "updatedAt"));
+        Page<Listing> listings = listingRepository.findByStatus(ListingStatus.WAITING, pageable);
+        return toCoverDtoPage(listings);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ListingDto getWaitingListing(UUID publicId) {
+        Listing l = listingRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+
+        if (l.getStatus() != ListingStatus.WAITING) {
+            throw new EntityNotFoundException("Listing is not waiting for approval");
+        }
+
+        List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
+        List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
+        ProfileResponse sellerProfile = profileFacade.getProfile(l.getSellerUserId());
+
+        return listingMapper.toDto(l, sellerProfile, attributes, media);
+    }
+
     @Transactional(readOnly = true)
     public Page<ListingCoverDto> listForUser(String userId, int page, int size, ListingStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));

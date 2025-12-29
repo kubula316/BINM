@@ -39,4 +39,8 @@ public interface ListingFacade {
     void finishListing(UUID publicId, String currentUserId);
 
     void expireOverdueListings();
+
+    Page<ListingCoverDto> getListingsForApproval(int page, int size);
+
+    ListingDto getWaitingListing(UUID publicId);
 }

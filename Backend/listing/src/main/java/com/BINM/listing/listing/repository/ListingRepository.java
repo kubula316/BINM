@@ -31,6 +31,8 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
 
     Page<Listing> findBySellerUserIdAndStatus(String sellerUserId, ListingStatus status, Pageable pageable);
 
+    Page<Listing> findByStatus(ListingStatus status, Pageable pageable);
+
     Page<Listing> findByCategoryIdAndSellerUserId(Long categoryId, String sellerUserId, Pageable pageable);
 
     Page<Listing> findByCategoryIdIn(Collection<Long> categoryIds, Pageable pageable);
@@ -44,4 +46,6 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
     long countByCategoryId(Long categoryId);
 
     List<Listing> findAllByStatusAndExpiresAtBefore(ListingStatus status, OffsetDateTime dateTime);
+
+    Optional<Listing> findFirstByStatusOrderByUpdatedAtAsc(ListingStatus status);
 }
