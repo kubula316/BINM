@@ -6,7 +6,6 @@ import com.BINM.user.io.ProfileUpdateRequest;
 import com.BINM.user.service.ProfileFacade;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 

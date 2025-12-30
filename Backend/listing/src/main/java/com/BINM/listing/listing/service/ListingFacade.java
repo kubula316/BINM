@@ -22,8 +22,6 @@ public interface ListingFacade {
 
     Page<ListingCoverDto> listRandom(int page, int size);
 
-    Page<ListingCoverDto> search(ListingSearchRequest req);
-
     boolean existsById(UUID publicId);
 
     Page<ListingCoverDto> getListingsByIds(List<UUID> publicIds, int page, int size);

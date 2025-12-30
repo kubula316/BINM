@@ -1,6 +1,7 @@
 package com.BINM.listing.attribute.dto;
 
 import com.BINM.listing.attribute.model.AttributeType;
+
 import java.util.List;
 
 public record AttributeCreateRequest(

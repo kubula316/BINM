@@ -1,12 +1,12 @@
 package com.BINM.listing.attribute.service;
 
 import com.BINM.listing.attribute.Mapper.AttributeMapper;
-import com.BINM.listing.attribute.repostiory.AttributeDefinitionRepository;
-import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
-import com.BINM.listing.attribute.dto.AttributeDefinitionDto;
-import com.BINM.listing.attribute.dto.AttributeOptionDto;
+import com.BINM.listing.attribute.dto.*;
 import com.BINM.listing.attribute.model.AttributeDefinition;
 import com.BINM.listing.attribute.model.AttributeOption;
+import com.BINM.listing.attribute.model.AttributeType;
+import com.BINM.listing.attribute.repostiory.AttributeDefinitionRepository;
+import com.BINM.listing.attribute.repostiory.AttributeOptionRepository;
 import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,13 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import com.BINM.listing.attribute.dto.AttributeCreateRequest;
-import com.BINM.listing.attribute.dto.AttributeUpdateRequest;
-import com.BINM.listing.attribute.model.AttributeType;
-
-import com.BINM.listing.attribute.dto.AttributeOptionCreateRequest;
-import com.BINM.listing.attribute.dto.AttributeOptionUpdateRequest;
 
 @Service
 @RequiredArgsConstructor

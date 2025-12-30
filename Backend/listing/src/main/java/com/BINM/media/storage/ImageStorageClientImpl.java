@@ -1,6 +1,5 @@
 package com.BINM.media.storage;
 
-import com.BINM.media.exception.MediaErrorCode;
 import com.BINM.media.exception.MediaException;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;

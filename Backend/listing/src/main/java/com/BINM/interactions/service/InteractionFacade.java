@@ -3,7 +3,6 @@ package com.BINM.interactions.service;
 import com.BINM.interactions.model.EntityType;
 import com.BINM.listing.listing.dto.ListingCoverDto;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface InteractionFacade {
 

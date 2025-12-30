@@ -6,8 +6,6 @@ import com.BINM.listing.listing.model.Listing;
 import com.BINM.listing.listing.model.ListingStatus;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 class ListingValidator {
 

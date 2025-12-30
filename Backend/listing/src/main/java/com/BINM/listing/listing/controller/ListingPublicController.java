@@ -5,11 +5,9 @@ import com.BINM.listing.listing.dto.ListingDto;
 import com.BINM.listing.listing.dto.ListingSearchRequest;
 import com.BINM.listing.listing.model.ListingStatus;
 import com.BINM.listing.listing.service.ListingFacade;
-import com.BINM.user.service.CustomUserDetails;
+import com.BINM.listing.listing.service.SearchFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,6 +18,7 @@ import java.util.UUID;
 public class ListingPublicController {
 
     private final ListingFacade listingService;
+    private final SearchFacade searchService;
 
 
     @GetMapping("/get/{id}")
@@ -35,7 +34,7 @@ public class ListingPublicController {
 
     @PostMapping("/search")
     public Page<ListingCoverDto> search(@RequestBody ListingSearchRequest req) {
-        return listingService.search(req);
+        return searchService.search(req);
     }
 
     @GetMapping("/user/{userId}")
