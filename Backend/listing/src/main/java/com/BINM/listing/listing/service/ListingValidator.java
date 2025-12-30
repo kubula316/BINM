@@ -1,24 +1,43 @@
 package com.BINM.listing.listing.service;
 
 import com.BINM.listing.category.model.Category;
+import com.BINM.listing.exception.ListingException;
 import com.BINM.listing.listing.model.Listing;
-import org.springframework.security.access.AccessDeniedException;
+import com.BINM.listing.listing.model.ListingStatus;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 class ListingValidator {
 
     public void validateOwnership(Listing listing, String currentUserId) {
         if (!listing.getSellerUserId().equals(currentUserId)) {
-            throw new AccessDeniedException("You are not the owner of this listing");
+            throw ListingException.accessDenied();
         }
     }
 
-    public void validateCategoryIsLeaf(Category category){
+    public void validateCategoryIsLeaf(Category category) {
         if (!Boolean.TRUE.equals(category.getIsLeaf())) {
-            throw new IllegalArgumentException("Listing must be assigned to a leaf category");
+            throw ListingException.categoryNotLeaf();
         }
     }
 
+    public void validateIsDraftOrRejected(Listing l){
+        if (l.getStatus() != ListingStatus.DRAFT && l.getStatus() != ListingStatus.REJECTED) {
+            throw ListingException.invalidState("Only DRAFT or REJECTED listings can be submitted for approval");
+        }
+    }
 
+    public void validateIsWaiting(Listing l){
+        if (l.getStatus() != ListingStatus.WAITING) {
+            throw ListingException.invalidState("Listing is not waiting for approval");
+        }
+    }
+
+    public void validateIsActiveOrWaiting(Listing l){
+        if (l.getStatus() != ListingStatus.ACTIVE && l.getStatus() != ListingStatus.WAITING) {
+            throw ListingException.invalidState("Only ACTIVE or WAITING listings can be finished");
+        }
+    }
 }

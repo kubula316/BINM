@@ -60,7 +60,7 @@ class ProfileService implements ProfileFacade {
     @Transactional
     public ProfileResponse createProfile(ProfileRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new UserAlreadyExistsException("User with email " + request.email() + " already exists.");
+            throw new UserAlreadyExistsException(request.email());
         }
         UserEntity newUser = convertToUserEntity(request);
         String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
@@ -71,7 +71,7 @@ class ProfileService implements ProfileFacade {
         try {
             emailService.sendOtpEmail(savedUser.getEmail(), otp);
         } catch (Exception e) {
-            throw new OtpException("Could not send OTP email. Please try again later.");
+            throw OtpException.sendFailed();
         }
         return convertToProfileResponse(savedUser);
     }
@@ -91,11 +91,11 @@ class ProfileService implements ProfileFacade {
             return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
                     .body(new AuthResponse(email, jwtToken));
         } catch (BadCredentialsException e) {
-            throw new LoginErrorException("Invalid credentials", e);
+            throw LoginErrorException.invalidCredentials(e);
         } catch (DisabledException e) {
-            throw new LoginErrorException("User is disabled", e);
+            throw LoginErrorException.accountDisabled(e);
         } catch (Exception e) {
-            throw new LoginErrorException("Something went wrong", e);
+            throw LoginErrorException.failed(e);
         }
     }
 
@@ -137,10 +137,10 @@ class ProfileService implements ProfileFacade {
         UserEntity existingEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));
         if (existingEntity.getResetOtp() == null || !existingEntity.getResetOtp().equals(otp)) {
-            throw new OtpException("Invalid OTP");
+            throw OtpException.invalid();
         }
         if (existingEntity.getResetOtpExpireAt() < System.currentTimeMillis()) {
-            throw new OtpException("OTP expired");
+            throw OtpException.expired();
         }
         existingEntity.setPassword(passwordEncoder.encode(newPassword));
         existingEntity.setResetOtp(null);
@@ -163,7 +163,7 @@ class ProfileService implements ProfileFacade {
         try {
             emailService.sendOtpEmail(existingUser.getEmail(), otp);
         } catch (Exception e) {
-            throw new OtpException("Unable to send OTP verify email");
+            throw OtpException.sendFailed();
         }
     }
 
@@ -173,10 +173,10 @@ class ProfileService implements ProfileFacade {
         UserEntity existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found for the email: " + email));
         if (existingUser.getVerifyOtp() == null || !existingUser.getVerifyOtp().equals(otp)) {
-            throw new OtpException("Invalid OTP");
+            throw OtpException.invalid();
         }
         if (existingUser.getVerifyOtpExpireAt() < System.currentTimeMillis()) {
-            throw new OtpException("OTP expired");
+            throw OtpException.expired();
         }
         existingUser.setIsAccountVerified(true);
         existingUser.setVerifyOtp(null);

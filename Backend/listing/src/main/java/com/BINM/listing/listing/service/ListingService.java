@@ -8,6 +8,7 @@ import com.BINM.listing.category.model.Category;
 import com.BINM.listing.category.repository.CategoryRepository;
 import com.BINM.listing.category.service.CategoryFacade;
 import com.BINM.listing.listing.dto.*;
+import com.BINM.listing.exception.ListingException;
 import com.BINM.listing.listing.event.ListingFinishedEvent;
 import com.BINM.listing.listing.mapper.ListingMapper;
 import com.BINM.listing.listing.model.Listing;
@@ -19,7 +20,6 @@ import com.BINM.listing.listing.repository.ListingMediaRepository;
 import com.BINM.listing.listing.repository.ListingRepository;
 import com.BINM.user.io.ProfileResponse;
 import com.BINM.user.service.ProfileFacade;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -61,7 +61,7 @@ class ListingService implements ListingFacade{
     @Transactional(readOnly = true)
     public ListingEditDto getListingForEdit(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         listingValidator.validateOwnership(l, currentUserId);
 
@@ -73,11 +73,10 @@ class ListingService implements ListingFacade{
     @Transactional(readOnly = true)
     public ListingDto get(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
-        // Tylko aktywne ogłoszenia są widoczne publicznie
         if (l.getStatus() != ListingStatus.ACTIVE) {
-            throw new EntityNotFoundException("Listing not found or not active");
+            throw ListingException.notActive(publicId.toString());
         }
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
@@ -90,7 +89,7 @@ class ListingService implements ListingFacade{
     @Transactional
     public ListingDto update(UUID publicId, ListingUpdateRequest req, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         listingValidator.validateOwnership(l, currentUserId);
 
@@ -137,7 +136,7 @@ class ListingService implements ListingFacade{
     @Transactional
     public void delete(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         listingValidator.validateOwnership(l, currentUserId);
 
@@ -150,7 +149,7 @@ class ListingService implements ListingFacade{
     @Transactional
     public ListingDto create(ListingCreateRequest req, String sellerUserId) {
         Category category = categoryRepository.findById(req.categoryId())
-                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+                .orElseThrow(() -> ListingException.categoryNotFound(req.categoryId()));
         
         listingValidator.validateCategoryIsLeaf(category);
 
@@ -188,7 +187,7 @@ class ListingService implements ListingFacade{
     @Transactional(readOnly = true)
     public ListingContactDto getContactInfo(UUID publicId) {
         Listing listing = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
         return new ListingContactDto(listing.getContactPhoneNumber());
     }
 
@@ -196,13 +195,11 @@ class ListingService implements ListingFacade{
     @Transactional
     public void submitForApproval(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         listingValidator.validateOwnership(l, currentUserId);
 
-        if (l.getStatus() != ListingStatus.DRAFT && l.getStatus() != ListingStatus.REJECTED) {
-            throw new IllegalStateException("Only DRAFT or REJECTED listings can be submitted for approval");
-        }
+        listingValidator.validateIsDraftOrRejected(l);
 
         l.setStatus(ListingStatus.WAITING);
         listingRepository.save(l);
@@ -212,15 +209,12 @@ class ListingService implements ListingFacade{
     @Transactional
     public void approveListing(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
-        if (l.getStatus() != ListingStatus.WAITING) {
-            throw new IllegalStateException("Only WAITING listings can be approved");
-        }
+        listingValidator.validateIsWaiting(l);
 
         l.setStatus(ListingStatus.ACTIVE);
         l.setPublishedAt(OffsetDateTime.now());
-        // Ustawiamy datę wygaśnięcia na 30 dni od teraz
         l.setExpiresAt(OffsetDateTime.now().plusDays(30));
         listingRepository.save(l);
     }
@@ -229,10 +223,9 @@ class ListingService implements ListingFacade{
     @Transactional
     public void rejectListing(UUID publicId, String reason) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         l.setStatus(ListingStatus.REJECTED);
-        // Tutaj można by dodać logikę wysyłania maila z powodem odrzucenia
         listingRepository.save(l);
     }
 
@@ -240,13 +233,11 @@ class ListingService implements ListingFacade{
     @Transactional
     public void finishListing(UUID publicId, String currentUserId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found"));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
         listingValidator.validateOwnership(l, currentUserId);
 
-        if (l.getStatus() != ListingStatus.ACTIVE && l.getStatus() != ListingStatus.WAITING) {
-            throw new IllegalStateException("Only ACTIVE or WAITING listings can be finished");
-        }
+        listingValidator.validateIsActiveOrWaiting(l);
 
         l.setStatus(ListingStatus.COMPLETED);
         listingRepository.save(l);
@@ -287,11 +278,9 @@ class ListingService implements ListingFacade{
     @Transactional(readOnly = true)
     public ListingDto getWaitingListing(UUID publicId) {
         Listing l = listingRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new EntityNotFoundException("Listing not found with publicId: " + publicId));
+                .orElseThrow(() -> ListingException.notFound(publicId.toString()));
 
-        if (l.getStatus() != ListingStatus.WAITING) {
-            throw new EntityNotFoundException("Listing is not waiting for approval");
-        }
+        listingValidator.validateIsWaiting(l);
 
         List<ListingAttribute> attributes = listingAttributeRepository.findByListingId(l.getId());
         List<ListingMedia> media = listingMediaRepository.findByListingIdOrderByPositionAsc(l.getId());
@@ -312,12 +301,11 @@ class ListingService implements ListingFacade{
         return toCoverDtoPage(listings);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<ListingCoverDto> listRandom(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        // Dodajemy filtr statusu ACTIVE
-        Specification<Listing> spec = (root, query, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE);
-        Page<Listing> randomListings = listingRepository.findAll(spec, pageable);
+        // Używamy metody z repozytorium, która ma ORDER BY RANDOM()
+        Page<Listing> randomListings = listingRepository.findRandom(ListingStatus.ACTIVE.name(), pageable);
         return toCoverDtoPage(randomListings);
     }
 
@@ -371,7 +359,7 @@ class ListingService implements ListingFacade{
         String key = ar.key().trim().toLowerCase(Locale.ROOT);
         AttributeDefinition def = defs.get(key);
         if (def == null) {
-            throw new IllegalArgumentException("Unknown attribute key: " + ar.key());
+            throw ListingException.invalidAttributeKey(ar.key());
         }
 
         ListingAttribute la = ListingAttribute.builder().listing(listing).attribute(def).build();
@@ -383,14 +371,14 @@ class ListingService implements ListingFacade{
                 try {
                     la.setVNumber(val != null ? new java.math.BigDecimal(val) : null);
                 } catch (NumberFormatException ex) {
-                    throw new IllegalArgumentException("Invalid number for attribute: " + def.getKey());
+                    throw ListingException.invalidAttributeValue(def.getKey());
                 }
             }
             case BOOLEAN -> la.setVBoolean(val != null && ("true".equalsIgnoreCase(val) || "1".equals(val)));
             case ENUM -> {
                 if (val != null && !val.isBlank()) {
                     AttributeOption opt = optionRepository.findByAttributeIdAndValueIgnoreCase(def.getId(), val)
-                            .orElseThrow(() -> new IllegalArgumentException("Invalid enum value for attribute: " + def.getKey()));
+                            .orElseThrow(() -> ListingException.invalidAttributeValue(def.getKey()));
                     la.setOption(opt);
                 }
             }

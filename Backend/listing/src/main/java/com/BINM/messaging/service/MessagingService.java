@@ -5,6 +5,7 @@ import com.BINM.listing.listing.service.ListingFacade;
 import com.BINM.messaging.dto.ChatMessageDto;
 import com.BINM.messaging.dto.ConversationDto;
 import com.BINM.messaging.dto.MessageDto;
+import com.BINM.messaging.exception.MessagingException;
 import com.BINM.messaging.model.Conversation;
 import com.BINM.messaging.model.Message;
 import com.BINM.messaging.repository.ConversationRepository;
@@ -16,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,10 +113,10 @@ class MessagingService implements MessagingFacade {
     @Transactional(readOnly = true)
     public Page<MessageDto> getMessagesForConversation(Long conversationId, String userId, int page, int size) {
         Conversation conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new AccessDeniedException("Conversation not found"));
+                .orElseThrow(() -> MessagingException.conversationNotFound(conversationId));
 
         if (!conversation.getBuyerId().equals(userId) && !conversation.getSellerId().equals(userId)) {
-            throw new AccessDeniedException("You are not a participant of this conversation");
+            throw MessagingException.conversationAccessDenied();
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -130,7 +130,7 @@ class MessagingService implements MessagingFacade {
     public void markConversationAsRead(Long conversationId, String userId) {
         conversationRepository.findById(conversationId).ifPresent(conversation -> {
             if (!conversation.getBuyerId().equals(userId) && !conversation.getSellerId().equals(userId)) {
-                throw new AccessDeniedException("You are not a participant of this conversation");
+                throw MessagingException.conversationAccessDenied();
             }
             messageRepository.markAsRead(conversationId, userId);
         });

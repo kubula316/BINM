@@ -1,9 +1,12 @@
 package com.BINM.user.exception;
 
-import com.BINM.exception.BusinessException;
+public class UserAlreadyExistsException extends UserException {
 
-public class UserAlreadyExistsException extends BusinessException {
-    public UserAlreadyExistsException(String message) {
-        super(message);
+    public UserAlreadyExistsException() {
+        super(UserErrorCode.USER_ALREADY_EXISTS);
+    }
+
+    public UserAlreadyExistsException(String email) {
+        super(UserErrorCode.USER_ALREADY_EXISTS, email);
     }
 }

@@ -1,7 +1,7 @@
 package com.BINM.media.storage;
 
-import com.BINM.media.exception.UploadError;
-import com.BINM.media.exception.UploadException;
+import com.BINM.media.exception.MediaErrorCode;
+import com.BINM.media.exception.MediaException;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -28,7 +28,7 @@ class ImageStorageClientImpl implements ImageStorageClient {
             blobClient.upload(data, length, true);
             return blobClient.getBlobUrl();
         } catch (BlobStorageException e) {
-            throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
+            throw MediaException.uploadFailed();
         }
     }
 
@@ -44,7 +44,7 @@ class ImageStorageClientImpl implements ImageStorageClient {
                 }
             }
         } catch (Exception e) {
-            throw new UploadException(UploadError.FAILED_TO_DELETE_IMAGE);
+            throw MediaException.uploadFailed();
         }
     }
 }

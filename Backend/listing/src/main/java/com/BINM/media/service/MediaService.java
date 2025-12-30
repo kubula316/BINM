@@ -1,8 +1,6 @@
 package com.BINM.media.service;
 
-
-import com.BINM.media.exception.UploadError;
-import com.BINM.media.exception.UploadException;
+import com.BINM.media.exception.MediaException;
 import com.BINM.media.storage.ImageStorageClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +27,7 @@ class MediaService implements MediaFacade {
         try {
             return uploadImage(mediaContainerName, file);
         } catch (IOException e) {
-            throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
+            throw MediaException.uploadFailed(e);
         }
     }
 
@@ -38,7 +36,7 @@ class MediaService implements MediaFacade {
         try {
             return uploadImage(profileContainerName, file);
         } catch (IOException e) {
-            throw new UploadException(UploadError.FAILED_TO_UPLOAD_IMAGE);
+            throw MediaException.uploadFailed(e);
         }
     }
 
@@ -52,7 +50,7 @@ class MediaService implements MediaFacade {
         try {
             this.imageStorageClient.deleteImage(containerName, url);
         } catch (Exception e) {
-            throw new UploadException(UploadError.FAILED_TO_DELETE_IMAGE);
+            throw MediaException.deleteFailed();
         }
     }
 }

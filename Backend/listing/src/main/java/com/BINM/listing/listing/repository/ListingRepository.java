@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -16,10 +17,10 @@ import java.util.UUID;
 
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
 
-    @Query(value = "SELECT * FROM listing ORDER BY RANDOM()",
-           countQuery = "SELECT count(*) FROM listing",
+    @Query(value = "SELECT * FROM listing WHERE status = :status ORDER BY RANDOM()",
+           countQuery = "SELECT count(*) FROM listing WHERE status = :status",
            nativeQuery = true)
-    Page<Listing> findRandom(Pageable pageable);
+    Page<Listing> findRandom(@Param("status") String status, Pageable pageable);
 
     Page<Listing> findAllByPublicIdIn(List<UUID> publicIds, Pageable page);
 
