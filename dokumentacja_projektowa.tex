@@ -632,6 +632,9 @@ Projekt wykorzystuje wzorzec Fasady, aby ukryć złożoność logiki biznesowej 
     \item \texttt{ProfileFacade}: Zarządzanie profilem użytkownika i autentykacją.
     \item \texttt{MessagingFacade}: Obsługa wiadomości i konwersacji.
     \item \texttt{InteractionFacade}: Zarządzanie ulubionymi.
+    \item \texttt{SearchFacade}: Dedykowany interfejs do wyszukiwania ogłoszeń.
+    \item \texttt{MediaFacade}: Obsługa operacji na plikach multimedialnych.
+    \item \texttt{EmailFacade}: Obsługa wysyłki wiadomości email.
 \end{itemize}
 
 \textbf{2. Serwisy (Services)}
@@ -640,25 +643,91 @@ Implementują logikę biznesową zdefiniowaną w interfejsach fasad.
     \item \texttt{ListingService}: Odpowiada za cykl życia ogłoszenia (Draft $\rightarrow$ Waiting $\rightarrow$ Active $\rightarrow$ Completed/Expired). Implementuje logikę walidacji i zapisu.
     \item \texttt{SearchService}: Dedykowany serwis do obsługi zaawansowanego wyszukiwania ogłoszeń z wykorzystaniem dynamicznych filtrów.
     \item \texttt{MessagingService}: Obsługuje logikę czatu, tworzenie konwersacji i zapisywanie wiadomości.
+    \item \texttt{InteractionService}: Obsługuje logikę ulubionych.
+    \item \texttt{MediaService}: Obsługuje logikę przesyłania plików do chmury.
+    \item \texttt{EmailService}: Obsługuje wysyłkę emaili przez SMTP.
+    \item \texttt{ProfileService}: Obsługuje logikę użytkownika (rejestracja, logowanie, profil).
 \end{itemize}
 
 \textbf{3. Kontrolery (Controllers)}
 Wystawiają endpointy REST API. Podzielone są na publiczne (dostępne dla wszystkich), użytkownika (wymagające logowania) i administracyjne (wymagające roli ADMIN).
 \begin{itemize}
-    \item \texttt{ListingPublicController}, \texttt{ListingUserController}, \texttt{ListingAdminController}
-    \item \texttt{AuthController}, \texttt{ProfileController}
-    \item \texttt{ChatController} (WebSocket), \texttt{ConversationController} (REST)
+    \item \texttt{ListingPublicController}: Publiczne endpointy do przeglądania i wyszukiwania ogłoszeń.
+    \item \texttt{ListingUserController}: Endpointy dla zalogowanych użytkowników (zarządzanie własnymi ogłoszeniami).
+    \item \texttt{ListingAdminController}: Endpointy administracyjne (moderacja ogłoszeń).
+    \item \texttt{CategoryPublicController}: Publiczne endpointy do pobierania kategorii.
+    \item \texttt{CategoryAdminController}: Zarządzanie kategoriami (ADMIN).
+    \item \texttt{AttributeAdminController}: Zarządzanie atrybutami (ADMIN).
+    \item \texttt{AuthController}: Logowanie, rejestracja, reset hasła.
+    \item \texttt{ProfileController}: Zarządzanie własnym profilem.
+    \item \texttt{PublicUserController}: Pobieranie publicznych profili innych użytkowników.
+    \item \texttt{ChatController}: Kontroler WebSocket.
+    \item \texttt{ConversationController}: Historia rozmów (REST).
+    \item \texttt{InteractionController}: Zarządzanie ulubionymi.
+    \item \texttt{MediaController}: Upload plików.
+\end{itemize}
+
+\textbf{4. Konfiguracja i Bezpieczeństwo}
+Kluczowe klasy odpowiedzialne za konfigurację aplikacji i bezpieczeństwo.
+\begin{itemize}
+    \item \texttt{SecurityConfig}: Główna klasa konfiguracyjna Spring Security. Definiuje łańcuch filtrów bezpieczeństwa, reguły dostępu do endpointów (np. \texttt{/admin/**} tylko dla roli ADMIN) oraz konfigurację CORS.
+    \item \texttt{JwtRequestFilter}: Filtr uruchamiany przed każdym żądaniem HTTP. Weryfikuje poprawność tokenu JWT przesyłanego w nagłówku \texttt{Authorization}, parsuje go i ustawia kontekst bezpieczeństwa (\texttt{SecurityContextHolder}).
+    \item \texttt{CustomAuthenticationEntryPoint}: Obsługuje błędy autentykacji (np. próba dostępu do zasobu bez tokenu), zwracając odpowiedni kod błędu 401.
+    \item \texttt{WebSocketConfig}: Konfiguruje brokera wiadomości STOMP oraz endpointy WebSocket. Rejestruje interceptory.
+    \item \texttt{JwtChannelInterceptor}: Specjalny interceptor dla kanałów WebSocket, który autoryzuje połączenie na podstawie tokenu JWT w momencie nawiązywania sesji (handshake).
 \end{itemize}
 
 \subsubsection{Wzorce Projektowe}
-W projekcie zastosowano szereg wzorców projektowych, m.in.:
+W projekcie zastosowano szereg wzorców projektowych, które zapewniają modularność, skalowalność i łatwość utrzymania kodu.
 
 \begin{itemize}
-    \item \textbf{Facade (Fasada):} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych (np. \texttt{ListingFacade}).
-    \item \textbf{Strategy (Strategia):} Wykorzystywana w mechanizmie wyszukiwania (\texttt{Specification<Listing>}), gdzie kryteria filtrowania są budowane dynamicznie w zależności od żądania użytkownika.
-    \item \textbf{Observer / Publish-Subscribe:} Zrealizowany za pomocą Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone (\texttt{ListingFinishedEvent}), moduł interakcji automatycznie usuwa je z ulubionych, nie tworząc bezpośredniej zależności między serwisami.
-    \item \textbf{Builder:} Wykorzystywany (dzięki bibliotece Lombok) do tworzenia złożonych obiektów DTO i encji w czytelny sposób.
-    \item \texttt{Repository:} Wzorzec dostępu do danych, zaimplementowany przez Spring Data JPA.
+    \item \textbf{Model-View-Controller (MVC):} Architektoniczny wzorzec projektowy, który jest fundamentem frameworka Spring Web.
+    \begin{itemize}
+        \item \textbf{Model:} Reprezentowany przez encje JPA (\texttt{UserEntity}, \texttt{Listing}) oraz obiekty DTO. Przechowuje dane i logikę biznesową.
+        \item \textbf{View:} W przypadku REST API widokiem jest format JSON zwracany do klienta.
+        \item \textbf{Controller:} Klasy z adnotacją \texttt{@RestController} (np. \texttt{ListingPublicController}), które przyjmują żądania HTTP, przetwarzają je (często delegując do serwisu) i zwracają odpowiedź.
+    \end{itemize}
+
+    \item \textbf{Facade (Fasada):} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Interfejsy takie jak \texttt{ListingFacade} czy \texttt{ProfileFacade} stanowią jedyny punkt wejścia do logiki danego modułu. Dzięki temu kontrolery nie muszą znać wewnętrznych zależności serwisu (np. repozytoriów czy mapperów). Ułatwia to testowanie i refaktoryzację.
+    \end{itemize}
+
+    \item \textbf{Strategy (Strategia):} Wzorzec behawioralny, który pozwala na zdefiniowanie rodziny algorytmów i ich wymienne stosowanie.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Wykorzystywany w mechanizmie wyszukiwania (\texttt{Specification<Listing>}). Kryteria filtrowania (np. po cenie, kategorii, atrybutach) są budowane dynamicznie w zależności od żądania użytkownika. Każdy filtr jest osobną strategią (predykatem), które są łączone w jedno zapytanie.
+    \end{itemize}
+
+    \item \textbf{Observer (Obserwator) / Publish-Subscribe:} Wzorzec, w którym obiekt (podmiot) powiadamia listę zależnych od niego obiektów (obserwatorów) o zmianie swojego stanu.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Zrealizowany za pomocą mechanizmu Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone w \texttt{ListingService}, publikowane jest zdarzenie \texttt{ListingFinishedEvent}. Serwis \texttt{InteractionService} nasłuchuje na to zdarzenie (\texttt{@EventListener}) i automatycznie usuwa to ogłoszenie z ulubionych. Dzięki temu moduły są luźno powiązane (loose coupling) - \texttt{ListingService} nie musi wiedzieć o istnieniu \texttt{InteractionService}.
+    \end{itemize}
+
+    \item \textbf{Builder (Budowniczy):} Wzorzec konstrukcyjny, który pozwala na tworzenie złożonych obiektów krok po kroku.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Wykorzystywany powszechnie dzięki bibliotece Lombok (\texttt{@Builder}). Umożliwia czytelne tworzenie obiektów DTO i encji, np.:
+        \begin{verbatim}
+        UserEntity.builder()
+            .email("...")
+            .name("...")
+            .build();
+        \end{verbatim}
+    \end{itemize}
+
+    \item \textbf{Repository (Repozytorium):} Wzorzec, który pośredniczy między warstwą domeny a warstwą mapowania danych.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Interfejsy rozszerzające \texttt{JpaRepository} (np. \texttt{ListingRepository}) zapewniają abstrakcję nad dostępem do bazy danych, ukrywając zapytania SQL/JPQL.
+    \end{itemize}
+
+    \item \textbf{Data Transfer Object (DTO):} Wzorzec służący do przesyłania danych między podsystemami aplikacji.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Obiekty w pakietach \texttt{dto} lub \texttt{io} (np. \texttt{ListingDto}, \texttt{ProfileRequest}) służą do oddzielenia wewnętrznego modelu danych (encji JPA) od danych prezentowanych klientowi API. Zapobiega to wyciekowi wrażliwych danych i problemom z cyklicznymi zależnościami w JSON.
+    \end{itemize}
+
+    \item \textbf{Dependency Injection (Wstrzykiwanie Zależności):} Wzorzec, w którym obiekty nie tworzą swoich zależności, ale otrzymują je z zewnątrz.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Fundament frameworka Spring. Wszystkie serwisy, kontrolery i repozytoria są wstrzykiwane przez konstruktor (z użyciem \texttt{@RequiredArgsConstructor}), co ułatwia testowanie i zarządzanie cyklem życia komponentów.
+    \end{itemize}
 \end{itemize}
 
 \subsection{Szczegółowa dokumentacja kodu (Frontend)}
