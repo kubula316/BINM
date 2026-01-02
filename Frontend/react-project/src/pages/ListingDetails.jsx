@@ -85,43 +85,56 @@ function ListingDetails() {
                 {listing.seller && (
                   <div className="item-seller">Sprzedawca: {listing.seller.name}</div>
                 )}
+                <div className="item-price" style={{ marginTop: 8 }}>
+                  {listing.priceAmount?.toLocaleString('pl-PL', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
+                </div>
+                <div className="item-location">
+                  Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
+                </div>
               </div>
               {mainImage && (
-                <a className="item-image-link" href={mainImage} target="_blank" rel="noreferrer">
-                  Zdjęcie
-                </a>
+                <div style={{ marginLeft: 16 }}>
+                  <img
+                    src={mainImage}
+                    alt={listing.title}
+                    style={{ maxWidth: 220, maxHeight: 220, objectFit: 'cover', borderRadius: 8 }}
+                  />
+                </div>
               )}
             </div>
 
             <div className="item-body">
-              <div className="item-price">
-                {listing.priceAmount?.toLocaleString('pl-PL', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
-              </div>
-              <div className="item-location">
-                Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
-              </div>
               <p className="item-desc">{listing.description}</p>
 
               {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
                 <div className="item-attributes">
                   <h3 style={{ color: '#fff', marginTop: 12, marginBottom: 6 }}>Parametry</h3>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {listing.attributes.map((attr) => {
+                    {listing.attributes.map((attr, index) => {
                       const label = attr.label || attr.key
-                      let valueText = attr.displayValue || attr.value
 
-                      if (!valueText && attr.type === 'ENUM' && attr.optionLabel) {
-                        valueText = attr.optionLabel
+                      let valueText = null
+                      if (attr.type === 'ENUM') {
+                        valueText = attr.enumLabel || attr.enumValue
+                      } else if (attr.type === 'NUMBER') {
+                        if (attr.numberValue !== null && attr.numberValue !== undefined) {
+                          valueText = attr.numberValue
+                        }
+                      } else if (attr.type === 'BOOLEAN') {
+                        if (attr.booleanValue === true) valueText = 'Tak'
+                        else if (attr.booleanValue === false) valueText = 'Nie'
+                      } else {
+                        valueText = attr.stringValue
                       }
 
-                      if (!valueText) return null
+                      if (valueText === null || valueText === undefined || valueText === '') return null
 
                       return (
-                        <li key={attr.key} style={{ color: '#ddd', fontSize: 14 }}>
+                        <li key={attr.key || index} style={{ color: '#ddd', fontSize: 14 }}>
                           <strong>{label}:</strong> {valueText}
                         </li>
                       )

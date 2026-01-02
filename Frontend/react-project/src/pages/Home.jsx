@@ -10,7 +10,7 @@ function Home({ isLoggedIn }) {
   useEffect(() => {
     const fetchRandom = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/public/listings/random?page=0&size=6`)
+        const response = await fetch(`${API_BASE_URL}/public/listings/random?page=0&size=12`)
         if (!response.ok) return
         const data = await response.json()
         setRandomListings(Array.isArray(data.content) ? data.content : [])
