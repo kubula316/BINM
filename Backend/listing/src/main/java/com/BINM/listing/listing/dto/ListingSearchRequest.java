@@ -9,7 +9,10 @@ public record ListingSearchRequest(
         List<AttributeFilter> attributes,
         List<SortSpec> sort,
         Integer page,
-        Integer size
+        Integer size,
+        Double latitude,
+        Double longitude,
+        Integer radiusKm
 ) {
     public static record AttributeFilter(
             String key,

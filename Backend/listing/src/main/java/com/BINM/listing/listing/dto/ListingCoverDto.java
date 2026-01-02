@@ -9,6 +9,7 @@ public record ListingCoverDto(
         SellerInfo seller,
         BigDecimal priceAmount,
         Boolean negotiable,
-        String coverImageUrl
+        String coverImageUrl,
+        String locationCity
 ) {
 }

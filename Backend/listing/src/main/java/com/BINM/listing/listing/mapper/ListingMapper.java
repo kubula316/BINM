@@ -51,6 +51,7 @@ public interface ListingMapper {
     @Mapping(target = "seller.id", source = "sellerProfile.userId")
     @Mapping(target = "seller.name", source = "sellerProfile.name")
     @Mapping(target = "coverImageUrl", source = "coverImage")
+    @Mapping(target = "locationCity", source = "listing.locationCity")
     ListingCoverDto toCoverDto(Listing listing, ProfileResponse sellerProfile, String coverImage);
 
     @Mapping(target = "key", source = "attribute.key")

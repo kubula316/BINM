@@ -70,6 +70,29 @@ public class SearchService implements SearchFacade {
                 spec = spec.and(hasAttribute(filter));
             }
         }
+
+        // Filtrowanie po lokalizacji (Bounding Box)
+        if (req.latitude() != null && req.longitude() != null && req.radiusKm() != null && req.radiusKm() > 0) {
+            double lat = req.latitude();
+            double lon = req.longitude();
+            double radius = req.radiusKm();
+
+            // 1 stopień szerokości geograficznej to ok. 111 km
+            double latDelta = radius / 111.0;
+            double minLat = lat - latDelta;
+            double maxLat = lat + latDelta;
+
+            // 1 stopień długości geograficznej zależy od szerokości: 111 * cos(lat)
+            // Używamy Math.cos(Math.toRadians(lat))
+            double lonDelta = radius / (111.0 * Math.cos(Math.toRadians(lat)));
+            double minLon = lon - lonDelta;
+            double maxLon = lon + lonDelta;
+
+            spec = spec.and((root, query, cb) -> cb.between(root.get("latitude"), minLat, maxLat));
+            spec = spec.and((root, query, cb) -> cb.between(root.get("longitude"), minLon, maxLon));
+        }
+
+
         return toCoverDtoPage(listingRepository.findAll(spec, pageable));
     }
 

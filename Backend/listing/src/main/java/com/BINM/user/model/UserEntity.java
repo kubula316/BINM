@@ -20,17 +20,27 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(unique = true)
     private String userId;
+
     private String name;
+
     @Column(unique = true)
     private String email;
+
     private String password;
+
     private String verifyOtp;
+
     private Boolean isAccountVerified;
+
     private Long verifyOtpExpireAt;
+
     private String resetOtp;
+
     private Long resetOtpExpireAt;
+
     private String profileImageUrl;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +50,7 @@ public class UserEntity {
     @CreationTimestamp
     @Column(updatable = false)
     private Timestamp createdAt;
+
     @UpdateTimestamp
     private Timestamp updatedAt;
 

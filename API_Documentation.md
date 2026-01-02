@@ -1,4 +1,4 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v3.0 - Final)
+# Dokumentacja API - Serwis Ogłoszeniowy (v3.2)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
@@ -162,6 +162,11 @@ W przypadku wystąpienia błędu, API zwraca odpowiedź w formacie JSON ze stoso
       "categoryId": 72,
       "sellerUserId": null,
       "attributes": [ ... ],
+      "latitude": 52.2297,   // Opcjonalne (wymaga longitude i radiusKm)
+      "longitude": 21.0122,  // Opcjonalne
+      "radiusKm": 10,        // Opcjonalne (promień w km)
+      "locationCity": "Gdańsk", // Opcjonalne
+      "locationRegion": "Pomorskie", // Opcjonalne
       "sort": [{ "field": "priceAmount", "dir": "asc" }],
       "page": 0,
       "size": 20
