@@ -22,12 +22,12 @@
 \usepackage[x11names,dvipsnames,table]{xcolor}
 \usepackage{hyperref}
 \hypersetup{
-    pdfauthor={Roman Czapla, Olaf Bar},
-    colorlinks=True,
-    linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
-    citecolor=BrickRed,  % color of links to bibliography
-    filecolor=Magenta,   % color of file links
-    urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
+pdfauthor={Roman Czapla, Olaf Bar},
+colorlinks=True,
+linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
+citecolor=BrickRed,  % color of links to bibliography
+filecolor=Magenta,   % color of file links
+urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
 
 % diagramy, grafy itp.
 \usepackage{tikz}
@@ -48,7 +48,7 @@
 %---------------------
 \overfullrule=2mm
 \pagestyle{plain}
-\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3}
+\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3} 
 \setlength{\parskip}{0pt}
 \setlength\arraycolsep{2pt}
 \oddsidemargin = 0.9cm
@@ -91,367 +91,603 @@
 % Strona tytułowa
 % --------------------------------------------
 
-    \thispagestyle{empty}
-    \begin{titlepage}
-        \begin{center}\Large
-        Uniwersytet Komisji Edukacji Narodowej w Krakowie\\
-        \large
-        Instytut Bezpieczeństwa i Informatyki\\
-        \vskip 10pt
-        \end{center}
-        \begin{center}
-            \centering \includegraphics[width=1.0\columnwidth]{images/logo.png}
-        \end{center}
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}\Large
+Uniwersytet Komisji Edukacji Narodowej w Krakowie\\
+\large
+Instytut Bezpieczeństwa i Informatyki\\
+\vskip 10pt
+\end{center}
+\begin{center}
+\centering \includegraphics[width=1.0\columnwidth]{images/logo.png}
+\end{center}
 
-        \begin{center}
-        {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ DOKUMENTACJA PROJEKTOWA}
-        \end{center}
-        \vskip 5pt
-        \begin{center}
-        {\bf \fontsize{22pt}{22pt}\selectfont Serwis Ogłoszeniowy BINM}
-        \end{center}
+\begin{center}
+ {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ DOKUMENTACJA PROJEKTOWA}
+\end{center}
+\vskip 5pt
+\begin{center}
+ {\bf \fontsize{22pt}{22pt}\selectfont Serwis Ogłoszeniowy BINM}
+\end{center}
 
 
 
-        \begin{center}
-        {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
-        \end{center}
-        \begin{center}
-        {\bf\fontsize{16pt}{16pt}\selectfont Jakub ...}\\
-        {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX \\\&\\}
-        {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Frontend)}\\
-        {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX\\\&\\}
-        {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Mobile)}\\
-        {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX}
-        \end{center}
-        \begin{center}
-        {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
-        {\bf\fontsize{12pt}{12pt}\selectfont dr inż. ...}
-        \end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
+\end{center}
+\begin{center}
+ {\bf\fontsize{16pt}{16pt}\selectfont Jakub ...}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX \\\&\\}
+ {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Frontend)}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX\\\&\\}
+ {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Mobile)}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX}
+\end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
+ {\bf\fontsize{12pt}{12pt}\selectfont dr inż. ...}
+\end{center}
 
 %\mbox{}
-        \vspace*{\fill}
+\vspace*{\fill}
 %\vskip 50pt
-        \begin{center}
-            \large
-            Kraków \the\year\\
-            (ostatnia aktualizacja: \DTMcurrenttime,\;\today)
-        \end{center}
-    \end{titlepage}
-    \setcounter{page}{0}
-    \newpage\null\thispagestyle{empty}
+\begin{center}
+\large
+Kraków \the\year\\
+(ostatnia aktualizacja: \DTMcurrenttime,\;\today)
+\end{center}
+\end{titlepage}
+\setcounter{page}{0} 
+\newpage\null\thispagestyle{empty}
 %\setcounter{page}{0} 
 %\newpage
 %\thispagestyle{empty}
 
-    \tableofcontents
+\tableofcontents
 
 
-    \newpage
+\newpage
 
-    \section{Szczegółowa dokumentacja projektowa}
-    \textit{W zależności od specyfiki projektu! Wymienione niżej podpunkty mają charakter orientacyjny.}
-    \subsection{Projekt UML}
-    \textit{W szczególności: diagram klas, ew. np. przypadki użycia, diagramy sekwencji, czynności, stanów, obiektów/komponentów/pakietów itp.}
+\section{Szczegółowa dokumentacja projektowa}
+\textit{W zależności od specyfiki projektu! Wymienione niżej podpunkty mają charakter orientacyjny.}
 
-    \subsection{Projekt bazy danych}
-    Projekt wykorzystuje relacyjną bazę danych PostgreSQL. Schemat bazy danych został zaprojektowany w podejściu \textit{Code-First} przy użyciu JPA (Java Persistence API) i Hibernate. Poniżej znajduje się opis kluczowych tabel.
+\subsection{Projekt UML}
+System został zaprojektowany w architekturze klient-serwer, wykorzystując model REST API do komunikacji. Głównym elementem systemu jest serwer aplikacji (Backend), który udostępnia interfejsy programistyczne dla aplikacji klienckich (Frontend webowy oraz aplikacja mobilna).
 
-    \begin{center}
-        \centering \includegraphics[width=1.0\columnwidth]{dokumentacja_projektowa/images/Diagram ERD.png}
-    \end{center}
-
-    \subsubsection{Tabela \texttt{tbl\_users}}
-    Przechowuje informacje o użytkownikach systemu.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny, auto-inkrementacja \\
-            \texttt{user\_id} & VARCHAR(255) & Publiczny, unikalny identyfikator (UUID) \\
-            \texttt{name} & VARCHAR(255) & Nazwa użytkownika \\
-            \texttt{email} & VARCHAR(255) & Unikalny adres email \\
-            \texttt{password} & VARCHAR(255) & Hasło (zahaszowane algorytmem BCrypt) \\
-            \texttt{profile\_image\_url} & VARCHAR(255) & URL do zdjęcia profilowego \\
-            \texttt{role} & VARCHAR(255) & Rola użytkownika (USER, ADMIN) \\
-            \texttt{is\_account\_verified} & BOOLEAN & Czy konto zostało zweryfikowane przez OTP \\
-            \texttt{verify\_otp} & VARCHAR(255) & Kod weryfikacyjny OTP \\
-            \texttt{verify\_otp\_expire\_at} & BIGINT & Czas wygaśnięcia kodu weryfikacyjnego \\
-            \texttt{reset\_otp} & VARCHAR(255) & Kod OTP do resetu hasła \\
-            \texttt{reset\_otp\_expire\_at} & BIGINT & Czas wygaśnięcia kodu resetu hasła \\
-            \texttt{created\_at} & TIMESTAMP & Data utworzenia konta \\
-            \texttt{updated\_at} & TIMESTAMP & Data ostatniej modyfikacji \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{tbl\_users}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{listing}}
-    Główna tabela przechowująca ogłoszenia.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{public\_id} & UUID & Publiczny, unikalny identyfikator \\
-            \texttt{seller\_user\_id} & VARCHAR(255) & ID sprzedawcy (FK do \texttt{tbl\_users}) \\
-            \texttt{category\_id} & BIGINT (FK) & ID kategorii (FK do \texttt{category}) \\
-            \texttt{title} & VARCHAR(255) & Tytuł ogłoszenia \\
-            \texttt{description} & TEXT & Opis ogłoszenia \\
-            \texttt{price\_amount} & NUMERIC(12, 2) & Cena \\
-            \texttt{currency} & VARCHAR(3) & Waluta (np. PLN) \\
-            \texttt{negotiable} & BOOLEAN & Czy cena podlega negocjacji \\
-            \texttt{location\_city} & VARCHAR(255) & Miasto \\
-            \texttt{location\_region} & VARCHAR(255) & Region/Województwo \\
-            \texttt{latitude} & DOUBLE PRECISION & Szerokość geograficzna \\
-            \texttt{longitude} & DOUBLE PRECISION & Długość geograficzna \\
-            \texttt{contact\_phone\_number} & VARCHAR(255) & Numer telefonu kontaktowego \\
-            \texttt{status} & VARCHAR(255) & Status ogłoszenia (DRAFT, WAITING, ACTIVE, etc.) \\
-            \texttt{published\_at} & TIMESTAMP & Data publikacji \\
-            \texttt{expires\_at} & TIMESTAMP & Data wygaśnięcia \\
-            \texttt{created\_at} & TIMESTAMP & Data utworzenia \\
-            \texttt{updated\_at} & TIMESTAMP & Data ostatniej modyfikacji \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{listing}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{listing\_media}}
-    Przechowuje zdjęcia przypisane do ogłoszeń.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{listing\_id} & BIGINT (FK) & ID ogłoszenia \\
-            \texttt{media\_url} & VARCHAR(255) & URL do pliku w chmurze \\
-            \texttt{media\_type} & VARCHAR(50) & Typ pliku (np. image) \\
-            \texttt{position} & INTEGER & Kolejność wyświetlania \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{listing\_media}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{category}}
-    Przechowuje hierarchiczną strukturę kategorii.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{parent\_id} & BIGINT (FK) & ID kategorii nadrzędnej (self-reference) \\
-            \texttt{name} & VARCHAR(255) & Nazwa kategorii \\
-            \texttt{sort\_order} & INTEGER & Kolejność sortowania \\
-            \texttt{image\_url} & VARCHAR(255) & Ikona/Obrazek kategorii \\
-            \texttt{depth} & INTEGER & Głębokość w drzewie kategorii \\
-            \texttt{is\_leaf} & BOOLEAN & Czy jest to kategoria końcowa (liść) \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{category}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{attribute\_definition}}
-    Definiuje atrybuty (cechy), które mogą posiadać ogłoszenia w danej kategorii.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{category\_id} & BIGINT (FK) & ID kategorii \\
-            \texttt{key} & VARCHAR(255) & Klucz atrybutu (np. color) \\
-            \texttt{label} & VARCHAR(255) & Etykieta wyświetlana (np. Kolor) \\
-            \texttt{type} & VARCHAR(50) & Typ danych (STRING, NUMBER, BOOLEAN, ENUM) \\
-            \texttt{unit} & VARCHAR(50) & Jednostka (np. km, cm) \\
-            \texttt{sort\_order} & INTEGER & Kolejność wyświetlania \\
-            \texttt{active} & BOOLEAN & Czy atrybut jest aktywny \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{attribute\_definition}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{attribute\_option}}
-    Przechowuje możliwe wartości dla atrybutów typu ENUM.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{attribute\_id} & BIGINT (FK) & ID definicji atrybutu \\
-            \texttt{value} & VARCHAR(255) & Wartość opcji \\
-            \texttt{label} & VARCHAR(255) & Etykieta opcji \\
-            \texttt{sort\_order} & INTEGER & Kolejność sortowania \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{attribute\_option}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{listing\_attribute}}
-    Przechowuje konkretne wartości atrybutów dla danego ogłoszenia.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{listing\_id} & BIGINT (FK) & ID ogłoszenia \\
-            \texttt{attribute\_id} & BIGINT (FK) & ID definicji atrybutu \\
-            \texttt{option\_id} & BIGINT (FK) & ID wybranej opcji (dla ENUM) \\
-            \texttt{v\_text} & VARCHAR(255) & Wartość tekstowa \\
-            \texttt{v\_number} & NUMERIC & Wartość liczbowa \\
-            \texttt{v\_boolean} & BOOLEAN & Wartość logiczna \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{listing\_attribute}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{favorite}}
-    Przechowuje informacje o polubieniach (ulubionych ogłoszeniach).
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{user\_id} & VARCHAR(255) & ID użytkownika \\
-            \texttt{entity\_id} & VARCHAR(255) & ID polubionego obiektu (np. ogłoszenia) \\
-            \texttt{entity\_type} & VARCHAR(50) & Typ obiektu (np. LISTING) \\
-            \texttt{created\_at} & TIMESTAMP & Data dodania do ulubionych \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{favorite}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{conversation}}
-    Reprezentuje konwersację między dwoma użytkownikami na temat ogłoszenia.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{listing\_id} & UUID & ID ogłoszenia, którego dotyczy rozmowa \\
-            \texttt{buyer\_id} & VARCHAR(255) & ID kupującego \\
-            \texttt{seller\_id} & VARCHAR(255) & ID sprzedającego \\
-            \texttt{created\_at} & TIMESTAMP & Data utworzenia \\
-            \texttt{updated\_at} & TIMESTAMP & Data ostatniej wiadomości \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{conversation}}
-    \end{table}
-
-    \subsubsection{Tabela \texttt{message}}
-    Przechowuje pojedynczą wiadomość w ramach konwersacji.
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{|l|l|l|}
-            \hline
-            \textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
-            \hline
-            \texttt{id} & BIGINT (PK) & Klucz główny \\
-            \texttt{conversation\_id} & BIGINT (FK) & ID konwersacji \\
-            \texttt{sender\_id} & VARCHAR(255) & ID nadawcy \\
-            \texttt{recipient\_id} & VARCHAR(255) & ID odbiorcy \\
-            \texttt{content} & TEXT & Treść wiadomości \\
-            \texttt{is\_read} & BOOLEAN & Czy wiadomość została odczytana \\
-            \texttt{created\_at} & TIMESTAMP & Data wysłania \\
-            \hline
-        \end{tabular}
-        \caption{Struktura tabeli \texttt{message}}
-    \end{table}
-
-    \subsection{Szczegółowa dokumentacja kodu (Backend)}
-    Część serwerowa aplikacji została zaimplementowana w języku Java (wersja 21) przy użyciu frameworka Spring Boot. Architektura projektu opiera się na podziale na moduły funkcjonalne (\textit{Package by Feature}), co zapewnia wysoką spójność i niskie sprzężenie komponentów.
-
-    \subsubsection{Architektura i Pakiety}
-    Główne pakiety aplikacji to:
+Architektura systemu składa się z następujących komponentów:
+\begin{itemize}
+    \item \textbf{Aplikacja Webowa (Frontend):} Interfejs użytkownika dostępny przez przeglądarkę internetową, zaimplementowany w technologii React.
+    \item \textbf{Aplikacja Mobilna:} Natywna aplikacja na system Android, umożliwiająca korzystanie z serwisu na urządzeniach przenośnych.
+    \item \textbf{Backend API:} Serwer aplikacji zaimplementowany w języku Java (Spring Boot), odpowiedzialny za logikę biznesową, autentykację, obsługę ogłoszeń oraz komunikację w czasie rzeczywistym.
+    \item \textbf{Baza Danych:} Relacyjna baza danych PostgreSQL przechowująca wszystkie trwałe dane systemu.
+    \item \textbf{Usługi Zewnętrzne:}
     \begin{itemize}
-        \item \texttt{com.BINM.user}: Zarządzanie użytkownikami, autentykacja, profile.
-        \item \texttt{com.BINM.listing}: Zarządzanie ogłoszeniami, kategoriami i atrybutami.
-        \item \texttt{com.BINM.messaging}: System komunikacji w czasie rzeczywistym (WebSocket).
-        \item \texttt{com.BINM.interactions}: Obsługa ulubionych i innych interakcji.
-        \item \texttt{com.BINM.media}: Obsługa przesyłania plików (Azure Blob Storage).
+        \item \textbf{Serwer SMTP:} Do wysyłania wiadomości email (weryfikacja konta, reset hasła).
+        \item \textbf{Azure Blob Storage:} Chmurowy magazyn danych do przechowywania plików multimedialnych (zdjęcia ogłoszeń, awatary).
     \end{itemize}
+\end{itemize}
 
-    \subsubsection{Kluczowe Klasy i Interfejsy}
+Komunikacja między klientami a serwerem odbywa się za pomocą protokołu HTTPS (dla REST API) oraz WebSocket (dla czatu w czasie rzeczywistym).
 
-    \textbf{1. Fasady (Facades)}
-    Projekt wykorzystuje wzorzec Fasady, aby ukryć złożoność logiki biznesowej przed kontrolerami i innymi modułami.
-    \begin{itemize}
-        \item \texttt{ListingFacade}: Główny punkt dostępu do operacji na ogłoszeniach (tworzenie, edycja, wyszukiwanie).
-        \item \texttt{ProfileFacade}: Zarządzanie profilem użytkownika i autentykacją.
-        \item \texttt{MessagingFacade}: Obsługa wiadomości i konwersacji.
-        \item \texttt{InteractionFacade}: Zarządzanie ulubionymi.
-    \end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/Architecture_Diagram.png}
+    \caption{Ogólny diagram architektury systemu}
+\end{figure}
 
-    \textbf{2. Serwisy (Services)}
-    Implementują logikę biznesową zdefiniowaną w interfejsach fasad.
-    \begin{itemize}
-        \item \texttt{ListingService}: Odpowiada za cykl życia ogłoszenia (Draft $\rightarrow$ Waiting $\rightarrow$ Active $\rightarrow$ Completed/Expired). Implementuje logikę walidacji i zapisu.
-        \item \texttt{SearchService}: Dedykowany serwis do obsługi zaawansowanego wyszukiwania ogłoszeń z wykorzystaniem dynamicznych filtrów.
-        \item \texttt{MessagingService}: Obsługuje logikę czatu, tworzenie konwersacji i zapisywanie wiadomości.
-    \end{itemize}
+\subsection{Projekt bazy danych}
+Projekt wykorzystuje relacyjną bazę danych PostgreSQL. Schemat bazy danych został zaprojektowany w podejściu \textit{Code-First} przy użyciu JPA (Java Persistence API) i Hibernate. Poniżej znajduje się opis kluczowych tabel.
 
-    \textbf{3. Kontrolery (Controllers)}
-    Wystawiają endpointy REST API. Podzielone są na publiczne (dostępne dla wszystkich), użytkownika (wymagające logowania) i administracyjne (wymagające roli ADMIN).
-    \begin{itemize}
-        \item \texttt{ListingPublicController}, \texttt{ListingUserController}, \texttt{ListingAdminController}
-        \item \texttt{AuthController}, \texttt{ProfileController}
-        \item \texttt{ChatController} (WebSocket), \texttt{ConversationController} (REST)
-    \end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{dokumentacja_projektowa/images/Diagram ERD.png}
+    \caption{Diagram ERD}
+\end{figure}
 
-    \subsubsection{Wzorce Projektowe}
-    W projekcie zastosowano szereg wzorców projektowych, m.in.:
+\subsubsection{Tabela \texttt{tbl\_users}}
+Przechowuje informacje o użytkownikach systemu.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny, auto-inkrementacja \\
+\texttt{user\_id} & VARCHAR(255) & Publiczny, unikalny identyfikator (UUID) \\
+\texttt{name} & VARCHAR(255) & Nazwa użytkownika \\
+\texttt{email} & VARCHAR(255) & Unikalny adres email \\
+\texttt{password} & VARCHAR(255) & Hasło (zahaszowane algorytmem BCrypt) \\
+\texttt{profile\_image\_url} & VARCHAR(255) & URL do zdjęcia profilowego \\
+\texttt{role} & VARCHAR(255) & Rola użytkownika (USER, ADMIN) \\
+\texttt{is\_account\_verified} & BOOLEAN & Czy konto zostało zweryfikowane przez OTP \\
+\texttt{verify\_otp} & VARCHAR(255) & Kod weryfikacyjny OTP \\
+\texttt{verify\_otp\_expire\_at} & BIGINT & Czas wygaśnięcia kodu weryfikacyjnego \\
+\texttt{reset\_otp} & VARCHAR(255) & Kod OTP do resetu hasła \\
+\texttt{reset\_otp\_expire\_at} & BIGINT & Czas wygaśnięcia kodu resetu hasła \\
+\texttt{created\_at} & TIMESTAMP & Data utworzenia konta \\
+\texttt{updated\_at} & TIMESTAMP & Data ostatniej modyfikacji \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{tbl\_users}}
+\end{table}
 
-    \begin{itemize}
-        \item \textbf{Facade (Fasada):} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych (np. \texttt{ListingFacade}).
-        \item \textbf{Strategy (Strategia):} Wykorzystywana w mechanizmie wyszukiwania (\texttt{Specification<Listing>}), gdzie kryteria filtrowania są budowane dynamicznie w zależności od żądania użytkownika.
-        \item \textbf{Observer / Publish-Subscribe:} Zrealizowany za pomocą Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone (\texttt{ListingFinishedEvent}), moduł interakcji automatycznie usuwa je z ulubionych, nie tworząc bezpośredniej zależności między serwisami.
-        \item \textbf{Builder:} Wykorzystywany (dzięki bibliotece Lombok) do tworzenia złożonych obiektów DTO i encji w czytelny sposób.
-        \item \texttt{Repository:} Wzorzec dostępu do danych, zaimplementowany przez Spring Data JPA.
-    \end{itemize}
+\subsubsection{Tabela \texttt{listing}}
+Główna tabela przechowująca ogłoszenia.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{public\_id} & UUID & Publiczny, unikalny identyfikator \\
+\texttt{seller\_user\_id} & VARCHAR(255) & ID sprzedawcy (FK do \texttt{tbl\_users}) \\
+\texttt{category\_id} & BIGINT (FK) & ID kategorii (FK do \texttt{category}) \\
+\texttt{title} & VARCHAR(255) & Tytuł ogłoszenia \\
+\texttt{description} & TEXT & Opis ogłoszenia \\
+\texttt{price\_amount} & NUMERIC(12, 2) & Cena \\
+\texttt{currency} & VARCHAR(3) & Waluta (np. PLN) \\
+\texttt{negotiable} & BOOLEAN & Czy cena podlega negocjacji \\
+\texttt{location\_city} & VARCHAR(255) & Miasto \\
+\texttt{location\_region} & VARCHAR(255) & Region/Województwo \\
+\texttt{latitude} & DOUBLE PRECISION & Szerokość geograficzna \\
+\texttt{longitude} & DOUBLE PRECISION & Długość geograficzna \\
+\texttt{contact\_phone\_number} & VARCHAR(255) & Numer telefonu kontaktowego \\
+\texttt{status} & VARCHAR(255) & Status ogłoszenia (DRAFT, WAITING, ACTIVE, etc.) \\
+\texttt{published\_at} & TIMESTAMP & Data publikacji \\
+\texttt{expires\_at} & TIMESTAMP & Data wygaśnięcia \\
+\texttt{created\_at} & TIMESTAMP & Data utworzenia \\
+\texttt{updated\_at} & TIMESTAMP & Data ostatniej modyfikacji \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{listing}}
+\end{table}
 
-    \subsection{Szczegółowa dokumentacja kodu (Frontend)}
-    \textit{[Miejsce dla zespołu frontendowego]}
+\subsubsection{Tabela \texttt{listing\_media}}
+Przechowuje zdjęcia przypisane do ogłoszeń.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{listing\_id} & BIGINT (FK) & ID ogłoszenia \\
+\texttt{media\_url} & VARCHAR(255) & URL do pliku w chmurze \\
+\texttt{media\_type} & VARCHAR(50) & Typ pliku (np. image) \\
+\texttt{position} & INTEGER & Kolejność wyświetlania \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{listing\_media}}
+\end{table}
 
-    \subsection{Szczegółowa dokumentacja kodu (Mobile)}
-    \textit{[Miejsce dla zespołu mobilnego]}
+\subsubsection{Tabela \texttt{category}}
+Przechowuje hierarchiczną strukturę kategorii.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{parent\_id} & BIGINT (FK) & ID kategorii nadrzędnej (self-reference) \\
+\texttt{name} & VARCHAR(255) & Nazwa kategorii \\
+\texttt{sort\_order} & INTEGER & Kolejność sortowania \\
+\texttt{image\_url} & VARCHAR(255) & Ikona/Obrazek kategorii \\
+\texttt{depth} & INTEGER & Głębokość w drzewie kategorii \\
+\texttt{is\_leaf} & BOOLEAN & Czy jest to kategoria końcowa (liść) \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{category}}
+\end{table}
 
-    \subsection{Środowisko programistyczne}
-    Do rozwoju i uruchomienia projektu wykorzystano następujące narzędzia i technologie:
+\subsubsection{Tabela \texttt{attribute\_definition}}
+Definiuje atrybuty (cechy), które mogą posiadać ogłoszenia w danej kategorii.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{category\_id} & BIGINT (FK) & ID kategorii \\
+\texttt{key} & VARCHAR(255) & Klucz atrybutu (np. color) \\
+\texttt{label} & VARCHAR(255) & Etykieta wyświetlana (np. Kolor) \\
+\texttt{type} & VARCHAR(50) & Typ danych (STRING, NUMBER, BOOLEAN, ENUM) \\
+\texttt{unit} & VARCHAR(50) & Jednostka (np. km, cm) \\
+\texttt{sort\_order} & INTEGER & Kolejność wyświetlania \\
+\texttt{active} & BOOLEAN & Czy atrybut jest aktywny \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{attribute\_definition}}
+\end{table}
 
-    \begin{itemize}
-        \item \textbf{Język programowania:} Java 21.
-        \item \textbf{Framework:} Spring Boot 3.x (Spring Web, Spring Security, Spring Data JPA, Spring WebSocket).
-        \item \textbf{Baza danych:} PostgreSQL 15+.
-        \item \textbf{Zarządzanie zależnościami:} Apache Maven.
-        \item \textbf{IDE:} IntelliJ IDEA Ultimate / Community.
-        \item \textbf{Konteneryzacja:} Docker (do uruchomienia bazy danych).
-        \item \textbf{Przechowywanie plików:} Azure Blob Storage.
-        \item \textbf{Biblioteki pomocnicze:} Lombok (redukcja boilerplate code), MapStruct (mapowanie DTO-Entity), JJWT (obsługa tokenów JWT).
-    \end{itemize}
+\subsubsection{Tabela \texttt{attribute\_option}}
+Przechowuje możliwe wartości dla atrybutów typu ENUM.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{attribute\_id} & BIGINT (FK) & ID definicji atrybutu \\
+\texttt{value} & VARCHAR(255) & Wartość opcji \\
+\texttt{label} & VARCHAR(255) & Etykieta opcji \\
+\texttt{sort\_order} & INTEGER & Kolejność sortowania \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{attribute\_option}}
+\end{table}
+
+\subsubsection{Tabela \texttt{listing\_attribute}}
+Przechowuje konkretne wartości atrybutów dla danego ogłoszenia.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{listing\_id} & BIGINT (FK) & ID ogłoszenia \\
+\texttt{attribute\_id} & BIGINT (FK) & ID definicji atrybutu \\
+\texttt{option\_id} & BIGINT (FK) & ID wybranej opcji (dla ENUM) \\
+\texttt{v\_text} & VARCHAR(255) & Wartość tekstowa \\
+\texttt{v\_number} & NUMERIC & Wartość liczbowa \\
+\texttt{v\_boolean} & BOOLEAN & Wartość logiczna \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{listing\_attribute}}
+\end{table}
+
+\subsubsection{Tabela \texttt{favorite}}
+Przechowuje informacje o polubieniach (ulubionych ogłoszeniach).
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{user\_id} & VARCHAR(255) & ID użytkownika \\
+\texttt{entity\_id} & VARCHAR(255) & ID polubionego obiektu (np. ogłoszenia) \\
+\texttt{entity\_type} & VARCHAR(50) & Typ obiektu (np. LISTING) \\
+\texttt{created\_at} & TIMESTAMP & Data dodania do ulubionych \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{favorite}}
+\end{table}
+
+\subsubsection{Tabela \texttt{conversation}}
+Reprezentuje konwersację między dwoma użytkownikami na temat ogłoszenia.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{listing\_id} & UUID & ID ogłoszenia, którego dotyczy rozmowa \\
+\texttt{buyer\_id} & VARCHAR(255) & ID kupującego \\
+\texttt{seller\_id} & VARCHAR(255) & ID sprzedającego \\
+\texttt{created\_at} & TIMESTAMP & Data utworzenia \\
+\texttt{updated\_at} & TIMESTAMP & Data ostatniej wiadomości \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{conversation}}
+\end{table}
+
+\subsubsection{Tabela \texttt{message}}
+Przechowuje pojedynczą wiadomość w ramach konwersacji.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Nazwa kolumny} & \textbf{Typ danych} & \textbf{Opis} \\
+\hline
+\texttt{id} & BIGINT (PK) & Klucz główny \\
+\texttt{conversation\_id} & BIGINT (FK) & ID konwersacji \\
+\texttt{sender\_id} & VARCHAR(255) & ID nadawcy \\
+\texttt{recipient\_id} & VARCHAR(255) & ID odbiorcy \\
+\texttt{content} & TEXT & Treść wiadomości \\
+\texttt{is\_read} & BOOLEAN & Czy wiadomość została odczytana \\
+\texttt{created\_at} & TIMESTAMP & Data wysłania \\
+\hline
+\end{tabular}
+\caption{Struktura tabeli \texttt{message}}
+\end{table}
+
+\subsection{Szczegółowa dokumentacja kodu (Backend)}
+Część serwerowa aplikacji została zaimplementowana w języku Java (wersja 21) przy użyciu frameworka Spring Boot. Architektura projektu opiera się na podziale na moduły funkcjonalne (\textit{Package by Feature}), co zapewnia wysoką spójność i niskie sprzężenie komponentów.
+
+\subsubsection{Architektura i Pakiety}
+Kod źródłowy został podzielony na niezależne pakiety funkcjonalne. Poniżej przedstawiono szczegółowy opis każdego z nich.
+
+\paragraph{Pakiet \texttt{com.BINM.user}}
+Ten moduł odpowiada za zarządzanie tożsamością użytkowników, autentykację oraz obsługę profili. Jest to fundament bezpieczeństwa aplikacji.
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Rejestracja i logowanie użytkowników (generowanie tokenów JWT).
+    \item Weryfikacja konta (OTP) i resetowanie haseł.
+    \item Zarządzanie danymi profilowymi (imię, zdjęcie).
+    \item Konfiguracja Spring Security (filtry, role).
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{controller}:
+        \begin{itemize}
+            \item \texttt{AuthController}: Obsługuje publiczne endpointy związane z autentykacją (logowanie, rejestracja, reset hasła).
+            \item \texttt{ProfileController}: Obsługuje endpointy wymagające zalogowania, związane z zarządzaniem własnym profilem (pobieranie danych, edycja, weryfikacja OTP).
+            \item \texttt{PublicUserController}: Obsługuje publiczne endpointy do pobierania danych o innych użytkownikach (np. sprzedawcach).
+        \end{itemize}
+    \item \texttt{service}:
+        \begin{itemize}
+            \item \texttt{ProfileFacade}: Interfejs definiujący kontrakt dla operacji na profilach, ukrywający implementację.
+            \item \texttt{ProfileService}: Implementacja logiki biznesowej (tworzenie konta, walidacja, wysyłanie emaili).
+            \item \texttt{AppUserDetailsService}: Implementacja interfejsu Spring Security \texttt{UserDetailsService}, ładująca użytkownika z bazy danych.
+            \item \texttt{CustomUserDetails}: Rozszerzenie klasy \texttt{User} ze Spring Security, przechowujące dodatkowe informacje (np. ID użytkownika).
+        \end{itemize}
+    \item \texttt{repository}:
+        \begin{itemize}
+            \item \texttt{UserRepository}: Interfejs Spring Data JPA do komunikacji z tabelą \texttt{tbl\_users}.
+        \end{itemize}
+    \item \texttt{model}:
+        \begin{itemize}
+            \item \texttt{UserEntity}: Encja JPA reprezentująca użytkownika w bazie danych.
+            \item \texttt{UserRole}: Enum definiujący role w systemie (USER, ADMIN).
+        \end{itemize}
+    \item \texttt{io}: Obiekty DTO (Data Transfer Object) służące do przesyłania danych między klientem a serwerem (np. \texttt{AuthRequest}, \texttt{ProfileResponse}).
+    \item \texttt{config}:
+        \begin{itemize}
+            \item \texttt{SecurityConfig}: Główna konfiguracja bezpieczeństwa (CORS, CSRF, reguły dostępu do endpointów).
+            \item \texttt{JwtRequestFilter}: Filtr przechwytujący każde żądanie HTTP, weryfikujący token JWT i ustawiający kontekst bezpieczeństwa.
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/uml_user_package.png}
+    \caption{Diagram klas pakietu \texttt{com.BINM.user}}
+\end{figure}
+
+\paragraph{Pakiet \texttt{com.BINM.listing}}
+Jest to największy i najważniejszy moduł aplikacji, odpowiedzialny za całą logikę związaną z ogłoszeniami, kategoriami i atrybutami.
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Zarządzanie cyklem życia ogłoszenia (DRAFT, WAITING, ACTIVE, EXPIRED, etc.).
+    \item Obsługa zaawansowanego wyszukiwania i filtrowania.
+    \item Zarządzanie hierarchiczną strukturą kategorii.
+    \item Zarządzanie dynamicznymi atrybutami przypisanymi do kategorii.
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{listing}:
+        \begin{itemize}
+            \item \texttt{ListingPublicController}, \texttt{ListingUserController}, \texttt{ListingAdminController}: Kontrolery obsługujące operacje na ogłoszeniach dla różnych ról.
+            \item \texttt{ListingService}: Główny serwis implementujący logikę biznesową ogłoszeń.
+            \item \texttt{SearchService}: Serwis dedykowany do wyszukiwania (CQRS).
+            \item \texttt{ListingValidator}: Komponent walidujący reguły biznesowe.
+            \item \texttt{ListingRepository}, \texttt{ListingMediaRepository}, \texttt{ListingAttributeRepository}: Repozytoria JPA.
+            \item \texttt{ListingExceptionHandler}: Obsługa błędów specyficznych dla ogłoszeń.
+        \end{itemize}
+    \item \texttt{category}:
+        \begin{itemize}
+            \item \texttt{CategoryPublicController}, \texttt{CategoryAdminController}: Zarządzanie kategoriami.
+            \item \texttt{CategoryService}: Logika drzewa kategorii.
+        \end{itemize}
+    \item \texttt{attribute}:
+        \begin{itemize}
+            \item \texttt{AttributeAdminController}: Zarządzanie definicjami atrybutów.
+            \item \texttt{AttributeService}: Logika biznesowa atrybutów.
+            \item \texttt{AttributeDefinitionRepository}, \texttt{AttributeOptionRepository}: Repozytoria JPA.
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/uml_listing_package.png}
+    \caption{Diagram klas pakietu \texttt{com.BINM.listing}}
+\end{figure}
+
+\paragraph{Pakiet \texttt{com.BINM.messaging}}
+Moduł odpowiedzialny za komunikację w czasie rzeczywistym między użytkownikami.
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Obsługa połączeń WebSocket (STOMP).
+    \item Przesyłanie wiadomości w czasie rzeczywistym.
+    \item Zapisywanie historii konwersacji w bazie danych.
+    \item Zarządzanie statusem wiadomości (przeczytana/nieprzeczytana).
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{controller}:
+        \begin{itemize}
+            \item \texttt{ChatController}: Kontroler WebSocket obsługujący wysyłanie wiadomości.
+            \item \texttt{ConversationController}: Kontroler REST do pobierania historii rozmów.
+        \end{itemize}
+    \item \texttt{service}:
+        \begin{itemize}
+            \item \texttt{MessagingFacade}: Interfejs publiczny modułu.
+            \item \texttt{MessagingService}: Logika biznesowa (tworzenie konwersacji, zapis wiadomości).
+        \end{itemize}
+    \item \texttt{repository}:
+        \begin{itemize}
+            \item \texttt{ConversationRepository}, \texttt{MessageRepository}: Dostęp do bazy danych.
+        \end{itemize}
+    \item \texttt{config}:
+        \begin{itemize}
+            \item \texttt{WebSocketConfig}: Konfiguracja brokera wiadomości i endpointów STOMP.
+            \item \texttt{JwtChannelInterceptor}: Interceptor autoryzujący połączenia WebSocket za pomocą tokenu JWT.
+            \item \texttt{WebSocketUserPrincipal}: Klasa reprezentująca tożsamość użytkownika w sesji WebSocket.
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/uml_messaging_package.png}
+    \caption{Diagram klas pakietu \texttt{com.BINM.messaging}}
+\end{figure}
+
+\paragraph{Pakiet \texttt{com.BINM.interactions}}
+Moduł obsługujący interakcje użytkowników z ogłoszeniami, w szczególności system "Ulubionych".
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Dodawanie i usuwanie ogłoszeń z ulubionych.
+    \item Sprawdzanie statusu polubienia.
+    \item Pobieranie listy ulubionych ogłoszeń użytkownika.
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{controller}:
+        \begin{itemize}
+            \item \texttt{InteractionController}: Obsługuje endpointy REST do zarządzania ulubionymi.
+        \end{itemize}
+    \item \texttt{service}:
+        \begin{itemize}
+            \item \texttt{InteractionFacade}: Interfejs publiczny modułu.
+            \item \texttt{InteractionService}: Implementacja logiki biznesowej. Nasłuchuje również na zdarzenia (np. zakończenie ogłoszenia), aby usunąć nieaktualne polubienia.
+        \end{itemize}
+    \item \texttt{repository}:
+        \begin{itemize}
+            \item \texttt{FavoriteRepository}: Dostęp do tabeli \texttt{favorite}.
+        \end{itemize}
+    \item \texttt{model}:
+        \begin{itemize}
+            \item \texttt{Favorite}: Encja reprezentująca polubienie.
+            \item \texttt{EntityType}: Enum określający typ polubionego obiektu (obecnie tylko LISTING).
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/uml_interactions_package.png}
+    \caption{Diagram klas pakietu \texttt{com.BINM.interactions}}
+\end{figure}
+
+\paragraph{Pakiet \texttt{com.BINM.media}}
+Moduł odpowiedzialny za obsługę plików multimedialnych (zdjęcia ogłoszeń, zdjęcia profilowe).
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Przesyłanie plików na zewnętrzny serwer (Azure Blob Storage).
+    \item Generowanie publicznych adresów URL do zasobów.
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{controller}:
+        \begin{itemize}
+            \item \texttt{MediaController}: Endpointy do uploadu plików.
+        \end{itemize}
+    \item \texttt{service}:
+        \begin{itemize}
+            \item \texttt{MediaFacade}: Interfejs publiczny modułu.
+            \item \texttt{MediaService}: Implementacja logiki uploadu.
+        \end{itemize}
+    \item \texttt{storage}:
+        \begin{itemize}
+            \item \texttt{ImageStorageClient}: Klient integrujący się z Azure Blob Storage SDK.
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/uml_media_package.png}
+    \caption{Diagram klas pakietu \texttt{com.BINM.media}}
+\end{figure}
+
+\paragraph{Pakiet \texttt{com.BINM.mailing}}
+Moduł pomocniczy odpowiedzialny za wysyłanie wiadomości email (np. kody OTP).
+
+\textbf{Główne odpowiedzialności:}
+\begin{itemize}
+    \item Wysyłanie emaili z kodami weryfikacyjnymi.
+    \item Integracja z serwerem SMTP.
+\end{itemize}
+
+\textbf{Struktura pakietu:}
+\begin{itemize}
+    \item \texttt{service}:
+        \begin{itemize}
+            \item \texttt{EmailFacade}: Interfejs publiczny modułu.
+            \item \texttt{EmailService}: Implementacja wykorzystująca \texttt{JavaMailSender}.
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{Kluczowe Klasy i Interfejsy}
+
+\textbf{1. Fasady (Facades)}
+Projekt wykorzystuje wzorzec Fasady, aby ukryć złożoność logiki biznesowej przed kontrolerami i innymi modułami.
+\begin{itemize}
+    \item \texttt{ListingFacade}: Główny punkt dostępu do operacji na ogłoszeniach (tworzenie, edycja, wyszukiwanie).
+    \item \texttt{ProfileFacade}: Zarządzanie profilem użytkownika i autentykacją.
+    \item \texttt{MessagingFacade}: Obsługa wiadomości i konwersacji.
+    \item \texttt{InteractionFacade}: Zarządzanie ulubionymi.
+\end{itemize}
+
+\textbf{2. Serwisy (Services)}
+Implementują logikę biznesową zdefiniowaną w interfejsach fasad.
+\begin{itemize}
+    \item \texttt{ListingService}: Odpowiada za cykl życia ogłoszenia (Draft $\rightarrow$ Waiting $\rightarrow$ Active $\rightarrow$ Completed/Expired). Implementuje logikę walidacji i zapisu.
+    \item \texttt{SearchService}: Dedykowany serwis do obsługi zaawansowanego wyszukiwania ogłoszeń z wykorzystaniem dynamicznych filtrów.
+    \item \texttt{MessagingService}: Obsługuje logikę czatu, tworzenie konwersacji i zapisywanie wiadomości.
+\end{itemize}
+
+\textbf{3. Kontrolery (Controllers)}
+Wystawiają endpointy REST API. Podzielone są na publiczne (dostępne dla wszystkich), użytkownika (wymagające logowania) i administracyjne (wymagające roli ADMIN).
+\begin{itemize}
+    \item \texttt{ListingPublicController}, \texttt{ListingUserController}, \texttt{ListingAdminController}
+    \item \texttt{AuthController}, \texttt{ProfileController}
+    \item \texttt{ChatController} (WebSocket), \texttt{ConversationController} (REST)
+\end{itemize}
+
+\subsubsection{Wzorce Projektowe}
+W projekcie zastosowano szereg wzorców projektowych, m.in.:
+
+\begin{itemize}
+    \item \textbf{Facade (Fasada):} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych (np. \texttt{ListingFacade}).
+    \item \textbf{Strategy (Strategia):} Wykorzystywana w mechanizmie wyszukiwania (\texttt{Specification<Listing>}), gdzie kryteria filtrowania są budowane dynamicznie w zależności od żądania użytkownika.
+    \item \textbf{Observer / Publish-Subscribe:} Zrealizowany za pomocą Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone (\texttt{ListingFinishedEvent}), moduł interakcji automatycznie usuwa je z ulubionych, nie tworząc bezpośredniej zależności między serwisami.
+    \item \textbf{Builder:} Wykorzystywany (dzięki bibliotece Lombok) do tworzenia złożonych obiektów DTO i encji w czytelny sposób.
+    \item \texttt{Repository:} Wzorzec dostępu do danych, zaimplementowany przez Spring Data JPA.
+\end{itemize}
+
+\subsection{Szczegółowa dokumentacja kodu (Frontend)}
+\textit{[Miejsce dla zespołu frontendowego]}
+
+\subsection{Szczegółowa dokumentacja kodu (Mobile)}
+\textit{[Miejsce dla zespołu mobilnego]}
+
+\subsection{Środowisko programistyczne}
+Do rozwoju i uruchomienia projektu wykorzystano następujące narzędzia i technologie:
+
+\begin{itemize}
+    \item \textbf{Język programowania:} Java 21.
+    \item \textbf{Framework:} Spring Boot 3.x (Spring Web, Spring Security, Spring Data JPA, Spring WebSocket).
+    \item \textbf{Baza danych:} PostgreSQL 15+.
+    \item \textbf{Zarządzanie zależnościami:} Apache Maven.
+    \item \textbf{IDE:} IntelliJ IDEA Ultimate / Community.
+    \item \textbf{Konteneryzacja:} Docker (do uruchomienia bazy danych).
+    \item \textbf{Przechowywanie plików:} Azure Blob Storage.
+    \item \textbf{Biblioteki pomocnicze:} Lombok (redukcja boilerplate code), MapStruct (mapowanie DTO-Entity), JJWT (obsługa tokenów JWT).
+\end{itemize}
 
 
 
 
 
-    \renewcommand\refname{Literatura (jeżeli wymagana)}
-    \bibliography{references}
-    \addcontentsline{toc}{section}{Literatura}
+\renewcommand\refname{Literatura (jeżeli wymagana)}
+\bibliography{references}
+\addcontentsline{toc}{section}{Literatura}
 % --------------------------------------------------------------------
 %%%%%%% odkomentować gdy bibliografia ma być wewnątrz dokumentu
 % --------------------------------------------------------------------

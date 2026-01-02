@@ -20,9 +20,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 class AttributeService implements AttributeFacade {
+    //Repo
     private final CategoryRepository categoryRepository;
     private final AttributeDefinitionRepository definitionRepository;
     private final AttributeOptionRepository optionRepository;
+    //Maper
     private final AttributeMapper attributeMapper;
 
     @Transactional

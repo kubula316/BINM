@@ -32,10 +32,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SearchService implements SearchFacade {
 
+    //REPO
     private final CategoryFacade categoryService;
     private final ListingMediaRepository mediaRepository;
     private final ListingRepository listingRepository;
+    //MAPPER
     private final ListingMapper listingMapper;
+    //FACADE
     private final ProfileFacade profileFacade;
 
 
