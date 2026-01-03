@@ -6,6 +6,7 @@ const API_BASE_URL = 'http://localhost:8081'
 
 export default function MyListings() {
   const [items, setItems] = useState([])
+  const [statusById, setStatusById] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
@@ -33,7 +34,38 @@ export default function MyListings() {
         }
 
         const data = await response.json()
-        setItems(Array.isArray(data.content) ? data.content : [])
+        const list = Array.isArray(data.content) ? data.content : []
+        setItems(list)
+
+        // Backend /user/listing/my zwraca ListingCoverDto bez statusu.
+        // Dociągamy statusy przez filtrowanie po statusie na endpointcie user (działa też dla niepublicznych).
+        const ids = new Set(list.map((x) => x.publicId))
+        const STATUSES = ['ACTIVE', 'WAITING', 'DRAFT', 'REJECTED', 'COMPLETED', 'EXPIRED']
+
+        const results = await Promise.allSettled(
+          STATUSES.map(async (status) => {
+            const res = await fetch(
+              `${API_BASE_URL}/user/listing/my?page=0&size=200&status=${status}`,
+              { credentials: 'include' },
+            )
+            if (!res.ok) return { status, ids: [] }
+            const page = await res.json()
+            const content = Array.isArray(page.content) ? page.content : []
+            return {
+              status,
+              ids: content.map((it) => it.publicId).filter((id) => ids.has(id)),
+            }
+          }),
+        )
+
+        const map = {}
+        results.forEach((r) => {
+          if (r.status !== 'fulfilled') return
+          r.value.ids.forEach((id) => {
+            map[id] = r.value.status
+          })
+        })
+        setStatusById(map)
       } catch {
         setError('Brak połączenia z serwerem')
       } finally {
@@ -286,6 +318,18 @@ export default function MyListings() {
           {!loading && !error && items.length > 0 && (
             <div className="items-grid">
               {items.map((it) => {
+                const statusLabel = (() => {
+                  const s = statusById[it.publicId]
+                  if (!s) return null
+                  if (s === 'ACTIVE') return 'Aktywne'
+                  if (s === 'WAITING') return 'Oczekujące'
+                  if (s === 'DRAFT') return 'Robocze'
+                  if (s === 'REJECTED') return 'Odrzucone'
+                  if (s === 'COMPLETED') return 'Zakończone'
+                  if (s === 'EXPIRED') return 'Wygasłe'
+                  return s
+                })()
+
                 const priceLabel = (() => {
                   if (!it.priceAmount) return 'Brak ceny'
                   const raw =
@@ -314,13 +358,18 @@ export default function MyListings() {
                   : ''
 
                 return (
-                  <div
+                  <Link
                     key={it.publicId}
-                    className="item-card"
+                    to={`/listing/${it.publicId}`}
+                    className="item-card item-card-link"
+                    style={{ textDecoration: 'none' }}
                   >
                     <div className="item-header">
                       <div>
                         <div className="item-name">{it.title}</div>
+                        {statusLabel && (
+                          <div className="item-meta">Status: {statusLabel}</div>
+                        )}
                         {createdLabel && (
                           <div className="item-meta">Dodano: {createdLabel}</div>
                         )}
@@ -344,7 +393,11 @@ export default function MyListings() {
                       <button
                         type="button"
                         className="filters-button apply"
-                        onClick={() => openEdit(it)}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          openEdit(it)
+                        }}
                         disabled={updatingId === it.publicId || deletingId === it.publicId}
                       >
                         Edytuj
@@ -352,19 +405,17 @@ export default function MyListings() {
                       <button
                         type="button"
                         className="filters-button clear"
-                        onClick={() => handleDelete(it.publicId)}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleDelete(it.publicId)
+                        }}
                         disabled={deletingId === it.publicId || updatingId === it.publicId}
                       >
                         {deletingId === it.publicId ? 'Usuwanie...' : 'Usuń'}
                       </button>
-                      <Link
-                        to={`/listing/${it.publicId}`}
-                        className="item-image-link"
-                      >
-                        Podgląd
-                      </Link>
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>

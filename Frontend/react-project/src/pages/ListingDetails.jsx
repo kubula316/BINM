@@ -61,7 +61,7 @@ function ListingDetails() {
     : null
 
   return (
-    <div className="categories-page">
+    <div className="categories-page listing-details-page">
       <div className="categories-container">
         <h1>{listing.title}</h1>
         <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>Szczegóły ogłoszenia</p>

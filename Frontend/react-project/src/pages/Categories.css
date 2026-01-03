@@ -134,6 +134,20 @@
   border-color: rgba(96, 165, 250, 0.85);
 }
 
+/* Hover na kartach formularzy przeszkadza w wyborze opcji (np. select) przez przesuwanie całego bloku */
+.add-listing-form.item-card:hover,
+.profile-page .item-card:hover {
+  transform: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
+.listing-details-page .item-card:hover {
+  transform: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
 .item-header {
   display: flex;
   align-items: flex-start;

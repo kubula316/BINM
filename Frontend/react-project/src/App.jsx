@@ -10,6 +10,7 @@ import AddListing from './pages/AddListing'
 import ListingDetails from './pages/ListingDetails'
 import VerifyOtp from './pages/VerifyOtp'
 import MyListings from './pages/MyListings'
+import Profile from './pages/Profile'
 import './App.css'
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
           <Route path="/add-listing" element={<AddListing username={username} isLoggedIn={isLoggedIn} />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/my-listings" element={<MyListings />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </BrowserRouter>

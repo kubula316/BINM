@@ -22,7 +22,6 @@ export default function AddListing({ username }) {
   const [attributes, setAttributes] = useState([])
   const [attributeValues, setAttributeValues] = useState({})
   const [selectedFile, setSelectedFile] = useState(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
@@ -132,7 +131,6 @@ export default function AddListing({ username }) {
       formData.append('file', selectedFile)
 
       try {
-        setUploadingImage(true)
         const uploadResponse = await fetch(`${API_BASE_URL}/user/upload/media-image`, {
           method: 'POST',
           body: formData,
@@ -148,8 +146,6 @@ export default function AddListing({ username }) {
       } catch {
         setUploadError('Błąd połączenia przy wysyłaniu zdjęcia.')
         return
-      } finally {
-        setUploadingImage(false)
       }
     }
 
