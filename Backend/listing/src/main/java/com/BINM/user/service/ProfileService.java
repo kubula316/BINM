@@ -121,6 +121,7 @@ class ProfileService implements ProfileFacade {
     }
 
     @Override
+    @Transactional
     public void sendResetOtp(String email) {
         UserEntity existingEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found for the email: " + email));
@@ -130,6 +131,7 @@ class ProfileService implements ProfileFacade {
         existingEntity.setResetOtpExpireAt(expiryTime);
         userRepository.save(existingEntity);
         // Email sending logic should be here
+        emailService.sendResetOtpEmail(email, otp);
     }
 
     @Override
