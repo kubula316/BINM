@@ -308,6 +308,10 @@
   gap: 12px;
 }
 
+.item-header > div {
+  min-width: 0;
+}
+
 .item-name {
   font-weight: 700;
   color: #e5e7eb;
@@ -316,6 +320,15 @@
 .item-meta {
   color: #9ca3af;
   font-size: 0.9rem;
+}
+
+.message-preview {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .item-seller {

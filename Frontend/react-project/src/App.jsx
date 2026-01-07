@@ -17,6 +17,7 @@ import SellerProfile from './pages/SellerProfile'
 import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import NewMessage from './pages/NewMessage'
+import SearchResults from './pages/SearchResults'
 import './App.css'
 
 const API_BASE_URL = 'http://localhost:8081'
@@ -125,6 +126,7 @@ function App() {
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:conversationId" element={<Chat />} />
           <Route path="/messages/new/:listingId/:recipientId" element={<NewMessage />} />
+          <Route path="/search" element={<SearchResults />} />
         </Routes>
       </div>
     </BrowserRouter>

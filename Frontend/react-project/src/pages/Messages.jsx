@@ -85,7 +85,7 @@ export default function Messages() {
                       <div>
                         <div className="item-name">{c.listing?.title || 'Ogłoszenie'}</div>
                         <div className="item-meta">{c.otherParticipantName}</div>
-                        <div className="item-meta">{c.lastMessageContent}</div>
+                        <div className="item-meta message-preview">{c.lastMessageContent}</div>
                       </div>
                       {c.listing?.coverImageUrl && (
                         <img src={c.listing.coverImageUrl} alt="miniatura" className="listing-thumb" />
