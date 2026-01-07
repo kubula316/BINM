@@ -1,4 +1,4 @@
-# Dokumentacja API - Serwis Ogłoszeniowy (v3.2)
+# Dokumentacja API - Serwis Ogłoszeniowy (v3.3)
 
 Poniżej znajduje się zaktualizowany opis wszystkich dostępnych endpointów.
 
@@ -268,15 +268,29 @@ W przypadku wystąpienia błędu, API zwraca odpowiedź w formacie JSON ze stoso
 
 *   **Authentication:** Zabezpieczony
 
-### `POST /user/interactions/favorites/{listingId}`
+### `POST /user/interactions/favorites`
 > Dodaje ogłoszenie do ulubionych.
 
 *   **Authentication:** Zabezpieczony
+*   **Body:**
+    ```json
+    {
+      "entityId": "...",
+      "entityType": "LISTING"
+    }
+    ```
 
-### `DELETE /user/interactions/favorites/{listingId}`
+### `DELETE /user/interactions/favorites`
 > Usuwa ogłoszenie z ulubionych.
 
 *   **Authentication:** Zabezpieczony
+*   **Body:**
+    ```json
+    {
+      "entityId": "...",
+      "entityType": "LISTING"
+    }
+    ```
 
 ### `GET /user/interactions/favorites/status`
 > Sprawdza, czy dane ogłoszenie jest w ulubionych.
