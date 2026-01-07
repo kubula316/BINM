@@ -163,6 +163,18 @@ function LoginForm({ onLogin, onClose }) {
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? 'Logowanie...' : 'Zaloguj się'}
           </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            style={{ marginTop: 10 }}
+            onClick={() => {
+              onClose()
+              navigate('/reset-password')
+            }}
+          >
+            Nie pamiętasz hasła?
+          </button>
         </form>
         ) : (
         <form className="login-form" onSubmit={submitRegister}>

@@ -12,6 +12,7 @@ export default function AddListing({ username }) {
     negotiable: false,
     locationCity: '',
     locationRegion: '',
+    contactPhoneNumber: '',
     description: '',
   })
   const [categories, setCategories] = useState([])
@@ -164,6 +165,7 @@ export default function AddListing({ username }) {
       negotiable: form.negotiable,
       locationCity: form.locationCity || undefined,
       locationRegion: form.locationRegion || undefined,
+      contactPhoneNumber: form.contactPhoneNumber || undefined,
       mediaUrls: uploadedImageUrl ? [uploadedImageUrl] : [],
       attributes: attributesPayload,
     }
@@ -287,6 +289,16 @@ export default function AddListing({ username }) {
                   value={form.locationRegion}
                   onChange={onChange}
                   placeholder="np. Pomorskie"
+                />
+              </div>
+              <div className="form-group">
+                <label>Numer telefonu</label>
+                <input
+                  name="contactPhoneNumber"
+                  type="tel"
+                  value={form.contactPhoneNumber}
+                  onChange={onChange}
+                  placeholder="np. 500600700"
                 />
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>

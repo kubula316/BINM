@@ -10,6 +10,12 @@ function ListingDetails() {
   const [listing, setListing] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
+  const [contactLoading, setContactLoading] = useState(false)
+  const [contactPhone, setContactPhone] = useState('')
+  const [contactError, setContactError] = useState('')
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -33,6 +39,30 @@ function ListingDetails() {
     }
 
     fetchListing()
+  }, [publicId])
+
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      try {
+        setFavoriteError('')
+        const res = await fetch(
+          `${API_BASE_URL}/user/interactions/favorites/status?entityId=${encodeURIComponent(publicId)}&entityType=LISTING`,
+          { credentials: 'include' },
+        )
+
+        if (!res.ok) {
+          // dla niezalogowanych po prostu ukrywamy status (serduszko nadal pokażemy, ale klik zwróci komunikat)
+          return
+        }
+
+        const data = await res.json().catch(() => null)
+        setIsFavorite(Boolean(data && data.isFavorite))
+      } catch {
+        // cicho
+      }
+    }
+
+    if (publicId) fetchFavoriteStatus()
   }, [publicId])
 
   if (loading) {
@@ -67,13 +97,106 @@ function ListingDetails() {
         <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>Szczegóły ogłoszenia</p>
 
         <section className="electronics-section">
-          <button
-            type="button"
-            className="item-image-link"
-            onClick={() => navigate(-1)}
-          >
-            Wróć
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="item-image-link"
+              onClick={() => navigate(-1)}
+            >
+              Wróć
+            </button>
+
+            <button
+              type="button"
+              className="item-image-link"
+              disabled={contactLoading}
+              onClick={async () => {
+                setContactError('')
+
+                if (contactPhone) return
+
+                try {
+                  setContactLoading(true)
+                  const res = await fetch(`${API_BASE_URL}/user/listing/${publicId}/contact`, {
+                    credentials: 'include',
+                  })
+
+                  if (!res.ok) {
+                    if (res.status === 401) {
+                      setContactError('Zaloguj się, aby zobaczyć numer telefonu.')
+                    } else {
+                      setContactError('Nie udało się pobrać numeru telefonu.')
+                    }
+                    return
+                  }
+
+                  const data = await res.json().catch(() => null)
+                  const phone = data && data.phoneNumber ? String(data.phoneNumber) : ''
+                  if (!phone) {
+                    setContactError('Brak numeru telefonu dla tego ogłoszenia.')
+                    return
+                  }
+
+                  setContactPhone(phone)
+                } catch {
+                  setContactError('Brak połączenia z serwerem')
+                } finally {
+                  setContactLoading(false)
+                }
+              }}
+            >
+              {contactLoading ? 'Ładowanie...' : contactPhone ? `Tel: ${contactPhone}` : 'Pokaż numer'}
+            </button>
+
+            <button
+              type="button"
+              className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+              disabled={favoriteLoading}
+              onClick={async () => {
+                setFavoriteError('')
+
+                try {
+                  setFavoriteLoading(true)
+                  const body = { entityId: String(publicId), entityType: 'LISTING' }
+                  const res = await fetch(`${API_BASE_URL}/user/interactions/favorites`, {
+                    method: isFavorite ? 'DELETE' : 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(body),
+                  })
+
+                  if (!res.ok) {
+                    if (res.status === 401) {
+                      setFavoriteError('Zaloguj się, aby dodać ogłoszenie do obserwowanych.')
+                    } else {
+                      setFavoriteError('Nie udało się zmienić statusu obserwowania.')
+                    }
+                    return
+                  }
+
+                  setIsFavorite((v) => !v)
+                } catch {
+                  setFavoriteError('Brak połączenia z serwerem')
+                } finally {
+                  setFavoriteLoading(false)
+                }
+              }}
+              aria-label={isFavorite ? 'Usuń z obserwowanych' : 'Dodaj do obserwowanych'}
+              title={isFavorite ? 'Usuń z obserwowanych' : 'Dodaj do obserwowanych'}
+            >
+              {favoriteLoading ? '...' : isFavorite ? '♥ Obserwowane' : '♡ Obserwuj'}
+            </button>
+          </div>
+
+          {favoriteError && (
+            <p style={{ color: '#ff6b6b', marginTop: 10 }}>{favoriteError}</p>
+          )}
+
+          {contactError && (
+            <p style={{ color: '#ff6b6b', marginTop: 10 }}>{contactError}</p>
+          )}
 
           <div className="item-card" style={{ marginTop: 16 }}>
             <div className="item-header">
