@@ -119,6 +119,32 @@
   gap: 16px;
 }
 
+/* Grid stricte pod listy ogłoszeń (3 w rzędzie na desktopie) */
+.items-grid.listings-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .items-grid.listings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .items-grid.listings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.listing-thumb {
+  width: 110px;
+  height: 86px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(0, 0, 0, 0.25);
+}
+
 .item-card {
   background: rgba(15, 23, 42, 0.92);
   border-radius: 14px;
@@ -134,11 +160,156 @@
   border-color: rgba(96, 165, 250, 0.85);
 }
 
+/* Hover na kartach formularzy przeszkadza w wyborze opcji (np. select) przez przesuwanie całego bloku */
+.add-listing-form.item-card:hover,
+.profile-page .item-card:hover {
+  transform: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
+.listing-details-page .item-card:hover {
+  transform: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.45);
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
+.listing-details-page .item-header {
+  align-items: flex-start;
+}
+
+.listing-details-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.listing-details-right {
+  flex: 0 0 260px;
+  width: 260px;
+}
+
+.listing-details-image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.listing-details-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.listing-details-thumbBtn {
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.listing-details-thumbBtn.active {
+  border: 2px solid #3b82f6;
+}
+
+.listing-details-thumbImg {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  display: block;
+}
+
+.listing-details-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.listing-details-top {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.listing-details-gallery {
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-details-galleryMain {
+  position: relative;
+}
+
+.listing-details-galleryNav {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.listing-details-galleryNav > * {
+  pointer-events: auto;
+}
+
+.listing-details-image {
+  width: 100%;
+  height: 360px;
+  object-fit: contain;
+  border-radius: 10px;
+  display: block;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.listing-details-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.listing-details-bottom {
+  margin-top: 16px;
+}
+
+.listing-details-sectionTitle {
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 900px) {
+  .listing-details-top {
+    grid-template-columns: 1fr;
+  }
+
+  .listing-details-image {
+    height: 300px;
+  }
+}
+
 .item-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.item-header > div {
+  min-width: 0;
 }
 
 .item-name {
@@ -151,9 +322,28 @@
   font-size: 0.9rem;
 }
 
+.message-preview {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 .item-seller {
   color: #d1d5db;
   font-size: 0.9rem;
+}
+
+.seller-link {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.seller-link:hover {
+  text-decoration: underline;
 }
 
 .chevron {
@@ -172,6 +362,26 @@
   text-decoration: none;
   font-size: 0.9rem;
   border: 1px solid rgba(191, 219, 254, 0.7);
+}
+
+.favorite-btn {
+  background: rgba(15, 23, 42, 0.92);
+  color: #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.favorite-btn.active {
+  border-color: rgba(251, 113, 133, 0.9);
+  color: #fb7185;
+}
+
+.favorite-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .item-body { margin-top: 10px; }

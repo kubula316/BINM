@@ -272,7 +272,7 @@ export default function CategoryDetails() {
           )}
 
           {!loading && !error && isListingView && (
-            <div className="items-grid">
+            <div className="items-grid listings-grid">
               {items.map((it) => {
                 const priceLabel = (() => {
                   if (!it.priceAmount) return 'Brak ceny'
@@ -320,7 +320,7 @@ export default function CategoryDetails() {
                         )}
                       </div>
                       {it.coverImageUrl && (
-                        <span className="item-image-link">Zdjęcie</span>
+                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
                       )}
                     </div>
                     <div className="item-body">

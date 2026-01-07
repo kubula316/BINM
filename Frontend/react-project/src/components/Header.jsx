@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import './Header.css'
 
 function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const [query, setQuery] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     function onDocClick(e) {
@@ -34,11 +36,22 @@ function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
 
         <div className="header-right">
           <div className="search-container">
-            <input 
-              type="text" 
-              placeholder="Szukaj" 
-              className="search-input"
-            />
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const q = query.trim()
+                if (!q) return
+                navigate(`/search?q=${encodeURIComponent(q)}`)
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Szukaj"
+                className="search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </form>
           </div>
 
           <Link to="/categories" className="nav-btn">Kategorie</Link>
@@ -58,7 +71,9 @@ function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
               {menuOpen && (
                 <div className="user-dropdown">
                   <Link to="/my-listings" className="dropdown-item">Moje ogłoszenia</Link>
-                  <button className="dropdown-item" type="button">Konto</button>
+                  <Link to="/favorites" className="dropdown-item">Obserwowane</Link>
+                  <Link to="/messages" className="dropdown-item">Wiadomości</Link>
+                  <Link to="/profile" className="dropdown-item">Konto</Link>
                 </div>
               )}
               <button onClick={onLogout} className="logout-btn">Wyloguj</button>

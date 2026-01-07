@@ -6,6 +6,7 @@ const API_BASE_URL = 'http://localhost:8081'
 
 function Home({ isLoggedIn }) {
   const [randomListings, setRandomListings] = useState([])
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
     const fetchRandom = async () => {
@@ -22,6 +23,25 @@ function Home({ isLoggedIn }) {
     fetchRandom()
   }, [])
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/public/category/all`)
+        if (!res.ok) return
+        const data = await res.json()
+        setCategories(Array.isArray(data) ? data : [])
+      } catch {
+        // cicho ignorujemy błąd na stronie głównej
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  const suggestedCategories = Array.isArray(categories)
+    ? categories.filter((c) => c && c.parentId === null).slice(0, 8)
+    : []
+
   return (
     <div className="home-page">
       <div className="home-inner">
@@ -31,10 +51,33 @@ function Home({ isLoggedIn }) {
         </div>
         {isLoggedIn && (
           <div className="home-actions">
-            <Link to="/add-listing" className="home-card">
+            <Link to="/add-listing" className="home-card home-card-primary">
               <div className="home-card-title">Dodaj przedmiot</div>
               <div className="home-card-desc">Szybko dodaj nowe ogłoszenie</div>
             </Link>
+          </div>
+        )}
+
+        {suggestedCategories.length > 0 && (
+          <div className="home-categories-section">
+            <h2>Proponowane kategorie</h2>
+            <div className="home-categories-grid">
+              {suggestedCategories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/categories/${cat.id}`}
+                  className="home-category"
+                  aria-label={cat.name}
+                  title={cat.name}
+                >
+                  {cat.imageUrl ? (
+                    <img src={cat.imageUrl} alt={cat.name} className="home-category-icon" />
+                  ) : (
+                    <span className="home-category-fallback">{String(cat.name || '?').slice(0, 1)}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
@@ -49,9 +92,14 @@ function Home({ isLoggedIn }) {
                   className="home-random-card"
                 >
                   <div className="home-random-header">
-                    <div className="home-random-title">{it.title}</div>
-                    {it.seller && it.seller.name && (
-                      <div className="home-random-seller">{it.seller.name}</div>
+                    <div>
+                      <div className="home-random-title">{it.title}</div>
+                      {it.seller && it.seller.name && (
+                        <div className="home-random-seller">{it.seller.name}</div>
+                      )}
+                    </div>
+                    {it.coverImageUrl && (
+                      <img src={it.coverImageUrl} alt={it.title} className="home-random-thumb" />
                     )}
                   </div>
                   <div className="home-random-price">
