@@ -22,7 +22,8 @@ export default function AddListing({ username }) {
   const [submittedListing, setSubmittedListing] = useState(null)
   const [attributes, setAttributes] = useState([])
   const [attributeValues, setAttributeValues] = useState({})
-  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([])
+  const [uploadingCount, setUploadingCount] = useState(0)
   const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
@@ -125,29 +126,9 @@ export default function AddListing({ username }) {
 
     setUploadError('')
 
-    let uploadedImageUrl = null
-
-    if (selectedFile) {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-
-      try {
-        const uploadResponse = await fetch(`${API_BASE_URL}/user/upload/media-image`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        })
-
-        if (!uploadResponse.ok) {
-          setUploadError('Nie udało się wysłać zdjęcia. Spróbuj ponownie lub wybierz inny plik.')
-          return
-        }
-
-        uploadedImageUrl = await uploadResponse.text()
-      } catch {
-        setUploadError('Błąd połączenia przy wysyłaniu zdjęcia.')
-        return
-      }
+    if (uploadingCount > 0) {
+      alert('Poczekaj aż wszystkie zdjęcia zostaną wysłane.')
+      return
     }
 
     const attributesPayload = Object.entries(attributeValues)
@@ -166,7 +147,7 @@ export default function AddListing({ username }) {
       locationCity: form.locationCity || undefined,
       locationRegion: form.locationRegion || undefined,
       contactPhoneNumber: form.contactPhoneNumber || undefined,
-      mediaUrls: uploadedImageUrl ? [uploadedImageUrl] : [],
+      mediaUrls: uploadedImageUrls,
       attributes: attributesPayload,
     }
 
@@ -368,19 +349,87 @@ export default function AddListing({ username }) {
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={(e) => {
                   setUploadError('')
-                  const file = e.target.files && e.target.files[0]
-                  setSelectedFile(file || null)
+                  const files = e.target.files ? Array.from(e.target.files) : []
+                  if (!files.length) return
+
+                  // Upload od razu po wyborze w explorerze (po jednym pliku na request)
+                  ;(async () => {
+                    setUploadingCount((c) => c + files.length)
+                    try {
+                      for (const file of files) {
+                        const formData = new FormData()
+                        formData.append('file', file)
+
+                        const uploadResponse = await fetch(`${API_BASE_URL}/user/upload/media-image`, {
+                          method: 'POST',
+                          body: formData,
+                          credentials: 'include',
+                        })
+
+                        if (!uploadResponse.ok) {
+                          setUploadError('Nie udało się wysłać jednego ze zdjęć. Spróbuj ponownie.')
+                          continue
+                        }
+
+                        const url = await uploadResponse.text()
+                        if (url) {
+                          setUploadedImageUrls((prev) => [...prev, url])
+                        }
+                      }
+                    } catch {
+                      setUploadError('Błąd połączenia przy wysyłaniu zdjęć.')
+                    } finally {
+                      setUploadingCount((c) => Math.max(0, c - files.length))
+                      // pozwala wybrać ten sam plik ponownie
+                      e.target.value = ''
+                    }
+                  })()
                 }}
               />
               {uploadError && (
                 <p style={{ color: '#ff6b6b', marginTop: 4 }}>{uploadError}</p>
               )}
-              {selectedFile && !uploadError && (
+              {uploadingCount > 0 && (
                 <p style={{ color: '#fff', marginTop: 4, fontSize: 12 }}>
-                  Wybrany plik: {selectedFile.name}
+                  Wysyłanie zdjęć... ({uploadingCount})
                 </p>
+              )}
+
+              {uploadedImageUrls.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <p style={{ color: '#fff', margin: 0, fontSize: 12 }}>Dodane zdjęcia: {uploadedImageUrls.length}</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {uploadedImageUrls.map((url, idx) => (
+                      <div key={`${url}-${idx}`} style={{ position: 'relative' }}>
+                        <img
+                          src={url}
+                          alt={`zdjęcie-${idx + 1}`}
+                          style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8 }}
+                        />
+                        <button
+                          type="button"
+                          className="filters-button clear"
+                          style={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            padding: '4px 6px',
+                            fontSize: 12,
+                          }}
+                          onClick={() => {
+                            setUploadedImageUrls((prev) => prev.filter((_, i) => i !== idx))
+                          }}
+                          disabled={uploadingCount > 0}
+                        >
+                          Usuń
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
             <button type="submit" className="login-button" style={{ marginTop: 16 }} disabled={submitting}>

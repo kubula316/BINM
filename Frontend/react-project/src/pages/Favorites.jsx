@@ -80,7 +80,7 @@ export default function Favorites() {
           )}
 
           {!loading && !error && items.length > 0 && (
-            <div className="items-grid">
+            <div className="items-grid listings-grid">
               {items.map((it) => {
                 const priceLabel = (() => {
                   if (it.priceAmount == null) return 'Brak ceny'
@@ -110,7 +110,7 @@ export default function Favorites() {
                         )}
                       </div>
                       {it.coverImageUrl && (
-                        <span className="item-image-link">Zdjęcie</span>
+                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
                       )}
                     </div>
 

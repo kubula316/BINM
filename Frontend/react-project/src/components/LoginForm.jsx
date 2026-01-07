@@ -44,8 +44,15 @@ function LoginForm({ onLogin, onClose }) {
         return
       }
 
+      const data = await response.json().catch(() => null)
+      if (data && data.token) {
+        localStorage.setItem('jwtToken', data.token)
+      }
+      localStorage.removeItem('forceLoggedOut')
+
       onLogin(username)
       onClose()
+      window.location.reload()
     } catch {
       setError('Brak połączenia z serwerem')
     } finally {
@@ -107,9 +114,16 @@ function LoginForm({ onLogin, onClose }) {
         return
       }
 
+      const loginData = await loginResponse.json().catch(() => null)
+      if (loginData && loginData.token) {
+        localStorage.setItem('jwtToken', loginData.token)
+      }
+      localStorage.removeItem('forceLoggedOut')
+
       // Nie ustawiamy globalnego stanu zalogowania – logujemy się tylko technicznie, żeby mieć cookie JWT
       navigate('/verify-otp')
       onClose()
+      window.location.reload()
     } catch {
       setError('Brak połączenia z serwerem')
     } finally {

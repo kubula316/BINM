@@ -59,6 +59,7 @@ function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
                 <div className="user-dropdown">
                   <Link to="/my-listings" className="dropdown-item">Moje ogłoszenia</Link>
                   <Link to="/favorites" className="dropdown-item">Obserwowane</Link>
+                  <Link to="/messages" className="dropdown-item">Wiadomości</Link>
                   <Link to="/profile" className="dropdown-item">Konto</Link>
                 </div>
               )}

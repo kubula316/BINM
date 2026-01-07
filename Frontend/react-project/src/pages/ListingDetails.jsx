@@ -16,6 +16,7 @@ function ListingDetails() {
   const [contactLoading, setContactLoading] = useState(false)
   const [contactPhone, setContactPhone] = useState('')
   const [contactError, setContactError] = useState('')
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -39,6 +40,10 @@ function ListingDetails() {
     }
 
     fetchListing()
+  }, [publicId])
+
+  useEffect(() => {
+    setActiveImageIndex(0)
   }, [publicId])
 
   useEffect(() => {
@@ -86,9 +91,11 @@ function ListingDetails() {
     )
   }
 
-  const mainImage = Array.isArray(listing.media) && listing.media.length > 0
-    ? listing.media[0].url
-    : null
+  const images = Array.isArray(listing.media)
+    ? listing.media.map((m) => m && m.url).filter(Boolean)
+    : []
+
+  const mainImage = images.length > 0 ? images[Math.min(activeImageIndex, images.length - 1)] : null
 
   return (
     <div className="categories-page listing-details-page">
@@ -97,7 +104,7 @@ function ListingDetails() {
         <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>Szczegóły ogłoszenia</p>
 
         <section className="electronics-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div className="listing-details-actions">
             <button
               type="button"
               className="item-image-link"
@@ -198,74 +205,141 @@ function ListingDetails() {
             <p style={{ color: '#ff6b6b', marginTop: 10 }}>{contactError}</p>
           )}
 
-          <div className="item-card" style={{ marginTop: 16 }}>
-            <div className="item-header">
-              <div>
-                <div className="item-name">{listing.title}</div>
-                <div className="item-meta">
-                  Dodano: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('pl-PL') : '–'}
-                </div>
-                {listing.seller && (
-                  <div className="item-seller">Sprzedawca: {listing.seller.name}</div>
-                )}
-                <div className="item-price" style={{ marginTop: 8 }}>
-                  {listing.priceAmount?.toLocaleString('pl-PL', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{' '}
-                  {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
-                </div>
-                <div className="item-location">
-                  Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
-                </div>
+          <div className="listing-details-top">
+            <div className="listing-details-gallery item-card">
+              {mainImage ? (
+                <>
+                  <div className="listing-details-galleryMain">
+                    {images.length > 1 && (
+                      <div className="listing-details-galleryNav">
+                        <button
+                          type="button"
+                          className="filters-button clear"
+                          onClick={() => setActiveImageIndex((i) => (i - 1 + images.length) % images.length)}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          ‹
+                        </button>
+                        <div style={{ color: '#ddd', fontSize: 12 }}>
+                          {activeImageIndex + 1}/{images.length}
+                        </div>
+                        <button
+                          type="button"
+                          className="filters-button clear"
+                          onClick={() => setActiveImageIndex((i) => (i + 1) % images.length)}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          ›
+                        </button>
+                      </div>
+                    )}
+                    <img
+                      src={mainImage}
+                      alt={listing.title}
+                      className="listing-details-image"
+                    />
+                  </div>
+
+                  {images.length > 1 && (
+                    <div className="listing-details-thumbs">
+                      {images.map((url, idx) => (
+                        <button
+                          key={`${url}-${idx}`}
+                          type="button"
+                          onClick={() => setActiveImageIndex(idx)}
+                          className={`listing-details-thumbBtn ${idx === activeImageIndex ? 'active' : ''}`}
+                          aria-label={`Pokaż zdjęcie ${idx + 1}`}
+                          title={`Zdjęcie ${idx + 1}`}
+                        >
+                          <img
+                            src={url}
+                            alt={`miniatura-${idx + 1}`}
+                            className="listing-details-thumbImg"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p style={{ color: '#fff', margin: 0 }}>Brak zdjęć</p>
+              )}
+            </div>
+
+            <div className="listing-details-info item-card">
+              <div className="item-name">{listing.title}</div>
+              <div className="item-meta">
+                Dodano: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('pl-PL') : '–'}
               </div>
-              {mainImage && (
-                <div style={{ marginLeft: 16 }}>
-                  <img
-                    src={mainImage}
-                    alt={listing.title}
-                    style={{ maxWidth: 220, maxHeight: 220, objectFit: 'cover', borderRadius: 8 }}
-                  />
-                </div>
+              {listing.seller && (
+                  <div className="item-seller">
+                    Sprzedawca:{' '}
+                    <Link className="seller-link" to={`/users/${listing.seller.id}`}>{listing.seller.name}</Link>
+                  </div>
               )}
+
+              {listing.seller?.id && (
+                <Link
+                  to={`/messages/new/${publicId}/${listing.seller.id}`}
+                  className="filters-button apply"
+                  style={{ width: 'fit-content', marginTop: 10, textDecoration: 'none' }}
+                >
+                  Napisz do sprzedawcy
+                </Link>
+              )}
+              <div className="item-price" style={{ marginTop: 8 }}>
+                {listing.priceAmount?.toLocaleString('pl-PL', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
+              </div>
+              <div className="item-location">
+                Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div className="listing-details-bottom">
+            <div className="item-card">
+              <div className="listing-details-sectionTitle">Opis</div>
+              <p className="item-desc" style={{ marginTop: 10 }}>
+                {listing.description || 'Brak opisu'}
+              </p>
             </div>
 
-            <div className="item-body">
-              <p className="item-desc">{listing.description}</p>
+            {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
+              <div className="item-card" style={{ marginTop: 16 }}>
+                <div className="listing-details-sectionTitle">Parametry</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0 0' }}>
+                  {listing.attributes.map((attr, index) => {
+                    const label = attr.label || attr.key
 
-              {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
-                <div className="item-attributes">
-                  <h3 style={{ color: '#fff', marginTop: 12, marginBottom: 6 }}>Parametry</h3>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {listing.attributes.map((attr, index) => {
-                      const label = attr.label || attr.key
-
-                      let valueText = null
-                      if (attr.type === 'ENUM') {
-                        valueText = attr.enumLabel || attr.enumValue
-                      } else if (attr.type === 'NUMBER') {
-                        if (attr.numberValue !== null && attr.numberValue !== undefined) {
-                          valueText = attr.numberValue
-                        }
-                      } else if (attr.type === 'BOOLEAN') {
-                        if (attr.booleanValue === true) valueText = 'Tak'
-                        else if (attr.booleanValue === false) valueText = 'Nie'
-                      } else {
-                        valueText = attr.stringValue
+                    let valueText = null
+                    if (attr.type === 'ENUM') {
+                      valueText = attr.enumLabel || attr.enumValue
+                    } else if (attr.type === 'NUMBER') {
+                      if (attr.numberValue !== null && attr.numberValue !== undefined) {
+                        valueText = attr.numberValue
                       }
+                    } else if (attr.type === 'BOOLEAN') {
+                      if (attr.booleanValue === true) valueText = 'Tak'
+                      else if (attr.booleanValue === false) valueText = 'Nie'
+                    } else {
+                      valueText = attr.stringValue
+                    }
 
-                      if (valueText === null || valueText === undefined || valueText === '') return null
+                    if (valueText === null || valueText === undefined || valueText === '') return null
 
-                      return (
-                        <li key={attr.key || index} style={{ color: '#ddd', fontSize: 14 }}>
-                          <strong>{label}:</strong> {valueText}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </div>
-              )}
-            </div>
+                    return (
+                      <li key={attr.key || index} style={{ color: '#ddd', fontSize: 14, marginBottom: 4 }}>
+                        <strong>{label}:</strong> {valueText}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         </section>
       </div>

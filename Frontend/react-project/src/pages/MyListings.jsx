@@ -316,7 +316,7 @@ export default function MyListings() {
           )}
 
           {!loading && !error && items.length > 0 && (
-            <div className="items-grid">
+            <div className="items-grid listings-grid">
               {items.map((it) => {
                 const statusLabel = (() => {
                   const s = statusById[it.publicId]
@@ -382,6 +382,9 @@ export default function MyListings() {
                           </p>
                         )}
                       </div>
+                      {it.coverImageUrl && (
+                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
+                      )}
                     </div>
                     <div className="item-body">
                       <div className="item-price">{priceLabel}</div>
