@@ -2,7 +2,6 @@ import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import './Categories.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -33,50 +32,36 @@ export default function Chat() {
 
   useEffect(() => {
     let cancelled = false
-
     const fetchAll = async () => {
       try {
         setLoading(true)
         setError('')
-
         const [profileRes, convRes, msgRes] = await Promise.all([
           fetch(`${API_BASE_URL}/user/profile`, { credentials: 'include' }),
           fetch(`${API_BASE_URL}/user/conversations`, { credentials: 'include' }),
           fetch(`${API_BASE_URL}/user/conversations/${convId}/messages?page=0&size=50`, { credentials: 'include' }),
         ])
-
         if (!profileRes.ok || !convRes.ok || !msgRes.ok) {
-          if (!cancelled) setError('Nie udało się pobrać danych czatu (zaloguj się).')
+          if (!cancelled) setError('Blad pobierania (zaloguj sie).')
           return
         }
-
         const profile = await profileRes.json().catch(() => null)
         const conversations = await convRes.json().catch(() => [])
         const msgPage = await msgRes.json().catch(() => null)
-
         if (cancelled) return
-
         setMeId(profile?.userId || '')
         setConversation(Array.isArray(conversations) ? conversations.find((c) => c.id === convId) : null)
         const content = Array.isArray(msgPage?.content) ? msgPage.content : []
-        // backend zwraca DESC, a my chcemy rosnąco
         setMessages(content.slice().reverse())
-
-        fetch(`${API_BASE_URL}/user/conversations/${convId}/read`, {
-          method: 'PATCH',
-          credentials: 'include',
-        }).catch(() => null)
+        fetch(`${API_BASE_URL}/user/conversations/${convId}/read`, { method: 'PATCH', credentials: 'include' }).catch(() => null)
       } catch {
-        if (!cancelled) setError('Brak połączenia z serwerem')
+        if (!cancelled) setError('Brak polaczenia z serwerem')
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
-
     if (Number.isFinite(convId)) fetchAll()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [convId])
 
   useEffect(() => {
@@ -86,73 +71,37 @@ export default function Chat() {
   useEffect(() => {
     const token = localStorage.getItem('jwtToken')
     if (!token) return
-
     const client = new Client({
       webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws`),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+      connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 3000,
     })
-
     client.onConnect = () => {
       client.subscribe('/user/queue/messages', (frame) => {
         try {
           const payload = JSON.parse(frame.body)
-          const incomingConvId = payload?.conversation?.id
-          if (incomingConvId && incomingConvId !== convId) return
+          if (payload?.conversation?.id && payload.conversation.id !== convId) return
           setMessages((prev) => [...prev, payload])
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
       })
     }
-
     client.activate()
     clientRef.current = client
-
-    return () => {
-      client.deactivate()
-      clientRef.current = null
-    }
+    return () => { client.deactivate(); clientRef.current = null }
   }, [convId])
 
   const send = async () => {
     if (!text.trim()) return
-    if (!listingId) {
-      setError('Brak listingId dla konwersacji')
-      return
-    }
-    if (!recipientId) {
-      setError('Nie udało się ustalić odbiorcy wiadomości')
-      return
-    }
-    if (!clientRef.current || !clientRef.current.connected) {
-      setError('Brak połączenia z czatem (zaloguj się ponownie).')
-      return
-    }
-
+    if (!listingId || !recipientId) { setError('Brak danych do wyslania'); return }
+    if (!clientRef.current?.connected) { setError('Brak polaczenia z czatem.'); return }
     try {
       setSending(true)
       setError('')
-
-      // optymistycznie dodaj wiadomość od razu (backend wysyła WS tylko do odbiorcy)
-      const optimistic = {
-        id: `local-${Date.now()}`,
-        senderId: meId,
-        recipientId,
-        content: text.trim(),
-        createdAt: new Date().toISOString(),
-      }
+      const optimistic = { id: `local-${Date.now()}`, senderId: meId, recipientId, content: text.trim(), createdAt: new Date().toISOString() }
       setMessages((prev) => [...prev, optimistic])
-
       clientRef.current.publish({
         destination: '/app/chat.sendMessage',
-        body: JSON.stringify({
-          listingId,
-          recipientId,
-          content: text.trim(),
-        }),
+        body: JSON.stringify({ listingId, recipientId, content: text.trim() }),
       })
       setText('')
     } finally {
@@ -162,113 +111,64 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="categories-page">
-        <div className="categories-container">
-          <p style={{ color: '#fff' }}>Ładowanie czatu...</p>
-        </div>
+      <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+        <div className="ui-container"><p className="ui-muted">Ladowanie czatu...</p></div>
       </div>
     )
   }
 
   return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <h1>Chat</h1>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="ui-h1 truncate">Chat</h1>
+          <Link to="/messages" className="ui-btn">Wroc</Link>
+        </div>
 
-        <section className="electronics-section">
-          <Link to="/messages" className="item-image-link">Wróć</Link>
-
-          {conversation && (
-            <div style={{ marginTop: 12, color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div>
-                <strong>{conversation.listing?.title}</strong> — {conversation.otherParticipantName}
-              </div>
-              {listingId && (
-                <Link
-                  to={`/listing/${listingId}`}
-                  className="item-image-link"
-                  style={{ textDecoration: 'none' }}
-                >
-                  Przejdź do ogłoszenia
-                </Link>
-              )}
-            </div>
-          )}
-
-          {error && <p style={{ color: '#ff6b6b', marginTop: 12 }}>{error}</p>}
-
-          <div className="item-card" style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 420, overflow: 'auto' }}>
-              {messages.length === 0 ? (
-                <div style={{ color: '#fff' }}>Brak wiadomości.</div>
-              ) : (
-                messages.map((m) => {
-                  const mine = meId && m.senderId === meId
-                  const authorLabel = mine
-                    ? 'Ty'
-                    : (conversation?.otherParticipantName || 'Rozmówca')
-                  return (
-                    <div
-                      key={m.id || `${m.senderId}-${m.createdAt}-${m.content}`}
-                      style={{
-                        alignSelf: mine ? 'flex-end' : 'flex-start',
-                        maxWidth: '80%',
-                        background: mine ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(148, 163, 184, 0.25)',
-                        borderRadius: 12,
-                        padding: '8px 10px',
-                        color: '#fff',
-                      }}
-                    >
-                      <div style={{ fontSize: 11, opacity: 0.8, marginBottom: 4 }}>
-                        {authorLabel}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          whiteSpace: 'pre-wrap',
-                          overflowWrap: 'anywhere',
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {m.content}
-                      </div>
-                      {m.createdAt && (
-                        <div style={{ fontSize: 11, opacity: 0.75, marginTop: 4 }}>
-                          {new Date(m.createdAt).toLocaleString('pl-PL')}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              )}
-              <div ref={bottomRef} />
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Napisz wiadomość..."
-                style={{ flex: 1 }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    send()
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className="filters-button apply"
-                onClick={send}
-                disabled={sending}
-              >
-                Wyślij
-              </button>
-            </div>
+        {conversation && (
+          <div className="flex items-center gap-2 text-sm text-zinc-300">
+            <span className="font-medium">{conversation.listing?.title}</span>
+            <span className="text-zinc-500">-</span>
+            <span>{conversation.otherParticipantName}</span>
+            {listingId && <Link to={`/listing/${listingId}`} className="ui-btn ml-auto">Pokaż Ogloszenie</Link>}
           </div>
-        </section>
+        )}
+
+        {error && <p className="text-red-400">{error}</p>}
+
+        <div className="ui-section">
+          <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="text-zinc-500">Brak wiadomosci.</div>
+            ) : (
+              messages.map((m) => {
+                const mine = meId && m.senderId === meId
+                return (
+                  <div
+                    key={m.id || `${m.senderId}-${m.createdAt}-${m.content}`}
+                    className={`max-w-[80%] rounded-xl px-3 py-2 ${mine ? 'self-end bg-emerald-600/20 border border-emerald-500/30 text-right' : 'self-start bg-zinc-700/50 border border-zinc-600/50'}`}
+                  >
+                    <div className="text-xs text-zinc-400 mb-1">{mine ? 'Ja' : conversation?.otherParticipantName || 'Rozmowca'}</div>
+                    <div className={`text-sm text-zinc-100 whitespace-pre-wrap break-words ${mine ? 'text-right' : ''}`}>{m.content}</div>
+                    {m.createdAt && <div className="text-xs text-zinc-500 mt-1">{new Date(m.createdAt).toLocaleString('pl-PL')}</div>}
+                  </div>
+                )
+              })
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <input
+              className="ui-input flex-1"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Napisz wiadomosc..."
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+            />
+            <button type="button" className="ui-btn-primary" onClick={send} disabled={sending}>Wyslij</button>
+          </div>
+        </div>
       </div>
     </div>
   )

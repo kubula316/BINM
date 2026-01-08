@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import './Categories.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -14,133 +13,96 @@ export default function Favorites() {
     try {
       setLoading(true)
       setError('')
-
       const res = await fetch(`${API_BASE_URL}/user/interactions/favorites?page=0&size=50`, {
         credentials: 'include',
       })
-
       if (!res.ok) {
-        if (res.status === 401) {
-          setError('Musisz być zalogowany, aby zobaczyć obserwowane ogłoszenia.')
-        } else {
-          setError('Nie udało się pobrać obserwowanych ogłoszeń.')
-        }
+        setError(res.status === 401 ? 'Musisz byc zalogowany.' : 'Blad pobierania.')
         return
       }
-
       const data = await res.json()
       setItems(Array.isArray(data.content) ? data.content : [])
     } catch {
-      setError('Brak połączenia z serwerem')
+      setError('Brak polaczenia z serwerem')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchFavorites()
-  }, [])
+  useEffect(() => { fetchFavorites() }, [])
 
   const removeFavorite = async (publicId) => {
     try {
       setRemovingId(publicId)
       const res = await fetch(`${API_BASE_URL}/user/interactions/favorites`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ entityId: String(publicId), entityType: 'LISTING' }),
       })
-
-      if (!res.ok) {
-        alert('Nie udało się usunąć z obserwowanych.')
-        return
-      }
-
+      if (!res.ok) { alert('Blad usuwania.'); return }
       setItems((prev) => prev.filter((x) => x.publicId !== publicId))
     } catch {
-      alert('Brak połączenia z serwerem')
+      alert('Brak polaczenia')
     } finally {
       setRemovingId(null)
     }
   }
 
   return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <h1>Obserwowane</h1>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <h1 className="ui-h1 text-center">Obserwowane</h1>
+        <div className="text-center">
+          <Link to="/" className="ui-btn">Wroc</Link>
+        </div>
 
-        <section className="electronics-section">
-          {loading && <p style={{ color: '#fff' }}>Ładowanie...</p>}
-          {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
+        {loading && <p className="ui-muted">Ladowanie...</p>}
+        {error && <p className="text-red-400">{error}</p>}
 
-          {!loading && !error && items.length === 0 && (
-            <p style={{ color: '#fff' }}>Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
-          )}
+        {!loading && !error && items.length === 0 && (
+          <p className="ui-muted">Nie obserwujesz jeszcze zadnych ogloszen.</p>
+        )}
 
-          {!loading && !error && items.length > 0 && (
-            <div className="items-grid listings-grid">
-              {items.map((it) => {
-                const priceLabel = (() => {
-                  if (it.priceAmount == null) return 'Brak ceny'
-                  const raw = Number(it.priceAmount)
-                  if (Number.isNaN(raw)) return 'Brak ceny'
-                  return `${raw.toLocaleString('pl-PL', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} PLN`
-                })()
+        {!loading && !error && items.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((it) => {
+              const priceLabel = it.priceAmount != null && !Number.isNaN(Number(it.priceAmount))
+                ? `${Number(it.priceAmount).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
+                : 'Brak ceny'
 
-                return (
-                  <Link
-                    key={it.publicId}
-                    to={`/listing/${it.publicId}`}
-                    className="item-card item-card-link"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div className="item-header">
-                      <div>
-                        <div className="item-name">{it.title}</div>
-                        {it.seller && it.seller.name && (
-                          <div className="item-seller">Sprzedawca: {it.seller.name}</div>
-                        )}
-                        {it.locationCity && (
-                          <div className="item-location">Lokalizacja: {it.locationCity}</div>
-                        )}
-                      </div>
-                      {it.coverImageUrl && (
-                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
-                      )}
+              return (
+                <Link
+                  key={it.publicId}
+                  to={`/listing/${it.publicId}`}
+                  className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-750 hover:border-zinc-600"
+                >
+                  <div className="flex gap-3">
+                    {it.coverImageUrl && (
+                      <img src={it.coverImageUrl} alt={it.title} className="h-20 w-24 flex-none rounded-lg object-cover" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-zinc-100">{it.title}</div>
+                      {it.seller?.name && <div className="truncate text-sm text-zinc-400">{it.seller.name}</div>}
+                      {it.locationCity && <div className="truncate text-sm text-zinc-500">{it.locationCity}</div>}
+                      <div className="mt-2 font-semibold text-emerald-400">{priceLabel}</div>
                     </div>
-
-                    <div className="item-body">
-                      <div className="item-price">{priceLabel}</div>
-                      {it.negotiable && (
-                        <div className="item-meta">Cena do negocjacji</div>
-                      )}
-                    </div>
-
-                    <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button
-                        type="button"
-                        className="filters-button clear"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          removeFavorite(it.publicId)
-                        }}
-                        disabled={removingId === it.publicId}
-                      >
-                        {removingId === it.publicId ? 'Usuwanie...' : 'Usuń z obserwowanych'}
-                      </button>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </section>
+                  </div>
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      className="ui-btn text-xs"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFavorite(it.publicId) }}
+                      disabled={removingId === it.publicId}
+                    >
+                      {removingId === it.publicId ? 'Usuwanie...' : 'Usun z obserwowanych'}
+                    </button>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,10 +1,9 @@
-import './Home.css'
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const API_BASE_URL = 'http://localhost:8081'
 
-function Home({ isLoggedIn }) {
+export default function Home({ isLoggedIn }) {
   const [randomListings, setRandomListings] = useState([])
   const [categories, setCategories] = useState([])
 
@@ -16,10 +15,9 @@ function Home({ isLoggedIn }) {
         const data = await response.json()
         setRandomListings(Array.isArray(data.content) ? data.content : [])
       } catch {
-        // cicho ignorujemy błąd na stronie głównej
+        // cicho
       }
     }
-
     fetchRandom()
   }, [])
 
@@ -31,96 +29,101 @@ function Home({ isLoggedIn }) {
         const data = await res.json()
         setCategories(Array.isArray(data) ? data : [])
       } catch {
-        // cicho ignorujemy błąd na stronie głównej
+        // cicho
       }
     }
-
     fetchCategories()
   }, [])
 
-  const suggestedCategories = Array.isArray(categories)
-    ? categories.filter((c) => c && c.parentId === null).slice(0, 8)
-    : []
+  const suggestedCategories = useMemo(() => {
+    if (!Array.isArray(categories)) return []
+    return categories.filter((c) => c && c.parentId === null).slice(0, 8)
+  }, [categories])
 
   return (
-    <div className="home-page">
-      <div className="home-inner">
-        <div className="title-section">
-          <h1>BINM</h1>
-          <p>Było I Nie Ma</p>
-        </div>
-        {isLoggedIn && (
-          <div className="home-actions">
-            <Link to="/add-listing" className="home-card home-card-primary">
-              <div className="home-card-title">Dodaj przedmiot</div>
-              <div className="home-card-desc">Szybko dodaj nowe ogłoszenie</div>
-            </Link>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-5">
+        <section className="ui-section text-center">
+          <h1 className="ui-h1">Witaj w BINM</h1>
+          <p className="ui-muted mt-1">Było i Nie Ma</p>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <Link className="ui-btn" to="/categories">Przegladaj kategorie</Link>
+            {isLoggedIn && <Link className="ui-btn-primary" to="/add-listing">Dodaj ogloszenie</Link>}
           </div>
-        )}
+        </section>
 
         {suggestedCategories.length > 0 && (
-          <div className="home-categories-section">
-            <h2>Proponowane kategorie</h2>
-            <div className="home-categories-grid">
+          <section className="ui-section">
+            <h2 className="ui-h2 text-center">Kategorie</h2>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-4">
               {suggestedCategories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  to={`/categories/${cat.id}`}
-                  className="home-category"
-                  aria-label={cat.name}
-                  title={cat.name}
-                >
-                  {cat.imageUrl ? (
-                    <img src={cat.imageUrl} alt={cat.name} className="home-category-icon" />
-                  ) : (
-                    <span className="home-category-fallback">{String(cat.name || '?').slice(0, 1)}</span>
-                  )}
+                <Link key={cat.id} to={`/categories/${cat.id}`} className="group">
+                  <div className="flex w-20 flex-col items-center gap-2">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800 transition group-hover:border-emerald-500/50 group-hover:bg-zinc-700">
+                      {cat.imageUrl ? (
+                        <img src={cat.imageUrl} alt={cat.name} className="h-9 w-9 object-contain" />
+                      ) : (
+                        <span className="text-base font-semibold text-zinc-300">{String(cat.name || '?').slice(0, 1)}</span>
+                      )}
+                    </div>
+                    <div className="w-full truncate text-center text-xs text-zinc-400 group-hover:text-zinc-300">{cat.name}</div>
+                  </div>
                 </Link>
               ))}
             </div>
-          </div>
+
+            <div className="mt-4 text-center">
+              <Link to="/categories" className="ui-link text-sm">Zobacz wszystkie kategorie</Link>
+            </div>
+          </section>
         )}
 
         {randomListings.length > 0 && (
-          <div className="home-random-section">
-            <h2>Proponowane ogłoszenia</h2>
-            <div className="home-random-grid">
-              {randomListings.map((it) => (
-                <Link
-                  key={it.publicId}
-                  to={`/listing/${it.publicId}`}
-                  className="home-random-card"
-                >
-                  <div className="home-random-header">
-                    <div>
-                      <div className="home-random-title">{it.title}</div>
-                      {it.seller && it.seller.name && (
-                        <div className="home-random-seller">{it.seller.name}</div>
-                      )}
-                    </div>
-                    {it.coverImageUrl && (
-                      <img src={it.coverImageUrl} alt={it.title} className="home-random-thumb" />
-                    )}
-                  </div>
-                  <div className="home-random-price">
-                    {(() => {
-                      if (it.priceAmount == null) return 'Brak ceny'
-                      const raw = Number(it.priceAmount)
-                      if (Number.isNaN(raw)) return 'Brak ceny'
-                      return `${raw.toLocaleString('pl-PL', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} PLN`
-                    })()}
-                  </div>
-                </Link>
-              ))}
+          <section className="ui-section">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="ui-h2">Proponowane ogloszenia</h2>
+              <Link to="/categories" className="ui-link">Przegladaj</Link>
             </div>
-          </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {randomListings.map((it) => {
+                const priceLabel = (() => {
+                  if (it.priceAmount == null) return 'Brak ceny'
+                  const raw = Number(it.priceAmount)
+                  if (Number.isNaN(raw)) return 'Brak ceny'
+                  return `${raw.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
+                })()
+
+                return (
+                  <Link
+                    key={it.publicId}
+                    to={`/listing/${it.publicId}`}
+                    className="rounded-xl border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-750 hover:border-zinc-600"
+                  >
+                    <div className="flex gap-3">
+                      {it.coverImageUrl && (
+                        <img
+                          src={it.coverImageUrl}
+                          alt={it.title}
+                          className="h-20 w-24 flex-none rounded-lg object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-zinc-100 line-clamp-2 break-words">{it.title}</div>
+                        {it.seller?.name && <div className="truncate text-sm text-zinc-400">{it.seller.name}</div>}
+                        {it.locationCity && <div className="truncate text-sm text-zinc-500">{it.locationCity}</div>}
+                        <div className="mt-1 font-semibold text-emerald-400">{priceLabel}</div>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
         )}
       </div>
     </div>
   )
 }
-
-export default Home

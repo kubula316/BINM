@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import './Categories.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -17,331 +16,201 @@ function ListingDetails() {
   const [contactPhone, setContactPhone] = useState('')
   const [contactError, setContactError] = useState('')
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [meId, setMeId] = useState(null)
 
   useEffect(() => {
     const fetchListing = async () => {
       try {
         setLoading(true)
         setError('')
-
         const response = await fetch(`${API_BASE_URL}/public/listings/get/${publicId}`)
-        if (!response.ok) {
-          setError('Nie udało się pobrać ogłoszenia')
-          return
-        }
-
+        if (!response.ok) { setError('Nie udalo sie pobrac ogloszenia'); return }
         const data = await response.json()
         setListing(data)
       } catch {
-        setError('Brak połączenia z serwerem')
+        setError('Brak polaczenia z serwerem')
       } finally {
         setLoading(false)
       }
     }
-
     fetchListing()
   }, [publicId])
 
-  useEffect(() => {
-    setActiveImageIndex(0)
-  }, [publicId])
+  useEffect(() => { setActiveImageIndex(0) }, [publicId])
 
   useEffect(() => {
-    const fetchFavoriteStatus = async () => {
+    const fetchUserAndFavorite = async () => {
       try {
-        setFavoriteError('')
-        const res = await fetch(
-          `${API_BASE_URL}/user/interactions/favorites/status?entityId=${encodeURIComponent(publicId)}&entityType=LISTING`,
-          { credentials: 'include' },
-        )
-
-        if (!res.ok) {
-          // dla niezalogowanych po prostu ukrywamy status (serduszko nadal pokażemy, ale klik zwróci komunikat)
-          return
+        const [profileRes, favRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/user/profile`, { credentials: 'include' }),
+          fetch(`${API_BASE_URL}/user/interactions/favorites/status?entityId=${encodeURIComponent(publicId)}&entityType=LISTING`, { credentials: 'include' }),
+        ])
+        if (profileRes.ok) {
+          const profile = await profileRes.json().catch(() => null)
+          setMeId(profile?.userId || null)
         }
-
-        const data = await res.json().catch(() => null)
-        setIsFavorite(Boolean(data && data.isFavorite))
-      } catch {
-        // cicho
-      }
+        if (favRes.ok) {
+          const data = await favRes.json().catch(() => null)
+          setIsFavorite(Boolean(data?.isFavorite))
+        }
+      } catch { /* cicho */ }
     }
-
-    if (publicId) fetchFavoriteStatus()
+    if (publicId) fetchUserAndFavorite()
   }, [publicId])
+
+  const images = listing && Array.isArray(listing.media) ? listing.media.map((m) => m && m.url).filter(Boolean) : []
+  const mainImage = images.length > 0 ? images[Math.min(activeImageIndex, images.length - 1)] : null
 
   if (loading) {
     return (
-      <div className="categories-page">
-        <div className="categories-container">
-          <p style={{ color: '#fff' }}>Ładowanie ogłoszenia...</p>
-        </div>
+      <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+        <div className="ui-container"><p className="ui-muted">Ladowanie ogloszenia...</p></div>
       </div>
     )
   }
 
   if (error || !listing) {
     return (
-      <div className="categories-page">
-        <div className="categories-container">
-          <p style={{ color: '#ff6b6b' }}>{error || 'Ogłoszenie nie zostało znalezione'}</p>
-          <Link to="/categories" className="item-image-link">Wróć do kategorii</Link>
+      <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+        <div className="ui-container">
+          <p className="text-red-400">{error || 'Ogloszenie nie zostalo znalezione'}</p>
+          <Link to="/categories" className="ui-btn mt-2 inline-block">Wroc do kategorii</Link>
         </div>
       </div>
     )
   }
 
-  const images = Array.isArray(listing.media)
-    ? listing.media.map((m) => m && m.url).filter(Boolean)
-    : []
+  const handleFavorite = async () => {
+    setFavoriteError('')
+    try {
+      setFavoriteLoading(true)
+      const body = { entityId: String(publicId), entityType: 'LISTING' }
+      const res = await fetch(`${API_BASE_URL}/user/interactions/favorites`, {
+        method: isFavorite ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) { setFavoriteError(res.status === 401 ? 'Zaloguj sie.' : 'Blad.'); return }
+      setIsFavorite((v) => !v)
+    } catch {
+      setFavoriteError('Brak polaczenia')
+    } finally {
+      setFavoriteLoading(false)
+    }
+  }
 
-  const mainImage = images.length > 0 ? images[Math.min(activeImageIndex, images.length - 1)] : null
+  const handleContact = async () => {
+    if (contactPhone) return
+    setContactError('')
+    try {
+      setContactLoading(true)
+      const res = await fetch(`${API_BASE_URL}/user/listing/${publicId}/contact`, { credentials: 'include' })
+      if (!res.ok) { setContactError(res.status === 401 ? 'Zaloguj sie.' : 'Blad.'); return }
+      const data = await res.json().catch(() => null)
+      setContactPhone(data?.phoneNumber || '')
+      if (!data?.phoneNumber) setContactError('Brak numeru.')
+    } catch {
+      setContactError('Brak polaczenia')
+    } finally {
+      setContactLoading(false)
+    }
+  }
 
   return (
-    <div className="categories-page listing-details-page">
-      <div className="categories-container">
-        <h1>{listing.title}</h1>
-        <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>Szczegóły ogłoszenia</p>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="ui-h1 break-words">{listing.title}</h1>
+          <button type="button" onClick={() => navigate(-1)} className="ui-btn flex-none">Wroc</button>
+        </div>
 
-        <section className="electronics-section">
-          <div className="listing-details-actions">
-            <button
-              type="button"
-              className="item-image-link"
-              onClick={() => navigate(-1)}
-            >
-              Wróć
-            </button>
-
-            <button
-              type="button"
-              className="item-image-link"
-              disabled={contactLoading}
-              onClick={async () => {
-                setContactError('')
-
-                if (contactPhone) return
-
-                try {
-                  setContactLoading(true)
-                  const res = await fetch(`${API_BASE_URL}/user/listing/${publicId}/contact`, {
-                    credentials: 'include',
-                  })
-
-                  if (!res.ok) {
-                    if (res.status === 401) {
-                      setContactError('Zaloguj się, aby zobaczyć numer telefonu.')
-                    } else {
-                      setContactError('Nie udało się pobrać numeru telefonu.')
-                    }
-                    return
-                  }
-
-                  const data = await res.json().catch(() => null)
-                  const phone = data && data.phoneNumber ? String(data.phoneNumber) : ''
-                  if (!phone) {
-                    setContactError('Brak numeru telefonu dla tego ogłoszenia.')
-                    return
-                  }
-
-                  setContactPhone(phone)
-                } catch {
-                  setContactError('Brak połączenia z serwerem')
-                } finally {
-                  setContactLoading(false)
-                }
-              }}
-            >
-              {contactLoading ? 'Ładowanie...' : contactPhone ? `Tel: ${contactPhone}` : 'Pokaż numer'}
-            </button>
-
-            <button
-              type="button"
-              className={`favorite-btn ${isFavorite ? 'active' : ''}`}
-              disabled={favoriteLoading}
-              onClick={async () => {
-                setFavoriteError('')
-
-                try {
-                  setFavoriteLoading(true)
-                  const body = { entityId: String(publicId), entityType: 'LISTING' }
-                  const res = await fetch(`${API_BASE_URL}/user/interactions/favorites`, {
-                    method: isFavorite ? 'DELETE' : 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(body),
-                  })
-
-                  if (!res.ok) {
-                    if (res.status === 401) {
-                      setFavoriteError('Zaloguj się, aby dodać ogłoszenie do obserwowanych.')
-                    } else {
-                      setFavoriteError('Nie udało się zmienić statusu obserwowania.')
-                    }
-                    return
-                  }
-
-                  setIsFavorite((v) => !v)
-                } catch {
-                  setFavoriteError('Brak połączenia z serwerem')
-                } finally {
-                  setFavoriteLoading(false)
-                }
-              }}
-              aria-label={isFavorite ? 'Usuń z obserwowanych' : 'Dodaj do obserwowanych'}
-              title={isFavorite ? 'Usuń z obserwowanych' : 'Dodaj do obserwowanych'}
-            >
-              {favoriteLoading ? '...' : isFavorite ? '♥ Obserwowane' : '♡ Obserwuj'}
-            </button>
+        {listing.status && listing.status !== 'ACTIVE' && (
+          <div className="rounded-lg bg-yellow-500/20 border border-yellow-500/30 px-4 py-2 text-sm text-yellow-300">
+            To ogloszenie oczekuje na akceptacje.
           </div>
+        )}
 
-          {favoriteError && (
-            <p style={{ color: '#ff6b6b', marginTop: 10 }}>{favoriteError}</p>
-          )}
-
-          {contactError && (
-            <p style={{ color: '#ff6b6b', marginTop: 10 }}>{contactError}</p>
-          )}
-
-          <div className="listing-details-top">
-            <div className="listing-details-gallery item-card">
-              {mainImage ? (
-                <>
-                  <div className="listing-details-galleryMain">
-                    {images.length > 1 && (
-                      <div className="listing-details-galleryNav">
-                        <button
-                          type="button"
-                          className="filters-button clear"
-                          onClick={() => setActiveImageIndex((i) => (i - 1 + images.length) % images.length)}
-                          style={{ padding: '6px 10px' }}
-                        >
-                          ‹
-                        </button>
-                        <div style={{ color: '#ddd', fontSize: 12 }}>
-                          {activeImageIndex + 1}/{images.length}
-                        </div>
-                        <button
-                          type="button"
-                          className="filters-button clear"
-                          onClick={() => setActiveImageIndex((i) => (i + 1) % images.length)}
-                          style={{ padding: '6px 10px' }}
-                        >
-                          ›
-                        </button>
-                      </div>
-                    )}
-                    <img
-                      src={mainImage}
-                      alt={listing.title}
-                      className="listing-details-image"
-                    />
-                  </div>
-
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="ui-section">
+            {mainImage ? (
+              <div className="space-y-3">
+                <div className="relative">
+                  <img src={mainImage} alt={listing.title} className="w-full rounded-lg object-contain max-h-80" />
                   {images.length > 1 && (
-                    <div className="listing-details-thumbs">
-                      {images.map((url, idx) => (
-                        <button
-                          key={`${url}-${idx}`}
-                          type="button"
-                          onClick={() => setActiveImageIndex(idx)}
-                          className={`listing-details-thumbBtn ${idx === activeImageIndex ? 'active' : ''}`}
-                          aria-label={`Pokaż zdjęcie ${idx + 1}`}
-                          title={`Zdjęcie ${idx + 1}`}
-                        >
-                          <img
-                            src={url}
-                            alt={`miniatura-${idx + 1}`}
-                            className="listing-details-thumbImg"
-                          />
-                        </button>
-                      ))}
+                    <div className="absolute inset-x-0 bottom-2 flex items-center justify-center gap-2">
+                      <button type="button" className="h-8 w-8 rounded-full bg-zinc-800/80 text-zinc-200" onClick={() => setActiveImageIndex((i) => (i - 1 + images.length) % images.length)}>‹</button>
+                      <span className="text-xs text-zinc-300">{activeImageIndex + 1}/{images.length}</span>
+                      <button type="button" className="h-8 w-8 rounded-full bg-zinc-800/80 text-zinc-200" onClick={() => setActiveImageIndex((i) => (i + 1) % images.length)}>›</button>
                     </div>
                   )}
-                </>
-              ) : (
-                <p style={{ color: '#fff', margin: 0 }}>Brak zdjęć</p>
-              )}
-            </div>
-
-            <div className="listing-details-info item-card">
-              <div className="item-name">{listing.title}</div>
-              <div className="item-meta">
-                Dodano: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('pl-PL') : '–'}
-              </div>
-              {listing.seller && (
-                  <div className="item-seller">
-                    Sprzedawca:{' '}
-                    <Link className="seller-link" to={`/users/${listing.seller.id}`}>{listing.seller.name}</Link>
+                </div>
+                {images.length > 1 && (
+                  <div className="flex justify-center gap-2 overflow-x-auto">
+                    {images.map((url, idx) => (
+                      <button key={idx} type="button" onClick={() => setActiveImageIndex(idx)} className={`h-14 w-14 flex-none rounded-lg border-2 overflow-hidden ${idx === activeImageIndex ? 'border-emerald-500' : 'border-zinc-700'}`}>
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
                   </div>
-              )}
-
-              {listing.seller?.id && (
-                <Link
-                  to={`/messages/new/${publicId}/${listing.seller.id}`}
-                  className="filters-button apply"
-                  style={{ width: 'fit-content', marginTop: 10, textDecoration: 'none' }}
-                >
-                  Napisz do sprzedawcy
-                </Link>
-              )}
-              <div className="item-price" style={{ marginTop: 8 }}>
-                {listing.priceAmount?.toLocaleString('pl-PL', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                {listing.currency || 'PLN'}{listing.negotiable ? ' (do negocjacji)' : ''}
+                )}
               </div>
-              <div className="item-location">
-                Lokalizacja: {listing.locationCity || 'Brak danych'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}
-              </div>
-            </div>
-          </div>
-
-          <div className="listing-details-bottom">
-            <div className="item-card">
-              <div className="listing-details-sectionTitle">Opis</div>
-              <p className="item-desc" style={{ marginTop: 10 }}>
-                {listing.description || 'Brak opisu'}
-              </p>
-            </div>
-
-            {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
-              <div className="item-card" style={{ marginTop: 16 }}>
-                <div className="listing-details-sectionTitle">Parametry</div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0 0' }}>
-                  {listing.attributes.map((attr, index) => {
-                    const label = attr.label || attr.key
-
-                    let valueText = null
-                    if (attr.type === 'ENUM') {
-                      valueText = attr.enumLabel || attr.enumValue
-                    } else if (attr.type === 'NUMBER') {
-                      if (attr.numberValue !== null && attr.numberValue !== undefined) {
-                        valueText = attr.numberValue
-                      }
-                    } else if (attr.type === 'BOOLEAN') {
-                      if (attr.booleanValue === true) valueText = 'Tak'
-                      else if (attr.booleanValue === false) valueText = 'Nie'
-                    } else {
-                      valueText = attr.stringValue
-                    }
-
-                    if (valueText === null || valueText === undefined || valueText === '') return null
-
-                    return (
-                      <li key={attr.key || index} style={{ color: '#ddd', fontSize: 14, marginBottom: 4 }}>
-                        <strong>{label}:</strong> {valueText}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
+            ) : (
+              <p className="ui-muted">Brak zdjec</p>
             )}
           </div>
-        </section>
+
+          <div className="ui-section space-y-3">
+            <div className="text-2xl font-bold text-emerald-400">
+              {listing.priceAmount?.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {listing.currency || 'PLN'}
+              {listing.negotiable && <span className="ml-2 text-sm text-zinc-400">(do negocjacji)</span>}
+            </div>
+            <div className="text-sm text-zinc-400">Dodano: {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('pl-PL') : '-'}</div>
+            {listing.seller && (
+              <div className="text-sm text-zinc-400">Sprzedawca: <Link to={`/users/${listing.seller.id}`} className="text-emerald-400 hover:underline">{listing.seller.name}</Link></div>
+            )}
+            <div className="text-sm text-zinc-400">Lokalizacja: {listing.locationCity || 'Brak'}{listing.locationRegion ? `, ${listing.locationRegion}` : ''}</div>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button type="button" onClick={handleContact} disabled={contactLoading} className="ui-btn">
+                {contactLoading ? '...' : contactPhone ? `Tel: ${contactPhone}` : 'Pokaz numer'}
+              </button>
+              <button type="button" onClick={handleFavorite} disabled={favoriteLoading} className={`ui-btn ${isFavorite ? 'border-emerald-500 text-emerald-400' : ''}`}>
+                {favoriteLoading ? '...' : isFavorite ? '♥ Obserwowane' : '♡ Obserwuj'}
+              </button>
+              {listing.seller?.id && meId !== listing.seller.id && (
+                <Link to={`/messages/new/${publicId}/${listing.seller.id}`} className="ui-btn-primary">Napisz</Link>
+              )}
+            </div>
+            {(favoriteError || contactError) && <p className="text-sm text-red-400">{favoriteError || contactError}</p>}
+          </div>
+        </div>
+
+        <div className="ui-section overflow-hidden">
+          <h2 className="ui-h2">Opis</h2>
+          <p className="mt-2 text-zinc-300 whitespace-pre-wrap break-words overflow-wrap-anywhere">{listing.description || 'Brak opisu'}</p>
+        </div>
+
+        {Array.isArray(listing.attributes) && listing.attributes.length > 0 && (
+          <div className="ui-section">
+            <h2 className="ui-h2">Parametry</h2>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {listing.attributes.map((attr, idx) => {
+                const label = attr.label || attr.key
+                let val = null
+                if (attr.type === 'ENUM') val = attr.enumLabel || attr.enumValue
+                else if (attr.type === 'NUMBER') val = attr.numberValue
+                else if (attr.type === 'BOOLEAN') val = attr.booleanValue === true ? 'Tak' : attr.booleanValue === false ? 'Nie' : null
+                else val = attr.stringValue
+                if (val == null || val === '') return null
+                return (
+                  <div key={attr.key || idx} className="text-sm">
+                    <span className="text-zinc-400">{label}:</span> <span className="text-zinc-200">{val}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

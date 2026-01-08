@@ -1,4 +1,3 @@
-import './Categories.css'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -33,36 +32,44 @@ function Categories() {
     fetchCategories()
   }, [])
 
-  const renderTopLevelCategories = (nodes) => {
-    if (!Array.isArray(nodes)) return null
+  return (
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <div className="text-center">
+          <h1 className="ui-h1">Kategorie</h1>
+          <p className="ui-muted mt-1">Wybierz kategorie, aby przegladac ogloszenia.</p>
+        </div>
 
-    return nodes
-      .filter((node) => node.parentId === null)
-      .map((node) => (
-        <Link key={node.id} className="category-card" to={`/categories/${node.id}`}>
-          {node.imageUrl && (
-            <div className="category-icon-wrapper">
-              <img src={node.imageUrl} alt={node.name} className="category-icon" />
+        <section className="ui-section">
+          {loading && <p className="ui-muted">Ladowanie kategorii...</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
+
+          {!loading && !error && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.isArray(categories) &&
+                categories
+                  .filter((c) => c && c.parentId === null)
+                  .map((node) => (
+                    <Link
+                      key={node.id}
+                      to={`/categories/${node.id}`}
+                      className="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-700"
+                    >
+                      <div className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-zinc-700">
+                        {node.imageUrl ? (
+                          <img src={node.imageUrl} alt={node.name} className="h-6 w-6 object-contain" />
+                        ) : (
+                          <span className="text-sm font-semibold text-zinc-300">{String(node.name || '?').slice(0, 1)}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-zinc-100">{node.name}</div>
+                        {node.description && <div className="truncate text-sm text-zinc-400">{node.description}</div>}
+                      </div>
+                    </Link>
+                  ))}
             </div>
           )}
-          <h3>{node.name}</h3>
-          {node.description && <p>{node.description}</p>}
-        </Link>
-      ))
-  }
-
-  return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <h1>Kategorie produktów</h1>
-
-        {loading && <p className="subtitle">Ładowanie kategorii...</p>}
-        {error && <p className="subtitle" style={{ color: '#ff6b6b' }}>{error}</p>}
-
-        <section className="electronics-section">
-          <div className="categories-grid">
-            {!loading && !error && renderTopLevelCategories(categories)}
-          </div>
         </section>
       </div>
     </div>

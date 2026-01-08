@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import './Categories.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -165,63 +164,65 @@ export default function CategoryDetails() {
   const backLink = isListingView ? `/categories/${categoryId}` : baseBackLink
 
   return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <h1>
-          {isListingView
-            ? currentSubCategory?.name || 'Ogłoszenia w podkategorii'
-            : currentCategory?.name || 'Podkategorie'}
-        </h1>
-        <p className="subtitle" style={{ color: '#fff', textAlign: 'center' }}>
-          {isListingView ? 'Lista dostępnych ogłoszeń' : 'Wybierz podkategorię'}
-        </p>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="ui-h1">
+              {isListingView
+                ? currentSubCategory?.name || 'Ogloszenia'
+                : currentCategory?.name || 'Podkategorie'}
+            </h1>
+            <p className="ui-muted mt-1">{isListingView ? 'Lista dostepnych ogloszen' : 'Wybierz podkategorie'}</p>
+          </div>
+          <Link to={backLink} className="ui-btn">Wroc</Link>
+        </div>
 
-        <section className="electronics-section">
-          <Link to={backLink} className="item-image-link">
-            Wróć
-          </Link>
-
-          {loading && <p style={{ color: '#fff' }}>Ładowanie...</p>}
-          {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
+        <section className="ui-section">
+          {loading && <p className="ui-muted">Ladowanie...</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           {!loading && !error && !isListingView && (
-            <div className="categories-grid">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {currentCategory && Array.isArray(currentCategory.children) && currentCategory.children.length > 0 ? (
                 currentCategory.children
+                  .slice()
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((child) => (
                     <Link
                       key={child.id}
-                      className="category-card"
                       to={`/categories/${currentCategory.id}/${child.id}`}
+                      className="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-700"
                     >
-                      {child.imageUrl && (
-                        <div className="category-icon-wrapper">
-                          <img src={child.imageUrl} alt={child.name} className="category-icon" />
-                        </div>
-                      )}
-                      <h3>{child.name}</h3>
+                      <div className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-zinc-700">
+                        {child.imageUrl ? (
+                          <img src={child.imageUrl} alt={child.name} className="h-6 w-6 object-contain" />
+                        ) : (
+                          <span className="text-sm font-semibold text-zinc-300">{String(child.name || '?').slice(0, 1)}</span>
+                        )}
+                      </div>
+                      <div className="truncate font-medium text-zinc-100">{child.name}</div>
                     </Link>
                   ))
               ) : (
-                <p style={{ color: '#fff' }}>Brak podkategorii.</p>
+                <p className="ui-muted">Brak podkategorii.</p>
               )}
             </div>
           )}
 
           {!loading && !error && isListingView && attributes.length > 0 && (
-            <div className="filters-panel">
-              <h3 style={{ color: '#fff' }}>Filtry</h3>
-              <div className="filters-grid">
+            <div className="mb-4 rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
+              <div className="mb-3 font-medium text-zinc-100">Filtry</div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {attributes
+                  .slice()
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((attr) => (
-                    <div key={attr.id} className="filter-item">
-                      <label style={{ color: '#fff', display: 'block', marginBottom: 4 }}>
-                        {attr.label}
-                      </label>
+                    <div key={attr.id}>
+                      <label className="mb-1 block text-sm text-zinc-400">{attr.label}</label>
                       {attr.type === 'ENUM' ? (
                         <select
+                          className="ui-input"
                           value={filters[attr.key]?.value ?? ''}
                           onChange={(e) => handleFilterChange(attr.key, e.target.value, attr.type)}
                         >
@@ -237,6 +238,7 @@ export default function CategoryDetails() {
                         </select>
                       ) : (
                         <input
+                          className="ui-input"
                           type="text"
                           value={filters[attr.key]?.value ?? ''}
                           onChange={(e) => handleFilterChange(attr.key, e.target.value, attr.type)}
@@ -245,96 +247,56 @@ export default function CategoryDetails() {
                     </div>
                   ))}
               </div>
-              <div className="filters-actions">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className="filters-button clear"
+                  className="ui-btn"
                   onClick={() => {
                     setFilters({})
                     applyFilters()
                   }}
                 >
-                  Wyczyść
+                  Wyczysc
                 </button>
-                <button
-                  type="button"
-                  className="filters-button apply"
-                  onClick={applyFilters}
-                >
-                  Zastosuj filtry
+                <button type="button" className="ui-btn-primary" onClick={applyFilters}>
+                  Zastosuj
                 </button>
               </div>
             </div>
           )}
 
-          {!loading && !error && isListingView && items.length === 0 && (
-            <p style={{ color: '#fff' }}>Brak ogłoszeń w tej podkategorii.</p>
-          )}
+          {!loading && !error && isListingView && items.length === 0 && <p className="ui-muted">Brak ogloszen.</p>}
 
-          {!loading && !error && isListingView && (
-            <div className="items-grid listings-grid">
+          {!loading && !error && isListingView && items.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((it) => {
                 const priceLabel = (() => {
-                  if (!it.priceAmount) return 'Brak ceny'
-                  const raw =
-                    typeof it.priceAmount === 'number'
-                      ? it.priceAmount
-                      : it.priceAmount.parsedValue ?? Number(it.priceAmount.source)
-                  if (Number.isNaN(raw) || raw == null) return 'Brak ceny'
-                  return `${raw.toLocaleString('pl-PL', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} PLN`
+                  if (it.priceAmount == null) return 'Brak ceny'
+                  const raw = Number(it.priceAmount)
+                  if (Number.isNaN(raw)) return 'Brak ceny'
+                  return `${raw.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
                 })()
 
-                const createdLabel = it.createdAt
-                  ? new Date(it.createdAt).toLocaleDateString('pl-PL')
-                  : null
-
-                const locationLabel = [it.locationCity, it.locationRegion]
-                  .filter(Boolean)
-                  .join(', ')
-
-                const previewAttrs = Array.isArray(it.attributes)
-                  ? it.attributes.slice(0, 2)
-                  : []
+                const createdLabel = it.createdAt ? new Date(it.createdAt).toLocaleDateString('pl-PL') : null
+                const locationLabel = [it.locationCity, it.locationRegion].filter(Boolean).join(', ')
 
                 return (
                   <Link
                     key={it.publicId}
                     to={`/listing/${it.publicId}`}
-                    className="item-card"
-                    style={{ textDecoration: 'none' }}
+                    className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-700"
                   >
-                    <div className="item-header">
-                      <div>
-                        <div className="item-name">{it.title}</div>
-                        {it.seller && it.seller.name && (
-                          <div className="item-seller">Sprzedawca: {it.seller.name}</div>
-                        )}
-                        {createdLabel && (
-                          <div className="item-meta">Dodano: {createdLabel}</div>
-                        )}
-                        {locationLabel && (
-                          <div className="item-location">Lokalizacja: {locationLabel}</div>
-                        )}
-                      </div>
+                    <div className="flex gap-3">
                       {it.coverImageUrl && (
-                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
+                        <img src={it.coverImageUrl} alt={it.title} className="h-20 w-24 flex-none rounded-lg object-cover" />
                       )}
-                    </div>
-                    <div className="item-body">
-                      <div className="item-price">{priceLabel}</div>
-                      {previewAttrs.length > 0 && (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0' }}>
-                          {previewAttrs.map((attr) => (
-                            <li key={attr.key} style={{ color: '#ddd', fontSize: 14 }}>
-                              <strong>{attr.label || attr.key}:</strong>{' '}
-                              {attr.displayValue || attr.value || attr.optionLabel}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium text-zinc-100">{it.title}</div>
+                        {it.seller?.name && <div className="truncate text-sm text-zinc-400">{it.seller.name}</div>}
+                        {createdLabel && <div className="text-sm text-zinc-500">Dodano: {createdLabel}</div>}
+                        {locationLabel && <div className="truncate text-sm text-zinc-500">{locationLabel}</div>}
+                        <div className="mt-2 font-semibold text-emerald-400">{priceLabel}</div>
+                      </div>
                     </div>
                   </Link>
                 )

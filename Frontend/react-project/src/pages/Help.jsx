@@ -1,50 +1,44 @@
-import './Help.css'
-
-function Help() {
+export default function Help() {
   return (
-    <div className="help-page">
-      <div className="help-container">
-        <h1>Centrum pomocy</h1>
-        <p className="subtitle">Jak możemy Ci pomóc?</p>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-6">
+        <div className="text-center">
+          <h1 className="ui-h1">Centrum pomocy</h1>
+          <p className="ui-muted">Jak mozemy Ci pomoc?</p>
+        </div>
 
-        {/* <div className="search-box">
-          <input type="text" placeholder="Wyszukaj odpowiedzi..." />
-        </div> */}
-
-        <div className="help-sections">
-          <div className="help-card">
-            <h3>Zamówienia i dostawa</h3>
-            <p>Informacje o statusie zamówienia, czasie dostawy i kosztach przesyłki</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Zamowienia i dostawa</h3>
+            <p className="mt-1 text-sm text-zinc-400">Informacje o statusie zamowienia, czasie dostawy i kosztach przesylki</p>
           </div>
 
-          <div className="help-card">
-            <h3>Zwroty i reklamacje</h3>
-            <p>Jak zwrócić produkt lub zgłosić reklamację</p>
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Zwroty i reklamacje</h3>
+            <p className="mt-1 text-sm text-zinc-400">Jak zwrocic produkt lub zglosic reklamacje</p>
           </div>
 
-          <div className="help-card">
-            <h3>Płatności</h3>
-            <p>Dostępne metody płatności i bezpieczeństwo transakcji</p>
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Platnosci</h3>
+            <p className="mt-1 text-sm text-zinc-400">Dostepne metody platnosci i bezpieczenstwo transakcji</p>
           </div>
 
-          <div className="help-card">
-            <h3>Konto użytkownika</h3>
-            <p>Zarządzanie kontem, danymi osobowymi i preferencjami</p>
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Konto uzytkownika</h3>
+            <p className="mt-1 text-sm text-zinc-400">Zarzadzanie kontem, danymi osobowymi i preferencjami</p>
           </div>
 
-          <div className="help-card">
-            <h3>Rozmiary i dopasowanie</h3>
-            <p>Tabele rozmiarów i porady dotyczące wyboru produktów</p>
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Rozmiary i dopasowanie</h3>
+            <p className="mt-1 text-sm text-zinc-400">Tabele rozmiarow i porady dotyczace wyboru produktow</p>
           </div>
 
-          <div className="help-card">
-            <h3>Kontakt</h3>
-            <p>Skontaktuj się z naszym zespołem obsługi klienta</p>
+          <div className="ui-section">
+            <h3 className="ui-h2 text-lg">Kontakt</h3>
+            <p className="mt-1 text-sm text-zinc-400">Skontaktuj sie z naszym zespolem obslugi klienta</p>
           </div>
         </div>
       </div>
     </div>
   )
 }
-
-export default Help

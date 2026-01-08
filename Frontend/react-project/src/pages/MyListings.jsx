@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import './Categories.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -11,6 +10,7 @@ export default function MyListings() {
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [submittingId, setSubmittingId] = useState(null)
   const [editListing, setEditListing] = useState(null)
   const [editAttributes, setEditAttributes] = useState([])
   const [editAttributeValues, setEditAttributeValues] = useState({})
@@ -20,16 +20,10 @@ export default function MyListings() {
       try {
         setLoading(true)
         setError('')
-        const response = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=20`, {
-          credentials: 'include',
-        })
+        const response = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=20`, { credentials: 'include' })
 
         if (!response.ok) {
-          if (response.status === 401) {
-            setError('Musisz być zalogowany, aby zobaczyć swoje ogłoszenia.')
-          } else {
-            setError('Nie udało się pobrać Twoich ogłoszeń.')
-          }
+          setError(response.status === 401 ? 'Musisz byc zalogowany.' : 'Nie udalo sie pobrac ogloszen.')
           return
         }
 
@@ -37,166 +31,97 @@ export default function MyListings() {
         const list = Array.isArray(data.content) ? data.content : []
         setItems(list)
 
-        // Backend /user/listing/my zwraca ListingCoverDto bez statusu.
-        // Dociągamy statusy przez filtrowanie po statusie na endpointcie user (działa też dla niepublicznych).
         const ids = new Set(list.map((x) => x.publicId))
         const STATUSES = ['ACTIVE', 'WAITING', 'DRAFT', 'REJECTED', 'COMPLETED', 'EXPIRED']
 
         const results = await Promise.allSettled(
           STATUSES.map(async (status) => {
-            const res = await fetch(
-              `${API_BASE_URL}/user/listing/my?page=0&size=200&status=${status}`,
-              { credentials: 'include' },
-            )
+            const res = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=200&status=${status}`, { credentials: 'include' })
             if (!res.ok) return { status, ids: [] }
             const page = await res.json()
             const content = Array.isArray(page.content) ? page.content : []
-            return {
-              status,
-              ids: content.map((it) => it.publicId).filter((id) => ids.has(id)),
-            }
+            return { status, ids: content.map((it) => it.publicId).filter((id) => ids.has(id)) }
           }),
         )
 
         const map = {}
         results.forEach((r) => {
           if (r.status !== 'fulfilled') return
-          r.value.ids.forEach((id) => {
-            map[id] = r.value.status
-          })
+          r.value.ids.forEach((id) => { map[id] = r.value.status })
         })
         setStatusById(map)
       } catch {
-        setError('Brak połączenia z serwerem')
+        setError('Brak polaczenia z serwerem')
       } finally {
         setLoading(false)
       }
     }
-
     fetchMyListings()
   }, [])
 
   const openEdit = async (listing) => {
     try {
       setUpdatingId(listing.publicId)
-
-      const response = await fetch(`${API_BASE_URL}/user/listing/${listing.publicId}/edit-data`, {
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        alert('Nie udało się pobrać danych ogłoszenia do edycji.')
-        return
-      }
-
+      const response = await fetch(`${API_BASE_URL}/user/listing/${listing.publicId}/edit-data`, { credentials: 'include' })
+      if (!response.ok) { alert('Nie udalo sie pobrac danych do edycji.'); return }
       const data = await response.json()
 
-      // Zbuduj mapę aktualnych wartości atrybutów z edit-data
       const currentAttrMap = new Map()
       if (Array.isArray(data.attributes)) {
         data.attributes.forEach((a) => currentAttrMap.set(a.key, a))
       }
 
-      // Pobierz pełne definicje atrybutów dla kategorii, żeby pokazać także puste
       let mergedAttributes = []
       if (data.categoryId) {
         try {
-          const attrDefResp = await fetch(
-            `${API_BASE_URL}/public/category/attributes?categoryId=${data.categoryId}`,
-          )
+          const attrDefResp = await fetch(`${API_BASE_URL}/public/category/attributes?categoryId=${data.categoryId}`)
           if (attrDefResp.ok) {
             const defs = await attrDefResp.json()
             if (Array.isArray(defs)) {
               mergedAttributes = defs.map((def) => {
                 const current = currentAttrMap.get(def.key)
-                let currentValue = ''
-                let selectValue = ''
-
+                let currentValue = '', selectValue = ''
                 if (current) {
-                  if (current.type === 'ENUM') {
-                    currentValue = current.enumLabel || current.enumValue || ''
-                    selectValue = current.enumValue || ''
-                  } else if (current.type === 'STRING') {
-                    currentValue = current.stringValue || ''
-                    selectValue = currentValue
-                  } else if (current.type === 'NUMBER') {
-                    currentValue =
-                      current.numberValue != null ? String(current.numberValue) : ''
-                    selectValue = currentValue
-                  } else if (current.type === 'BOOLEAN') {
-                    currentValue =
-                      current.booleanValue == null
-                        ? ''
-                        : current.booleanValue
-                          ? 'Tak'
-                          : 'Nie'
-                    selectValue =
-                      current.booleanValue == null ? '' : String(current.booleanValue)
-                  }
+                  if (current.type === 'ENUM') { currentValue = current.enumLabel || current.enumValue || ''; selectValue = current.enumValue || '' }
+                  else if (current.type === 'STRING') { currentValue = current.stringValue || ''; selectValue = currentValue }
+                  else if (current.type === 'NUMBER') { currentValue = current.numberValue != null ? String(current.numberValue) : ''; selectValue = currentValue }
+                  else if (current.type === 'BOOLEAN') { currentValue = current.booleanValue == null ? '' : current.booleanValue ? 'Tak' : 'Nie'; selectValue = current.booleanValue == null ? '' : String(current.booleanValue) }
                 }
-
-                return {
-                  ...def,
-                  currentValue,
-                  selectValue,
-                }
+                return { ...def, currentValue, selectValue }
               })
             }
           }
-        } catch {
-          // jeśli pobranie definicji się nie uda, użyj tego co zwrócił edit-data
-        }
+        } catch { /* ignore */ }
       }
 
       if (!mergedAttributes.length && Array.isArray(data.attributes)) {
         mergedAttributes = data.attributes.map((a) => {
-          let currentValue = ''
-          let selectValue = ''
-          if (a.type === 'ENUM') {
-            currentValue = a.enumLabel || a.enumValue || ''
-            selectValue = a.enumValue || ''
-          } else if (a.type === 'STRING') {
-            currentValue = a.stringValue || ''
-            selectValue = currentValue
-          } else if (a.type === 'NUMBER') {
-            currentValue = a.numberValue != null ? String(a.numberValue) : ''
-            selectValue = currentValue
-          } else if (a.type === 'BOOLEAN') {
-            currentValue =
-              a.booleanValue == null ? '' : a.booleanValue ? 'Tak' : 'Nie'
-            selectValue = a.booleanValue == null ? '' : String(a.booleanValue)
-          }
-          return {
-            ...a,
-            currentValue,
-            selectValue,
-          }
+          let currentValue = '', selectValue = ''
+          if (a.type === 'ENUM') { currentValue = a.enumLabel || a.enumValue || ''; selectValue = a.enumValue || '' }
+          else if (a.type === 'STRING') { currentValue = a.stringValue || ''; selectValue = currentValue }
+          else if (a.type === 'NUMBER') { currentValue = a.numberValue != null ? String(a.numberValue) : ''; selectValue = currentValue }
+          else if (a.type === 'BOOLEAN') { currentValue = a.booleanValue == null ? '' : a.booleanValue ? 'Tak' : 'Nie'; selectValue = a.booleanValue == null ? '' : String(a.booleanValue) }
+          return { ...a, currentValue, selectValue }
         })
       }
 
       setEditAttributes(mergedAttributes)
       const initialAttrValues = {}
-      mergedAttributes.forEach((attr) => {
-        initialAttrValues[attr.key] =
-          attr.type === 'ENUM' ? attr.selectValue || '' : attr.currentValue || ''
-      })
+      mergedAttributes.forEach((attr) => { initialAttrValues[attr.key] = attr.type === 'ENUM' ? attr.selectValue || '' : attr.currentValue || '' })
       setEditAttributeValues(initialAttrValues)
 
       setEditListing({
         publicId: listing.publicId,
         original: data,
         title: data.title || '',
-        priceAmount:
-          typeof data.priceAmount === 'number'
-            ? String(data.priceAmount)
-            : String(data.priceAmount?.parsedValue ?? data.priceAmount?.source ?? ''),
+        priceAmount: typeof data.priceAmount === 'number' ? String(data.priceAmount) : String(data.priceAmount?.parsedValue ?? data.priceAmount?.source ?? ''),
         locationCity: data.locationCity || '',
         locationRegion: data.locationRegion || '',
         description: data.description || '',
         negotiable: !!data.negotiable,
       })
     } catch {
-      alert('Błąd połączenia podczas pobierania danych do edycji')
+      alert('Blad polaczenia')
     } finally {
       setUpdatingId(null)
     }
@@ -212,405 +137,227 @@ export default function MyListings() {
     if (!editListing) return
 
     const body = {}
-    if (editListing.title.trim() !== '') body.title = editListing.title.trim()
-    if (editListing.priceAmount.trim() !== '') {
-      const num = Number(editListing.priceAmount.replace(',', '.'))
-      if (Number.isNaN(num) || num <= 0) {
-        alert('Niepoprawna cena')
-        return
-      }
+    const titleStr = String(editListing.title || '').trim()
+    if (titleStr !== '') body.title = titleStr
+    const priceStr = String(editListing.priceAmount || '').trim()
+    if (priceStr !== '') {
+      const num = Number(priceStr.replace(',', '.'))
+      if (Number.isNaN(num) || num <= 0) { alert('Niepoprawna cena'); return }
       body.priceAmount = num
     }
-    body.locationCity = editListing.locationCity.trim()
-    body.locationRegion = editListing.locationRegion.trim()
-    body.description = editListing.description.trim()
+    body.locationCity = String(editListing.locationCity || '').trim()
+    body.locationRegion = String(editListing.locationRegion || '').trim()
+    body.description = String(editListing.description || '').trim()
     body.negotiable = !!editListing.negotiable
 
-    const attributesPayload = editAttributes.map((attr) => ({
-      key: attr.key,
-      value: editAttributeValues[attr.key] ?? '',
-    }))
-
-    if (attributesPayload.length > 0) {
-      body.attributes = attributesPayload
-    }
-
-    if (Object.keys(body).length === 0) {
-      alert('Brak zmian do zapisania')
-      return
-    }
+    const attributesPayload = editAttributes
+      .map((attr) => ({ key: attr.key, value: editAttributeValues[attr.key] ?? '' }))
+      .filter((a) => a.value !== '')
+    if (attributesPayload.length > 0) body.attributes = attributesPayload
 
     try {
       setUpdatingId(editListing.publicId)
       const response = await fetch(`${API_BASE_URL}/user/listing/${editListing.publicId}/update`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(body),
       })
-
       if (!response.ok) {
-        alert('Nie udało się zaktualizować ogłoszenia.')
+        const errText = await response.text().catch(() => '')
+        console.error('Update error:', response.status, errText)
+        alert(`Nie udalo sie zaktualizowac ogloszenia. ${errText || ''}`)
         return
       }
 
-      setItems((prev) =>
-        prev.map((it) =>
-          it.publicId === editListing.publicId
-            ? {
-                ...it,
-                ...('title' in body ? { title: body.title } : {}),
-                ...('priceAmount' in body ? { priceAmount: body.priceAmount } : {}),
-                ...('locationCity' in body ? { locationCity: body.locationCity } : {}),
-                ...('locationRegion' in body ? { locationRegion: body.locationRegion } : {}),
-                ...('description' in body ? { description: body.description } : {}),
-                ...('negotiable' in body ? { negotiable: body.negotiable } : {}),
-              }
-            : it,
-        ),
-      )
+      // Jeśli status był WAITING, automatycznie wyślij do akceptacji
+      const prevStatus = statusById[editListing.publicId]
+      if (prevStatus === 'WAITING') {
+        await fetch(`${API_BASE_URL}/user/listing/${editListing.publicId}/submit-for-approval`, {
+          method: 'POST',
+          credentials: 'include',
+        })
+      }
+
+      setItems((prev) => prev.map((it) => it.publicId === editListing.publicId ? { ...it, title: body.title || it.title, priceAmount: body.priceAmount || it.priceAmount } : it))
       setEditListing(null)
     } catch {
-      alert('Błąd połączenia podczas aktualizacji ogłoszenia')
+      alert('Blad polaczenia')
     } finally {
       setUpdatingId(null)
     }
   }
 
   const handleDelete = async (publicId) => {
-    if (!window.confirm('Na pewno chcesz usunąć to ogłoszenie?')) return
-
+    if (!window.confirm('Na pewno chcesz usunac to ogloszenie?')) return
     try {
       setDeletingId(publicId)
-      const response = await fetch(`${API_BASE_URL}/user/listing/${publicId}/delete`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        alert('Nie udało się usunąć ogłoszenia.')
-        return
-      }
-
+      const response = await fetch(`${API_BASE_URL}/user/listing/${publicId}/delete`, { method: 'DELETE', credentials: 'include' })
+      if (!response.ok) { alert('Nie udalo sie usunac ogloszenia.'); return }
       setItems((prev) => prev.filter((it) => it.publicId !== publicId))
     } catch {
-      alert('Błąd połączenia podczas usuwania ogłoszenia')
+      alert('Blad polaczenia')
     } finally {
       setDeletingId(null)
     }
   }
 
+  const handleSubmitForApproval = async (publicId) => {
+    try {
+      setSubmittingId(publicId)
+      const response = await fetch(`${API_BASE_URL}/user/listing/${publicId}/submit-for-approval`, { method: 'POST', credentials: 'include' })
+      if (!response.ok) { alert('Nie udalo sie wyslac do akceptacji.'); return }
+      setStatusById((prev) => ({ ...prev, [publicId]: 'WAITING' }))
+    } catch {
+      alert('Blad polaczenia')
+    } finally {
+      setSubmittingId(null)
+    }
+  }
+
   return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <h1>Moje ogłoszenia</h1>
+    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
+      <div className="ui-container space-y-4">
+        <h1 className="ui-h1 text-center">Moje ogloszenia</h1>
+        <div className="text-center">
+          <Link to="/" className="ui-btn">Wroc</Link>
+        </div>
 
-        <section className="electronics-section">
-          {loading && <p style={{ color: '#fff' }}>Ładowanie...</p>}
-          {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
+        {loading && <p className="ui-muted">Ladowanie...</p>}
+        {error && <p className="text-red-400">{error}</p>}
 
-          {!loading && !error && items.length === 0 && (
-            <p style={{ color: '#fff' }}>Nie masz jeszcze żadnych ogłoszeń.</p>
-          )}
+        {!loading && !error && items.length === 0 && (
+          <p className="ui-muted">Nie masz jeszcze zadnych ogloszen.</p>
+        )}
 
-          {!loading && !error && items.length > 0 && (
-            <div className="items-grid listings-grid">
-              {items.map((it) => {
-                const statusLabel = (() => {
-                  const s = statusById[it.publicId]
-                  if (!s) return null
-                  if (s === 'ACTIVE') return 'Aktywne'
-                  if (s === 'WAITING') return 'Oczekujące'
-                  if (s === 'DRAFT') return 'Robocze'
-                  if (s === 'REJECTED') return 'Odrzucone'
-                  if (s === 'COMPLETED') return 'Zakończone'
-                  if (s === 'EXPIRED') return 'Wygasłe'
-                  return s
-                })()
+        {!loading && !error && items.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((it) => {
+              const status = statusById[it.publicId]
+              const statusLabel = (() => {
+                if (!status) return null
+                if (status === 'ACTIVE') return 'Aktywne'
+                if (status === 'WAITING') return 'Oczekujace'
+                if (status === 'DRAFT') return 'Robocze'
+                if (status === 'REJECTED') return 'Odrzucone'
+                if (status === 'COMPLETED') return 'Zakonczone'
+                if (status === 'EXPIRED') return 'Wygasle'
+                return status
+              })()
 
-                const priceLabel = (() => {
-                  if (!it.priceAmount) return 'Brak ceny'
-                  const raw =
-                    typeof it.priceAmount === 'number'
-                      ? it.priceAmount
-                      : it.priceAmount.parsedValue ?? Number(it.priceAmount.source)
-                  if (Number.isNaN(raw) || raw == null) return 'Brak ceny'
-                  return `${raw.toLocaleString('pl-PL', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} PLN`
-                })()
+              const priceLabel = (() => {
+                if (!it.priceAmount) return 'Brak ceny'
+                const raw = typeof it.priceAmount === 'number' ? it.priceAmount : it.priceAmount.parsedValue ?? Number(it.priceAmount.source)
+                if (Number.isNaN(raw) || raw == null) return 'Brak ceny'
+                return `${raw.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`
+              })()
 
-                const createdLabel = it.createdAt
-                  ? new Date(it.createdAt).toLocaleDateString('pl-PL')
-                  : null
+              const createdLabel = it.createdAt ? new Date(it.createdAt).toLocaleDateString('pl-PL') : null
+              const locationLabel = [it.locationCity, it.locationRegion].filter(Boolean).join(', ')
+              const canSubmit = status === 'DRAFT' || status === 'REJECTED'
+              const isActive = status === 'ACTIVE'
 
-                const locationLabel = [it.locationCity, it.locationRegion]
-                  .filter(Boolean)
-                  .join(', ')
-
-                const shortDesc = it.description
-                  ? it.description.length > 120
-                    ? `${it.description.slice(0, 117)}...`
-                    : it.description
-                  : ''
-
-                return (
-                  <Link
-                    key={it.publicId}
-                    to={`/listing/${it.publicId}`}
-                    className="item-card item-card-link"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <div className="item-header">
-                      <div>
-                        <div className="item-name">{it.title}</div>
-                        {statusLabel && (
-                          <div className="item-meta">Status: {statusLabel}</div>
-                        )}
-                        {createdLabel && (
-                          <div className="item-meta">Dodano: {createdLabel}</div>
-                        )}
-                        {locationLabel && (
-                          <div className="item-location">Lokalizacja: {locationLabel}</div>
-                        )}
-                        {shortDesc && (
-                          <p className="item-desc" style={{ marginTop: 6 }}>
-                            {shortDesc}
-                          </p>
-                        )}
-                      </div>
-                      {it.coverImageUrl && (
-                        <img src={it.coverImageUrl} alt={it.title} className="listing-thumb" />
-                      )}
-                    </div>
-                    <div className="item-body">
-                      <div className="item-price">{priceLabel}</div>
-                      {it.negotiable && (
-                        <div className="item-meta">Cena do negocjacji</div>
-                      )}
-                    </div>
-                    <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button
-                        type="button"
-                        className="filters-button apply"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          openEdit(it)
-                        }}
-                        disabled={updatingId === it.publicId || deletingId === it.publicId}
-                      >
-                        Edytuj
-                      </button>
-                      <button
-                        type="button"
-                        className="filters-button clear"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          handleDelete(it.publicId)
-                        }}
-                        disabled={deletingId === it.publicId || updatingId === it.publicId}
-                      >
-                        {deletingId === it.publicId ? 'Usuwanie...' : 'Usuń'}
-                      </button>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-          {editListing && (
-            <div className="item-card" style={{ marginTop: 24 }}>
-              <h2 style={{ color: '#fff', marginBottom: 12 }}>Edytuj ogłoszenie</h2>
-              <form onSubmit={handleEditSave} className="add-listing-form">
-                <div className="items-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                  <div className="form-group">
-                    <label>
-                      Tytuł
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie: {editListing.original?.title || '—'}
-                      </span>
-                    </label>
-                    <input
-                      name="title"
-                      type="text"
-                      value={editListing.title}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      Cena (PLN)
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie:{' '}
-                        {(() => {
-                          const raw =
-                            typeof editListing.original?.priceAmount === 'number'
-                              ? editListing.original.priceAmount
-                              : editListing.original?.priceAmount?.parsedValue
-                                ?? Number(editListing.original?.priceAmount?.source)
-                          return Number.isNaN(raw) || raw == null
-                            ? '—'
-                            : `${raw.toLocaleString('pl-PL', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })} PLN`
-                        })()}
-                      </span>
-                    </label>
-                    <input
-                      name="priceAmount"
-                      type="number"
-                      step="0.01"
-                      className="remove-arrows"
-                      value={editListing.priceAmount}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      Miasto
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie: {editListing.original?.locationCity || '—'}
-                      </span>
-                    </label>
-                    <input
-                      name="locationCity"
-                      type="text"
-                      value={editListing.locationCity}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      Województwo
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie: {editListing.original?.locationRegion || '—'}
-                      </span>
-                    </label>
-                    <input
-                      name="locationRegion"
-                      type="text"
-                      value={editListing.locationRegion}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <label>
-                      Cena do negocjacji
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie: {editListing.original?.negotiable ? 'Tak' : 'Nie'}
-                      </span>
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        id="edit-negotiable"
-                        type="checkbox"
-                        name="negotiable"
-                        checked={!!editListing.negotiable}
-                        onChange={(e) =>
-                          setEditListing((prev) => (prev ? { ...prev, negotiable: e.target.checked } : prev))
-                        }
-                      />
-                      <label htmlFor="edit-negotiable" style={{ margin: 0 }}>Zaznacz, jeśli cena jest do negocjacji</label>
-                    </div>
-                  </div>
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <label>
-                      Opis
-                      <span style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>
-                        Aktualnie: {editListing.original?.description || '—'}
-                      </span>
-                    </label>
-                    <textarea
-                      name="description"
-                      rows={3}
-                      value={editListing.description}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  {editAttributes.length > 0 && (
-                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                      <label style={{ display: 'block', marginBottom: 8, color: '#e5e7eb' }}>
-                        Dodatkowe parametry
-                      </label>
-                      <div className="filters-grid">
-                        {editAttributes
-                          .slice()
-                          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                          .map((attr) => (
-                            <div key={attr.id || attr.key} className="filter-item">
-                              <label style={{ color: '#fff', display: 'block', marginBottom: 2 }}>
-                                {attr.label || attr.key}
-                              </label>
-                              <span
-                                style={{ display: 'block', fontSize: 11, color: '#9ca3af', marginBottom: 4 }}
-                              >
-                                Aktualnie: {attr.currentValue || '—'}
-                              </span>
-                              {attr.type === 'ENUM' ? (
-                                <select
-                                  value={editAttributeValues[attr.key] ?? ''}
-                                  onChange={(e) =>
-                                    setEditAttributeValues((prev) => ({
-                                      ...prev,
-                                      [attr.key]: e.target.value,
-                                    }))
-                                  }
-                                >
-                                  <option value="">Wybierz</option>
-                                  {attr.options
-                                    ?.slice()
-                                    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                                    .map((opt) => (
-                                      <option key={opt.id} value={opt.value}>
-                                        {opt.label}
-                                      </option>
-                                    ))}
-                                </select>
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={editAttributeValues[attr.key] ?? ''}
-                                  onChange={(e) =>
-                                    setEditAttributeValues((prev) => ({
-                                      ...prev,
-                                      [attr.key]: e.target.value,
-                                    }))
-                                  }
-                                />
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
+              const cardContent = (
+                <div className="flex gap-3">
+                  {it.coverImageUrl && (
+                    <img src={it.coverImageUrl} alt={it.title} className="h-20 w-24 flex-none rounded-lg object-cover" />
                   )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-zinc-100">{it.title}</div>
+                    {statusLabel && <div className="text-xs text-zinc-400">Status: {statusLabel}</div>}
+                    {createdLabel && <div className="text-xs text-zinc-500">Dodano: {createdLabel}</div>}
+                    {locationLabel && <div className="text-xs text-zinc-500">{locationLabel}</div>}
+                    <div className="mt-2 font-semibold text-emerald-400">{priceLabel}</div>
+                  </div>
                 </div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-                  <button
-                    type="submit"
-                    className="filters-button apply"
-                    disabled={updatingId === editListing.publicId}
-                  >
-                    {updatingId === editListing.publicId ? 'Zapisywanie...' : 'Zapisz zmiany'}
-                  </button>
-                  <button
-                    type="button"
-                    className="filters-button clear"
-                    onClick={() => setEditListing(null)}
-                    disabled={updatingId === editListing.publicId}
-                  >
-                    Anuluj
-                  </button>
+              )
+
+              return (
+                <div key={it.publicId} className={`rounded-xl border bg-zinc-800 p-3 transition-all ${isActive ? 'border-zinc-700 hover:border-emerald-500/50 hover:bg-zinc-750' : 'border-zinc-700/50 opacity-75'}`}>
+                  {isActive ? (
+                    <Link to={`/listing/${it.publicId}`} className="block">{cardContent}</Link>
+                  ) : (
+                    <div className="cursor-not-allowed">{cardContent}</div>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" className="ui-btn text-xs" onClick={(e) => { e.preventDefault(); openEdit(it) }} disabled={updatingId === it.publicId}>Edytuj</button>
+                    {canSubmit && (
+                      <button type="button" className="ui-btn-primary text-xs" onClick={() => handleSubmitForApproval(it.publicId)} disabled={submittingId === it.publicId}>
+                        {submittingId === it.publicId ? 'Wysylanie...' : 'Wyslij do akceptacji'}
+                      </button>
+                    )}
+                    <button type="button" className="ui-btn text-xs text-red-400 border-red-400/30 hover:bg-red-500/10" onClick={() => handleDelete(it.publicId)} disabled={deletingId === it.publicId}>
+                      {deletingId === it.publicId ? 'Usuwanie...' : 'Usun'}
+                    </button>
+                  </div>
                 </div>
-              </form>
-            </div>
-          )}
-        </section>
+              )
+            })}
+          </div>
+        )}
+
+        {editListing && (
+          <div className="ui-section">
+            <h2 className="ui-h2 mb-4">Edytuj ogloszenie</h2>
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Tytul <span className="text-xs text-zinc-500">(Aktualnie: {editListing.original?.title || '-'})</span></label>
+                  <input name="title" type="text" className="ui-input w-full" value={editListing.title} onChange={handleEditChange} />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Cena (PLN) <span className="text-xs text-zinc-500">(Aktualnie: {editListing.original?.priceAmount || '-'})</span></label>
+                  <div className="flex items-center gap-4">
+                    <input name="priceAmount" type="number" step="0.01" className="ui-input flex-1" value={editListing.priceAmount} onChange={handleEditChange} />
+                    <label className="relative inline-flex items-center gap-2 cursor-pointer select-none flex-none">
+                      <input type="checkbox" name="negotiable" checked={!!editListing.negotiable} onChange={(e) => setEditListing((prev) => (prev ? { ...prev, negotiable: e.target.checked } : prev))} className="sr-only peer" />
+                      <div className="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                      <span className="text-xs text-zinc-400">Do negocjacji</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Miasto <span className="text-xs text-zinc-500">(Aktualnie: {editListing.original?.locationCity || '-'})</span></label>
+                  <input name="locationCity" type="text" className="ui-input w-full" value={editListing.locationCity} onChange={handleEditChange} />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-300 mb-1">Wojewodztwo <span className="text-xs text-zinc-500">(Aktualnie: {editListing.original?.locationRegion || '-'})</span></label>
+                  <input name="locationRegion" type="text" className="ui-input w-full" value={editListing.locationRegion} onChange={handleEditChange} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm text-zinc-300 mb-1">Opis</label>
+                  <textarea name="description" rows={3} className="ui-input w-full" value={editListing.description} onChange={handleEditChange} />
+                </div>
+                {editAttributes.length > 0 && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm text-zinc-300 mb-2">Dodatkowe parametry</label>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {editAttributes.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((attr) => (
+                        <div key={attr.id || attr.key}>
+                          <label className="block text-xs text-zinc-400 mb-1">{attr.label || attr.key} <span className="text-zinc-500">(Aktualnie: {attr.currentValue || '-'})</span></label>
+                          {attr.type === 'ENUM' ? (
+                            <select className="ui-input w-full" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))}>
+                              <option value="">Wybierz</option>
+                              {attr.options?.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((opt) => (
+                                <option key={opt.id} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input type="text" className="ui-input w-full" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="ui-btn-primary" disabled={updatingId === editListing.publicId}>{updatingId === editListing.publicId ? 'Zapisywanie...' : 'Zapisz zmiany'}</button>
+                <button type="button" className="ui-btn" onClick={() => setEditListing(null)} disabled={updatingId === editListing.publicId}>Anuluj</button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   )

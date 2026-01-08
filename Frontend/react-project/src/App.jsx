@@ -18,7 +18,6 @@ import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import NewMessage from './pages/NewMessage'
 import SearchResults from './pages/SearchResults'
-import './App.css'
 
 const API_BASE_URL = 'http://localhost:8081'
 
@@ -62,7 +61,7 @@ function App() {
         if (cancelled) return
 
         setIsLoggedIn(true)
-        setUsername(profile?.email || profile?.name || '')
+        setUsername(profile?.name || profile?.email || '')
       } catch {
         // cicho
       }
@@ -94,7 +93,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="app">
+      <div className="min-h-screen bg-zinc-900">
         <Header 
           isLoggedIn={isLoggedIn}
           username={username}
@@ -116,16 +115,16 @@ function App() {
           <Route path="/categories/:categoryId" element={<CategoryDetails />} />
           <Route path="/categories/:categoryId/:subCategoryId" element={<CategoryDetails />} />
           <Route path="/listing/:publicId" element={<ListingDetails />} />
-          <Route path="/add-listing" element={<AddListing username={username} isLoggedIn={isLoggedIn} />} />
+          <Route path="/add-listing" element={isLoggedIn ? <AddListing username={username} isLoggedIn={isLoggedIn} /> : <Home isLoggedIn={false} />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/my-listings" element={<MyListings />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/my-listings" element={isLoggedIn ? <MyListings /> : <Home isLoggedIn={false} />} />
+          <Route path="/profile" element={isLoggedIn ? <Profile /> : <Home isLoggedIn={false} />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/favorites" element={isLoggedIn ? <Favorites /> : <Home isLoggedIn={false} />} />
           <Route path="/users/:userId" element={<SellerProfile />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:conversationId" element={<Chat />} />
-          <Route path="/messages/new/:listingId/:recipientId" element={<NewMessage />} />
+          <Route path="/messages" element={isLoggedIn ? <Messages /> : <Home isLoggedIn={false} />} />
+          <Route path="/messages/:conversationId" element={isLoggedIn ? <Chat /> : <Home isLoggedIn={false} />} />
+          <Route path="/messages/new/:listingId/:recipientId" element={isLoggedIn ? <NewMessage /> : <Home isLoggedIn={false} />} />
           <Route path="/search" element={<SearchResults />} />
         </Routes>
       </div>
