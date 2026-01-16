@@ -15,19 +15,11 @@ public class ListingScheduler {
 
     private final ListingFacade listingFacade;
 
-    // Uruchamia się co godzinę (3600000 ms)
+    // Co godzinę (3600000 ms)
     @Scheduled(fixedRate = 3600000)
     public void expireListings() {
         log.info("Running scheduled task: expireListings");
-        // Uwaga: Musimy dodać metodę expireOverdueListings do fasady, 
-        // albo wstrzyknąć tutaj ListingService bezpośrednio (jeśli jest w tym samym module).
-        // Ponieważ ListingScheduler jest w tym samym module co ListingService, 
-        // ale w innym pakiecie, a metoda w serwisie jest publiczna, 
-        // to najczystszym rozwiązaniem jest dodanie jej do fasady, 
-        // ale tylko do użytku wewnętrznego (lub stworzenie osobnego interfejsu ListingInternalFacade).
-        
-        // Na potrzeby tego zadania, dodam metodę do ListingFacade, 
-        // chociaż nie będzie ona wystawiona w kontrolerze.
+
         listingFacade.expireOverdueListings();
     }
 }
