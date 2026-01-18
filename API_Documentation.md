@@ -20,7 +20,7 @@ W przypadku wystąpienia błędu, API zwraca odpowiedź w formacie JSON ze stoso
   "code": "ERROR_CODE",       // Unikalny kod błędu (np. USER_ALREADY_EXISTS, VALIDATION_ERROR)
   "message": "Opis błędu",    // Czytelny opis dla programisty
   "status": 400,              // Kod HTTP
-  "timestamp": "2023-10-27T10:00:00Z",
+  "timestamp": "2023-10-27T1cd 0:00:00Z",
   "details": "..."            // Opcjonalne szczegóły (np. lista pól z błędami walidacji)
 }
 ```
