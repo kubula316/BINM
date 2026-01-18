@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const API_BASE_URL = 'http://localhost:8081'
@@ -12,6 +12,7 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -106,7 +107,13 @@ export default function Profile() {
                 </div>
                 <div>
                   <label className="block text-sm text-zinc-300 mb-1">Zdjecie profilowe</label>
-                  <input type="file" accept="image/*" className="text-sm text-zinc-300" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-btn inline-flex items-center gap-2">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                    Wybierz zdjecie
+                  </button>
                   {selectedFile && <div className="text-xs text-zinc-500 mt-1">Wybrany: {selectedFile.name}</div>}
                 </div>
               </div>

@@ -35,9 +35,9 @@ function Categories() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
       <div className="ui-container space-y-4">
+        <h1 className="ui-h1 text-center">Kategorie</h1>
         <div className="text-center">
-          <h1 className="ui-h1">Kategorie</h1>
-          <p className="ui-muted mt-1">Wybierz kategorie, aby przegladac ogloszenia.</p>
+          <Link to="/" className="ui-btn">Wroc</Link>
         </div>
 
         <section className="ui-section">

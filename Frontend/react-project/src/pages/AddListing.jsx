@@ -121,7 +121,7 @@ export default function AddListing({ username }) {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
       <div className="ui-container space-y-4">
-        <h1 className="ui-h1">Dodaj przedmiot</h1>
+        <h1 className="ui-h1 text-center">Dodaj przedmiot</h1>
 
         <form onSubmit={onSubmit} className="ui-section space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">

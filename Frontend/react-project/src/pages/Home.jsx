@@ -74,9 +74,6 @@ export default function Home({ isLoggedIn }) {
               ))}
             </div>
 
-            <div className="mt-4 text-center">
-              <Link to="/categories" className="ui-link text-sm">Zobacz wszystkie kategorie</Link>
-            </div>
           </section>
         )}
 

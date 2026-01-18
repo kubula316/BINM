@@ -166,15 +166,12 @@ export default function CategoryDetails() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6">
       <div className="ui-container space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="ui-h1">
-              {isListingView
-                ? currentSubCategory?.name || 'Ogloszenia'
-                : currentCategory?.name || 'Podkategorie'}
-            </h1>
-            <p className="ui-muted mt-1">{isListingView ? 'Lista dostepnych ogloszen' : 'Wybierz podkategorie'}</p>
-          </div>
+        <h1 className="ui-h1 text-center">
+          {isListingView
+            ? currentSubCategory?.name || 'Ogloszenia'
+            : currentCategory?.name || 'Podkategorie'}
+        </h1>
+        <div className="text-center">
           <Link to={backLink} className="ui-btn">Wroc</Link>
         </div>
 
