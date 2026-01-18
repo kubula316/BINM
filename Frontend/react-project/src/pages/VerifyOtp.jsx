@@ -43,39 +43,49 @@ export default function VerifyOtp() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-zinc-900 py-6 flex items-center justify-center">
-      <div className="ui-section max-w-md w-full text-center">
-        <h2 className="ui-h1 mb-2">Potwierdz swoj email</h2>
-        <p className="ui-muted mb-6">Wyslalismy kod weryfikacyjny na adres powiazany z Twoim kontem.</p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-zinc-300 mb-1">Kod OTP</label>
-            <input
-              type="text"
-              maxLength={6}
-              className="ui-input w-full text-center text-lg tracking-widest"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-              placeholder="000000"
-            />
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-8 px-4">
+      <div className="w-full max-w-md">
+        <div className="rounded-2xl border border-slate-800/50 bg-slate-800/30 p-8 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
+          
+          <h2 className="text-2xl font-bold text-white mb-2">Potwierdz email</h2>
+          <p className="text-slate-400 mb-8">Wyslalismy kod weryfikacyjny na Twoj adres email. Wpisz go ponizej.</p>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-          {message && <p className="text-emerald-400 text-sm">{message}</p>}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Kod OTP</label>
+              <input
+                type="text"
+                maxLength={6}
+                className="h-14 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-xl text-center tracking-[0.5em] text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="000000"
+              />
+            </div>
 
-          <button type="submit" className="ui-btn-primary w-full" disabled={loading}>
-            {loading ? 'Weryfikowanie...' : 'Potwierdz kod'}
-          </button>
-        </form>
+            {error && <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">{error}</div>}
+            {message && <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-400">{message}</div>}
 
-        <div className="mt-4 space-y-2">
-          <button type="button" className="ui-link text-sm" onClick={handleResend} disabled={loading}>
-            Wyslij kod ponownie
-          </button>
-          <button type="button" className="block mx-auto text-sm text-zinc-500 hover:text-zinc-300" onClick={() => navigate('/')}>
-            Wroc na strone glowna
-          </button>
+            <button type="submit" className="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50" disabled={loading}>
+              {loading ? 'Weryfikowanie...' : 'Potwierdz kod'}
+            </button>
+          </form>
+
+          <div className="mt-6 space-y-3">
+            <button type="button" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors" onClick={handleResend} disabled={loading}>
+              Wyslij kod ponownie
+            </button>
+            <div>
+              <button type="button" className="text-sm text-slate-500 hover:text-slate-300 transition-colors" onClick={() => navigate('/')}>
+                Wroc na strone glowna
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -82,8 +82,6 @@ function App() {
   }
 
   const handleLogout = () => {
-    // Nie mamy endpointu logout w backendzie (cookie jwt jest HttpOnly), więc czyścimy token do WebSocket
-    // i przeładowujemy aplikację, aby odciąć istniejące połączenia czatu od poprzedniego usera.
     localStorage.setItem('forceLoggedOut', '1')
     setIsLoggedIn(false)
     setUsername('')
@@ -93,7 +91,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-zinc-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 antialiased font-sans">
         <Header 
           isLoggedIn={isLoggedIn}
           username={username}
