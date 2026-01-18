@@ -117,8 +117,8 @@ Instytut Bezpieczeństwa i Informatyki\\
  {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
 \end{center}
 \begin{center}
- {\bf\fontsize{16pt}{16pt}\selectfont Jakub ...}\\
- {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX \\\&\\}
+ {\bf\fontsize{16pt}{16pt}\selectfont Jakub Siudek}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: 161028 \\\&\\}
  {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Frontend)}\\
  {\fontsize{12pt}{12pt}\selectfont Nr albumu: XXXXX\\\&\\}
  {\bf\fontsize{16pt}{16pt}\selectfont Imię Nazwisko (Mobile)}\\
@@ -138,9 +138,9 @@ Kraków \the\year\\
 (ostatnia aktualizacja: \DTMcurrenttime,\;\today)
 \end{center}
 \end{titlepage}
-\setcounter{page}{0} 
+\setcounter{page}{0}
 \newpage\null\thispagestyle{empty}
-%\setcounter{page}{0} 
+%\setcounter{page}{0}
 %\newpage
 %\thispagestyle{empty}
 
@@ -181,7 +181,7 @@ Projekt wykorzystuje relacyjną bazę danych PostgreSQL. Schemat bazy danych zos
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{dokumentacja_projektowa/images/Diagram ERD.png}
+    \includegraphics[width=0.8\textwidth]{images/Diagram ERD.png}
     \caption{Diagram ERD}
 \end{figure}
 
@@ -234,7 +234,8 @@ Główna tabela przechowująca ogłoszenia.
 \texttt{latitude} & DOUBLE PRECISION & Szerokość geograficzna \\
 \texttt{longitude} & DOUBLE PRECISION & Długość geograficzna \\
 \texttt{contact\_phone\_number} & VARCHAR(255) & Numer telefonu kontaktowego \\
-\texttt{status} & VARCHAR(255) & Status ogłoszenia (DRAFT, WAITING, ACTIVE, etc.) \\
+\texttt{status} & VARCHAR(255) & Status ogłoszenia
+(DRAFT,ACTIVE, etc.) \\
 \texttt{published\_at} & TIMESTAMP & Data publikacji \\
 \texttt{expires\_at} & TIMESTAMP & Data wygaśnięcia \\
 \texttt{created\_at} & TIMESTAMP & Data utworzenia \\
@@ -294,7 +295,7 @@ Definiuje atrybuty (cechy), które mogą posiadać ogłoszenia w danej kategorii
 \texttt{category\_id} & BIGINT (FK) & ID kategorii \\
 \texttt{key} & VARCHAR(255) & Klucz atrybutu (np. color) \\
 \texttt{label} & VARCHAR(255) & Etykieta wyświetlana (np. Kolor) \\
-\texttt{type} & VARCHAR(50) & Typ danych (STRING, NUMBER, BOOLEAN, ENUM) \\
+\texttt{type} & VARCHAR(50) & Typ danych (STRING,NUMBER,BOOLEAN,ENUM) \\
 \texttt{unit} & VARCHAR(50) & Jednostka (np. km, cm) \\
 \texttt{sort\_order} & INTEGER & Kolejność wyświetlania \\
 \texttt{active} & BOOLEAN & Czy atrybut jest aktywny \\
@@ -399,13 +400,13 @@ Przechowuje pojedynczą wiadomość w ramach konwersacji.
 \end{table}
 
 \subsection{Szczegółowa dokumentacja kodu (Backend)}
-Część serwerowa aplikacji została zaimplementowana w języku Java (wersja 21) przy użyciu frameworka Spring Boot. Architektura projektu opiera się na podziale na moduły funkcjonalne (\textit{Package by Feature}), co zapewnia wysoką spójność i niskie sprzężenie komponentów.
+Część serwerowa aplikacji została zaimplementowana w języku Java (wersja 21) przy użyciu frameworka Spring Boot. Architektura projektu opiera się na podziale na moduły funkcjonalne , co zapewnia niskie sprzężenie komponentów.
 
 \subsubsection{Architektura i Pakiety}
-Kod źródłowy został podzielony na niezależne pakiety funkcjonalne. Poniżej przedstawiono szczegółowy opis każdego z nich.
+Kod źródłowy został podzielony na niezależne pakiety funkcjonalne. Poniżej przedstawiono opis najważniejszych z nich.
 
 \paragraph{Pakiet \texttt{com.BINM.user}}
-Ten moduł odpowiada za zarządzanie tożsamością użytkowników, autentykację oraz obsługę profili. Jest to fundament bezpieczeństwa aplikacji.
+Ten moduł odpowiada za zarządzanie tożsamością użytkowników, autentykację oraz obsługę profili.
 
 \textbf{Główne odpowiedzialności:}
 \begin{itemize}
@@ -440,17 +441,22 @@ Ten moduł odpowiada za zarządzanie tożsamością użytkowników, autentykacj�
             \item \texttt{UserRole}: Enum definiujący role w systemie (USER, ADMIN).
         \end{itemize}
     \item \texttt{io}: Obiekty DTO (Data Transfer Object) służące do przesyłania danych między klientem a serwerem (np. \texttt{AuthRequest}, \texttt{ProfileResponse}).
+    \item \texttt{util}:
+        \begin{itemize}
+            \item \texttt{JwtUtil}: Klasa narzędziowa odpowiedzialna za generowanie, podpisywanie i walidację tokenów JWT.
+        \end{itemize}
     \item \texttt{config}:
         \begin{itemize}
             \item \texttt{SecurityConfig}: Główna konfiguracja bezpieczeństwa (CORS, CSRF, reguły dostępu do endpointów).
             \item \texttt{JwtRequestFilter}: Filtr przechwytujący każde żądanie HTTP, weryfikujący token JWT i ustawiający kontekst bezpieczeństwa.
+            \item \texttt{AdminSeeder}: Komponent uruchamiany przy starcie aplikacji, tworzący domyślne konto administratora, jeśli nie istnieje.
         \end{itemize}
 \end{itemize}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/uml_user_package.png}
-    \caption{Diagram klas pakietu \texttt{com.BINM.user}}
+    \includegraphics[width=1\textwidth]{images/uml_user_package.png}
+    \caption{Uproszczony diagram klas pakietu \texttt{com.BINM.user}}
 \end{figure}
 
 \paragraph{Pakiet \texttt{com.BINM.listing}}
@@ -470,28 +476,36 @@ Jest to największy i najważniejszy moduł aplikacji, odpowiedzialny za całą 
         \begin{itemize}
             \item \texttt{ListingPublicController}, \texttt{ListingUserController}, \texttt{ListingAdminController}: Kontrolery obsługujące operacje na ogłoszeniach dla różnych ról.
             \item \texttt{ListingService}: Główny serwis implementujący logikę biznesową ogłoszeń.
-            \item \texttt{SearchService}: Serwis dedykowany do wyszukiwania (CQRS).
+            \item \texttt{SearchService}: Serwis dedykowany do wyszukiwania.
             \item \texttt{ListingValidator}: Komponent walidujący reguły biznesowe.
             \item \texttt{ListingRepository}, \texttt{ListingMediaRepository}, \texttt{ListingAttributeRepository}: Repozytoria JPA.
             \item \texttt{ListingExceptionHandler}: Obsługa błędów specyficznych dla ogłoszeń.
+            \item \texttt{ListingMapper}: Mapper MapStruct konwertujący obiekty między warstwami (Entity $\leftrightarrow$ DTO).
+            \item \texttt{ListingScheduler}: Komponent cykliczny zarządzający wygaszaniem ogłoszeń.
+            \item \texttt{ListingSeeder}: Klasa zasilająca bazę przykładowymi ogłoszeniami.
         \end{itemize}
     \item \texttt{category}:
         \begin{itemize}
             \item \texttt{CategoryPublicController}, \texttt{CategoryAdminController}: Zarządzanie kategoriami.
             \item \texttt{CategoryService}: Logika drzewa kategorii.
+            \item \texttt{CategoryMapper}: Mapper MapStruct dla kategorii.
+            \item \texttt{CategorySeeder}: Inicjalizacja drzewa kategorii przy starcie aplikacji.
+            \item \texttt{CategoryCacheWarmup}: Komponent odpowiedzialny za wstępne załadowanie struktury kategorii do pamięci podręcznej (Cache) w celu optymalizacji wydajności.
         \end{itemize}
     \item \texttt{attribute}:
         \begin{itemize}
             \item \texttt{AttributeAdminController}: Zarządzanie definicjami atrybutów.
             \item \texttt{AttributeService}: Logika biznesowa atrybutów.
             \item \texttt{AttributeDefinitionRepository}, \texttt{AttributeOptionRepository}: Repozytoria JPA.
+            \item \texttt{AttributeMapper}: Mapper MapStruct dla atrybutów.
+            \item \texttt{AttributeSeeder}: Inicjalizacja definicji atrybutów.
         \end{itemize}
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/uml_listing_package.png}
-    \caption{Diagram klas pakietu \texttt{com.BINM.listing}}
+    \caption{Uproszczony diagram klas pakietu \texttt{com.BINM.listing}}
 \end{figure}
 
 \paragraph{Pakiet \texttt{com.BINM.messaging}}
@@ -532,11 +546,11 @@ Moduł odpowiedzialny za komunikację w czasie rzeczywistym między użytkownika
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/uml_messaging_package.png}
-    \caption{Diagram klas pakietu \texttt{com.BINM.messaging}}
+    \caption{Uproszczony diagram klas pakietu \texttt{com.BINM.messaging}}
 \end{figure}
 
 \paragraph{Pakiet \texttt{com.BINM.interactions}}
-Moduł obsługujący interakcje użytkowników z ogłoszeniami, w szczególności system "Ulubionych".
+Moduł obsługujący interakcje użytkowników z ogłoszeniami.
 
 \textbf{Główne odpowiedzialności:}
 \begin{itemize}
@@ -563,14 +577,14 @@ Moduł obsługujący interakcje użytkowników z ogłoszeniami, w szczególnośc
     \item \texttt{model}:
         \begin{itemize}
             \item \texttt{Favorite}: Encja reprezentująca polubienie.
-            \item \texttt{EntityType}: Enum określający typ polubionego obiektu (obecnie tylko LISTING).
+            \item \texttt{EntityType}: Enum określający typ polubionego obiektu.
         \end{itemize}
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/uml_interactions_package.png}
-    \caption{Diagram klas pakietu \texttt{com.BINM.interactions}}
+    \caption{Uproszczony diagram klas pakietu \texttt{com.BINM.interactions}}
 \end{figure}
 
 \paragraph{Pakiet \texttt{com.BINM.media}}
@@ -595,14 +609,15 @@ Moduł odpowiedzialny za obsługę plików multimedialnych (zdjęcia ogłoszeń,
         \end{itemize}
     \item \texttt{storage}:
         \begin{itemize}
-            \item \texttt{ImageStorageClient}: Klient integrujący się z Azure Blob Storage SDK.
+            \item \texttt{ImageStorageClient}: Interfejs definiujący kontrakt dla operacji na plikach.
+            \item \texttt{ImageStorageClientImpl}: Implementacja klienta integrującego się z Azure Blob Storage SDK.
         \end{itemize}
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/uml_media_package.png}
-    \caption{Diagram klas pakietu \texttt{com.BINM.media}}
+    \caption{Uproszczony diagram klas pakietu \texttt{com.BINM.media}}
 \end{figure}
 
 \paragraph{Pakiet \texttt{com.BINM.mailing}}
@@ -625,7 +640,7 @@ Moduł pomocniczy odpowiedzialny za wysyłanie wiadomości email (np. kody OTP).
 
 \subsubsection{Kluczowe Klasy i Interfejsy}
 
-\textbf{1. Fasady (Facades)}
+\textbf{1. Fasady}
 Projekt wykorzystuje wzorzec Fasady, aby ukryć złożoność logiki biznesowej przed kontrolerami i innymi modułami.
 \begin{itemize}
     \item \texttt{ListingFacade}: Główny punkt dostępu do operacji na ogłoszeniach (tworzenie, edycja, wyszukiwanie).
@@ -637,7 +652,7 @@ Projekt wykorzystuje wzorzec Fasady, aby ukryć złożoność logiki biznesowej 
     \item \texttt{EmailFacade}: Obsługa wysyłki wiadomości email.
 \end{itemize}
 
-\textbf{2. Serwisy (Services)}
+\textbf{2. Serwisy}
 Implementują logikę biznesową zdefiniowaną w interfejsach fasad.
 \begin{itemize}
     \item \texttt{ListingService}: Odpowiada za cykl życia ogłoszenia (Draft $\rightarrow$ Waiting $\rightarrow$ Active $\rightarrow$ Completed/Expired). Implementuje logikę walidacji i zapisu.
@@ -649,7 +664,7 @@ Implementują logikę biznesową zdefiniowaną w interfejsach fasad.
     \item \texttt{ProfileService}: Obsługuje logikę użytkownika (rejestracja, logowanie, profil).
 \end{itemize}
 
-\textbf{3. Kontrolery (Controllers)}
+\textbf{3. Kontrolery}
 Wystawiają endpointy REST API. Podzielone są na publiczne (dostępne dla wszystkich), użytkownika (wymagające logowania) i administracyjne (wymagające roli ADMIN).
 \begin{itemize}
     \item \texttt{ListingPublicController}: Publiczne endpointy do przeglądania i wyszukiwania ogłoszeń.
@@ -674,7 +689,7 @@ Kluczowe klasy odpowiedzialne za konfigurację aplikacji i bezpieczeństwo.
     \item \texttt{JwtRequestFilter}: Filtr uruchamiany przed każdym żądaniem HTTP. Weryfikuje poprawność tokenu JWT przesyłanego w nagłówku \texttt{Authorization}, parsuje go i ustawia kontekst bezpieczeństwa (\texttt{SecurityContextHolder}).
     \item \texttt{CustomAuthenticationEntryPoint}: Obsługuje błędy autentykacji (np. próba dostępu do zasobu bez tokenu), zwracając odpowiedni kod błędu 401.
     \item \texttt{WebSocketConfig}: Konfiguruje brokera wiadomości STOMP oraz endpointy WebSocket. Rejestruje interceptory.
-    \item \texttt{JwtChannelInterceptor}: Specjalny interceptor dla kanałów WebSocket, który autoryzuje połączenie na podstawie tokenu JWT w momencie nawiązywania sesji (handshake).
+    \item \texttt{JwtChannelInterceptor}: Specjalny interceptor dla kanałów WebSocket, który autoryzuje połączenie na podstawie tokenu JWT w momencie nawiązywania sesji.
 \end{itemize}
 
 \subsubsection{Wzorce Projektowe}
@@ -687,23 +702,31 @@ W projekcie zastosowano szereg wzorców projektowych, które zapewniają modular
         \item \textbf{View:} W przypadku REST API widokiem jest format JSON zwracany do klienta.
         \item \textbf{Controller:} Klasy z adnotacją \texttt{@RestController} (np. \texttt{ListingPublicController}), które przyjmują żądania HTTP, przetwarzają je (często delegując do serwisu) i zwracają odpowiedź.
     \end{itemize}
-
-    \item \textbf{Facade (Fasada):} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.0\textwidth]{images/MVC.png}
+        \caption{Przykładowy przebieg informacji w aplikacji.}
+    \end{figure}
+    \item \textbf{Fasada:} Używana do uproszczenia interfejsów modułów i ukrycia szczegółów implementacyjnych.
     \begin{itemize}
         \item \textbf{Zastosowanie:} Interfejsy takie jak \texttt{ListingFacade} czy \texttt{ProfileFacade} stanowią jedyny punkt wejścia do logiki danego modułu. Dzięki temu kontrolery nie muszą znać wewnętrznych zależności serwisu (np. repozytoriów czy mapperów). Ułatwia to testowanie i refaktoryzację.
     \end{itemize}
 
-    \item \textbf{Strategy (Strategia):} Wzorzec behawioralny, który pozwala na zdefiniowanie rodziny algorytmów i ich wymienne stosowanie.
+    \item \textbf{Strategia:} Wzorzec behawioralny, który pozwala na zdefiniowanie rodziny algorytmów i ich wymienne stosowanie.
     \begin{itemize}
-        \item \textbf{Zastosowanie:} Wykorzystywany w mechanizmie wyszukiwania (\texttt{Specification<Listing>}). Kryteria filtrowania (np. po cenie, kategorii, atrybutach) są budowane dynamicznie w zależności od żądania użytkownika. Każdy filtr jest osobną strategią (predykatem), które są łączone w jedno zapytanie.
+        \item \textbf{Zastosowanie:} Wykorzystywany w mechanizmie wyszukiwania (\texttt{Specification <Listing>}). Kryteria filtrowania (np. po cenie, kategorii, atrybutach) są budowane dynamicznie w zależności od żądania użytkownika. Każdy filtr jest osobną strategią (predykatem), które są łączone w jedno zapytanie.
+    \end{itemize}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.0\textwidth]{images/STRATEGY.png}
+        \caption{Przykład wykorzystania interfejsu Specyfication do budowania strategi wyszukiwania.}
+    \end{figure}
+    \item \textbf{Obserwator:} Wzorzec, w którym obiekt (podmiot) powiadamia listę zależnych od niego obiektów (obserwatorów) o zmianie swojego stanu.
+    \begin{itemize}
+        \item \textbf{Zastosowanie:} Zrealizowany za pomocą mechanizmu Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone w \texttt{ListingService}, publikowane jest zdarzenie \texttt{ListingFinishedEvent}. Serwis \texttt{InteractionService} nasłuchuje na to zdarzenie (\texttt{@EventListener}) i automatycznie usuwa to ogłoszenie z ulubionych. Dzięki temu moduły są luźno powiązane.}.
     \end{itemize}
 
-    \item \textbf{Observer (Obserwator) / Publish-Subscribe:} Wzorzec, w którym obiekt (podmiot) powiadamia listę zależnych od niego obiektów (obserwatorów) o zmianie swojego stanu.
-    \begin{itemize}
-        \item \textbf{Zastosowanie:} Zrealizowany za pomocą mechanizmu Spring Events. Przykład: Gdy ogłoszenie zostaje zakończone w \texttt{ListingService}, publikowane jest zdarzenie \texttt{ListingFinishedEvent}. Serwis \texttt{InteractionService} nasłuchuje na to zdarzenie (\texttt{@EventListener}) i automatycznie usuwa to ogłoszenie z ulubionych. Dzięki temu moduły są luźno powiązane (loose coupling) - \texttt{ListingService} nie musi wiedzieć o istnieniu \texttt{InteractionService}.
-    \end{itemize}
-
-    \item \textbf{Builder (Budowniczy):} Wzorzec konstrukcyjny, który pozwala na tworzenie złożonych obiektów krok po kroku.
+    \item \textbf{Budowniczy:} Wzorzec konstrukcyjny, który pozwala na tworzenie złożonych obiektów krok po kroku.
     \begin{itemize}
         \item \textbf{Zastosowanie:} Wykorzystywany powszechnie dzięki bibliotece Lombok (\texttt{@Builder}). Umożliwia czytelne tworzenie obiektów DTO i encji, np.:
         \begin{verbatim}
@@ -714,19 +737,15 @@ W projekcie zastosowano szereg wzorców projektowych, które zapewniają modular
         \end{verbatim}
     \end{itemize}
 
-    \item \textbf{Repository (Repozytorium):} Wzorzec, który pośredniczy między warstwą domeny a warstwą mapowania danych.
-    \begin{itemize}
-        \item \textbf{Zastosowanie:} Interfejsy rozszerzające \texttt{JpaRepository} (np. \texttt{ListingRepository}) zapewniają abstrakcję nad dostępem do bazy danych, ukrywając zapytania SQL/JPQL.
-    \end{itemize}
-
     \item \textbf{Data Transfer Object (DTO):} Wzorzec służący do przesyłania danych między podsystemami aplikacji.
     \begin{itemize}
         \item \textbf{Zastosowanie:} Obiekty w pakietach \texttt{dto} lub \texttt{io} (np. \texttt{ListingDto}, \texttt{ProfileRequest}) służą do oddzielenia wewnętrznego modelu danych (encji JPA) od danych prezentowanych klientowi API. Zapobiega to wyciekowi wrażliwych danych i problemom z cyklicznymi zależnościami w JSON.
     \end{itemize}
 
-    \item \textbf{Dependency Injection (Wstrzykiwanie Zależności):} Wzorzec, w którym obiekty nie tworzą swoich zależności, ale otrzymują je z zewnątrz.
+    \item \textbf{Wstrzykiwanie Zależności:} Wzorzec, w którym obiekty nie tworzą swoich zależności, ale otrzymują je z zewnątrz.
     \begin{itemize}
-        \item \textbf{Zastosowanie:} Fundament frameworka Spring. Wszystkie serwisy, kontrolery i repozytoria są wstrzykiwane przez konstruktor (z użyciem \texttt{@RequiredArgsConstructor}), co ułatwia testowanie i zarządzanie cyklem życia komponentów.
+        \item \textbf{Zastosowanie:} Fundament frameworka Spring. Wszystkie serwisy, kontrolery i repozytoria są wstrzykiwane przez konstruktor
+        (z użyciem \texttt{@RequiredArgsConstructor}), co ułatwia testowanie i zarządzanie cyklem życia komponentów.
     \end{itemize}
 \end{itemize}
 

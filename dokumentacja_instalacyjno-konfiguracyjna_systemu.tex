@@ -178,15 +178,21 @@ git clone https://github.com/kubula316/BINM
 cd BINM/Backend/listing
 \end{verbatim}
 
-\subsubsection{Krok 2: Baza Danych}
-Aplikacja wymaga dostępu do bazy danych PostgreSQL (wersja 15+).
-Można wykorzystać:
+\subsubsection{Krok 2: Baza Danych i Magazyn Plików}
+Aplikacja wymaga dostępu do dwóch kluczowych usług przechowywania danych:
+
+\textbf{1. Relacyjna Baza Danych (PostgreSQL)}
+Wymagana jest baza danych PostgreSQL w wersji 15 lub nowszej. Można wykorzystać:
 \begin{itemize}
     \item Bazę danych w chmurze (np. darmowy plan \textbf{NeonDB}, AWS RDS, Azure SQL).
     \item Lokalną instalację PostgreSQL.
     \item Kontener Docker z PostgreSQL.
 \end{itemize}
-Połączenie z bazą danych odbywa się wyłącznie poprzez zmienne środowiskowe, co zapewnia bezpieczeństwo i elastyczność konfiguracji.
+
+\textbf{2. Magazyn Plików (Azure Blob Storage)}
+Do przechowywania zdjęć ogłoszeń oraz awatarów użytkowników wykorzystywana jest usługa chmurowa Azure Blob Storage. Należy posiadać aktywne konto Azure Storage Account oraz utworzone kontenery na pliki.
+
+Połączenie z obiema usługami odbywa się wyłącznie poprzez zmienne środowiskowe.
 
 \subsubsection{Krok 3: Konfiguracja Zmiennych Środowiskowych}
 Należy skonfigurować następujące zmienne środowiskowe w systemie lub pliku konfiguracyjnym IDE/kontenera:
@@ -221,6 +227,12 @@ Można użyć dowolnego serwera SMTP, np. Gmail lub darmowego planu \textbf{Brev
     \item \texttt{PROFILE\_CONTAINER}: Nazwa kontenera na zdjęcia profilowe
 \end{itemize}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{dokumentacja_instalacyjno_konfiguracyjna_systemu/images/EnvExample.png}
+    \caption{Przykładowa konfiguracja zmiennych środowiskowych}
+\end{figure}
+
 \subsubsection{Krok 4: Uruchomienie Aplikacji}
 
 \textbf{Metoda A: Maven (Lokalnie)}
@@ -239,8 +251,46 @@ Najwygodniejszym sposobem uruchomienia aplikacji podczas prac deweloperskich jes
     \item Uruchom klasę główną aplikacji (\texttt{ListingApplication.java}).
 \end{enumerate}
 
-\subsubsection{Krok 5: Konto Administratora}
-Przy pierwszym uruchomieniu system automatycznie utworzy konto administratora, jeśli nie istnieje:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{dokumentacja_instalacyjno_konfiguracyjna_systemu/images/Env.png}
+    \caption{Konfiguracja zmiennych środowiskowych w IntelliJ IDEA}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{dokumentacja_instalacyjno_konfiguracyjna_systemu/images/Run.png}
+    \caption{Uruchamianie aplikacji w IntelliJ IDEA}
+\end{figure}
+
+\subsubsection{Krok 5: Weryfikacja Instalacji}
+Aby upewnić się, że aplikacja została poprawnie zainstalowana i uruchomiona, należy wykonać następujące kroki:
+
+\begin{enumerate}
+    \item \textbf{Sprawdzenie logów:} W konsoli (lub logach kontenera) powinna pojawić się informacja:
+    \begin{verbatim}
+    Started ListingApplication in X.XXX seconds
+    \end{verbatim}
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{dokumentacja_instalacyjno_konfiguracyjna_systemu/images/image.png}
+        \caption{Poprawne logi startowe aplikacji}
+    \end{figure}
+    
+    Brak błędów (Exception) podczas startu oznacza, że połączenie z bazą danych i innymi usługami zostało nawiązane.
+    
+    \item \textbf{Test Endpointu Publicznego:} Otwórz przeglądarkę internetową lub narzędzie typu Postman i wywołaj adres:
+    \begin{verbatim}
+    http://localhost:8081/public/category/all
+    \end{verbatim}
+    Jeśli aplikacja działa poprawnie, powinieneś otrzymać odpowiedź w formacie JSON (lista kategorii lub pusta lista \texttt{[]}) oraz kod HTTP 200 OK.
+    
+    \item \textbf{Test Połączenia z Bazą:} Jeśli powyższy endpoint zwrócił wynik, oznacza to, że aplikacja poprawnie połączyła się z bazą danych.
+\end{enumerate}
+
+\subsubsection{Krok 6: Konto Administratora}
+Przy pierwszym uruchomieniu system automatycznie tworzy domyślne konto administratora, jeśli nie istnieje:
 \begin{itemize}
     \item \textbf{Email:} \texttt{admin@binm.com}
     \item \textbf{Hasło:} \texttt{admin123}
