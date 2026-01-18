@@ -360,7 +360,7 @@ W przypadku wystąpienia błędu, API zwraca odpowiedź w formacie JSON ze stoso
 *   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
 *   **URL Params:** `?page=0&size=10`
 
-### `GET /admin/listings/{publicId}`
+### `GET /admin/listings/waiting/{publicId}`
 > Pobiera szczegóły ogłoszenia oczekującego na zatwierdzenie.
 
 *   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
@@ -402,3 +402,38 @@ W przypadku wystąpienia błędu, API zwraca odpowiedź w formacie JSON ze stoso
 
 *   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
 *   **Body:** `{"key": "...", "label": "...", "type": "STRING"}`
+
+---
+
+## 11. Atrybuty - Administracja (Zabezpieczone - Rola ADMIN)
+
+### `POST /admin/attributes`
+> Tworzy nową definicję atrybutu (nieprzypisaną bezpośrednio do kategorii w tym endpoincie lub tworzącą globalną definicję).
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **Body:** (Zależne od implementacji DTO AttributeDefinition)
+
+### `PUT /admin/attributes/{id}`
+> Aktualizuje istniejącą definicję atrybutu.
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **URL Path Variable:** `id` (ID atrybutu)
+
+### `POST /admin/attributes/{id}/options`
+> Dodaje nową opcję do atrybutu typu ENUM (listy wyboru).
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **URL Path Variable:** `id` (ID atrybutu)
+*   **Body:** `{"value": "...", "label": "...", "sortOrder": 1}`
+
+### `PUT /admin/attributes/options/{optionId}`
+> Aktualizuje istniejącą opcję atrybutu.
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **URL Path Variable:** `optionId` (ID opcji)
+
+### `DELETE /admin/attributes/options/{optionId}`
+> Usuwa opcję atrybutu.
+
+*   **Authentication:** Zabezpieczony (Wymaga roli ADMIN)
+*   **URL Path Variable:** `optionId` (ID opcji)
