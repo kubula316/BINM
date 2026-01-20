@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-
-const API_BASE_URL = 'http://localhost:8081'
+import { API_BASE_URL } from '../config'
 
 export default function Home({ isLoggedIn }) {
   const [randomListings, setRandomListings] = useState([])

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const API_BASE_URL = 'http://localhost:8081'
+import { API_BASE_URL } from '../config'
 
 function LoginForm({ onLogin, onClose }) {
   const [mode, setMode] = useState('login')

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-
-const API_BASE_URL = 'http://localhost:8081'
+import { API_BASE_URL } from '../config'
 
 export default function Messages() {
   const navigate = useNavigate()

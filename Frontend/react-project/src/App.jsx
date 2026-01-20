@@ -18,8 +18,8 @@ import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import NewMessage from './pages/NewMessage'
 import SearchResults from './pages/SearchResults'
+import { API_BASE_URL } from './config'
 
-const API_BASE_URL = 'http://localhost:8081'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)

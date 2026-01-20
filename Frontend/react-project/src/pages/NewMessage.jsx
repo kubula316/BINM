@@ -2,8 +2,8 @@ import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
-const API_BASE_URL = 'http://localhost:8081'
 
 export default function NewMessage() {
   const navigate = useNavigate()
