@@ -24,6 +24,7 @@ import { API_BASE_URL } from './config'
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
+  const [userAvatar, setUserAvatar] = useState(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
 
   useEffect(() => {
@@ -32,6 +33,7 @@ function App() {
     if (localStorage.getItem('forceLoggedOut') === '1') {
       setIsLoggedIn(false)
       setUsername('')
+      setUserAvatar(null)
       return () => {
         cancelled = true
       }
@@ -62,6 +64,7 @@ function App() {
 
         setIsLoggedIn(true)
         setUsername(profile?.name || profile?.email || '')
+        setUserAvatar(profile?.profileImageUrl || null)
       } catch {
         // cicho
       }
@@ -85,8 +88,14 @@ function App() {
     localStorage.setItem('forceLoggedOut', '1')
     setIsLoggedIn(false)
     setUsername('')
+    setUserAvatar(null)
     localStorage.removeItem('jwtToken')
     window.location.reload()
+  }
+
+  const handleProfileUpdate = (profile) => {
+    setUsername(profile?.name || profile?.email || '')
+    setUserAvatar(profile?.profileImageUrl || null)
   }
 
   return (
@@ -95,6 +104,7 @@ function App() {
         <Header 
           isLoggedIn={isLoggedIn}
           username={username}
+          userAvatar={userAvatar}
           onLoginClick={() => setShowLoginModal(true)}
           onLogout={handleLogout}
         />
@@ -116,7 +126,7 @@ function App() {
           <Route path="/add-listing" element={isLoggedIn ? <AddListing username={username} isLoggedIn={isLoggedIn} /> : <Home isLoggedIn={false} />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/my-listings" element={isLoggedIn ? <MyListings /> : <Home isLoggedIn={false} />} />
-          <Route path="/profile" element={isLoggedIn ? <Profile /> : <Home isLoggedIn={false} />} />
+          <Route path="/profile" element={isLoggedIn ? <Profile onProfileUpdate={handleProfileUpdate} /> : <Home isLoggedIn={false} />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/favorites" element={isLoggedIn ? <Favorites /> : <Home isLoggedIn={false} />} />
           <Route path="/users/:userId" element={<SellerProfile />} />

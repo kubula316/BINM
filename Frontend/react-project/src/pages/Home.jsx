@@ -50,7 +50,7 @@ export default function Home({ isLoggedIn }) {
               Platforma ogloszen
             </div>
             <h1 className="text-3xl sm:text-5xl font-bold text-white mb-3">Witaj w <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">BINM</span></h1>
-            <p className="text-slate-400 text-lg mb-8">Bylo i Nie Ma - znajdz to czego szukasz</p>
+            <p className="text-slate-400 text-lg mb-8">Bylo i Nie Ma</p>
 
             <div className="flex flex-wrap justify-center gap-3">
               <Link className="inline-flex items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/50 px-6 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-slate-700 hover:text-white hover:border-slate-600" to="/categories">

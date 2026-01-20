@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
-function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
+function Header({ isLoggedIn, username, userAvatar, onLoginClick, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const menuRef = useRef(null)
@@ -82,9 +82,13 @@ function Header({ isLoggedIn, username, onLoginClick, onLogout }) {
           {isLoggedIn ? (
             <div className="relative" ref={menuRef}>
               <button type="button" className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${isActive('/my-listings') || isActive('/favorites') || isActive('/messages') || isActive('/profile') ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-slate-700/50 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white'}`} onClick={() => setMenuOpen((v) => !v)}>
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                  {username ? username.charAt(0).toUpperCase() : 'U'}
-                </div>
+                {userAvatar ? (
+                  <img src={userAvatar} alt={username} className="w-7 h-7 rounded-full object-cover ring-2 ring-emerald-500/50" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                    {username ? username.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
                 <span className="max-w-[100px] truncate hidden sm:block">{username}</span>
                 <svg className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M6 9l6 6 6-6" />
