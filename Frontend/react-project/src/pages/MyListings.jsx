@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
-const API_BASE_URL = 'http://localhost:8081'
+import { API_BASE_URL } from '../config'
 
 export default function MyListings() {
   const [items, setItems] = useState([])
@@ -15,47 +14,48 @@ export default function MyListings() {
   const [editAttributes, setEditAttributes] = useState([])
   const [editAttributeValues, setEditAttributeValues] = useState({})
 
-  useEffect(() => {
-    const fetchMyListings = async () => {
-      try {
-        setLoading(true)
-        setError('')
-        const response = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=20`, { credentials: 'include' })
+  const fetchMyListings = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=20`, { credentials: 'include' })
 
-        if (!response.ok) {
-          setError(response.status === 401 ? 'Musisz byc zalogowany.' : 'Nie udalo sie pobrac ogloszen.')
-          return
-        }
-
-        const data = await response.json()
-        const list = Array.isArray(data.content) ? data.content : []
-        setItems(list)
-
-        const ids = new Set(list.map((x) => x.publicId))
-        const STATUSES = ['ACTIVE', 'WAITING', 'DRAFT', 'REJECTED', 'COMPLETED', 'EXPIRED']
-
-        const results = await Promise.allSettled(
-          STATUSES.map(async (status) => {
-            const res = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=200&status=${status}`, { credentials: 'include' })
-            if (!res.ok) return { status, ids: [] }
-            const page = await res.json()
-            const content = Array.isArray(page.content) ? page.content : []
-            return { status, ids: content.map((it) => it.publicId).filter((id) => ids.has(id)) }
-          }),
-        )
-
-        const map = {}
-        results.forEach((r) => {
-          if (r.status !== 'fulfilled') return
-          r.value.ids.forEach((id) => { map[id] = r.value.status })
-        })
-        setStatusById(map)
-      } catch {
-        setError('Brak polaczenia z serwerem')
-      } finally {
-        setLoading(false)
+      if (!response.ok) {
+        setError(response.status === 401 ? 'Musisz byc zalogowany.' : 'Nie udalo sie pobrac ogloszen.')
+        return
       }
+
+      const data = await response.json()
+      const list = Array.isArray(data.content) ? data.content : []
+      setItems(list)
+
+      const ids = new Set(list.map((x) => x.publicId))
+      const STATUSES = ['ACTIVE', 'WAITING', 'DRAFT', 'REJECTED', 'COMPLETED', 'EXPIRED']
+
+      const results = await Promise.allSettled(
+        STATUSES.map(async (status) => {
+          const res = await fetch(`${API_BASE_URL}/user/listing/my?page=0&size=200&status=${status}`, { credentials: 'include' })
+          if (!res.ok) return { status, ids: [] }
+          const page = await res.json()
+          const content = Array.isArray(page.content) ? page.content : []
+          return { status, ids: content.map((it) => it.publicId).filter((id) => ids.has(id)) }
+        }),
+      )
+
+      const map = {}
+      results.forEach((r) => {
+        if (r.status !== 'fulfilled') return
+        r.value.ids.forEach((id) => { map[id] = r.value.status })
+      })
+      setStatusById(map)
+    } catch {
+      setError('Brak polaczenia z serwerem')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchMyListings()
   }, [])
 
@@ -170,7 +170,7 @@ export default function MyListings() {
         return
       }
 
-      const prevStatus = statusById[editListing.publicId]
+      const prevStatus = statusById[editListing.publicId] || items.find((i) => i.publicId === editListing.publicId)?.status
       if (prevStatus === 'WAITING') {
         await fetch(`${API_BASE_URL}/user/listing/${editListing.publicId}/submit-for-approval`, {
           method: 'POST',
@@ -178,7 +178,7 @@ export default function MyListings() {
         })
       }
 
-      setItems((prev) => prev.map((it) => it.publicId === editListing.publicId ? { ...it, title: body.title || it.title, priceAmount: body.priceAmount || it.priceAmount } : it))
+      await fetchMyListings()
       setEditListing(null)
     } catch {
       alert('Blad polaczenia')
@@ -265,9 +265,9 @@ export default function MyListings() {
         )}
 
         {!loading && !error && items.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
             {items.map((it) => {
-              const status = statusById[it.publicId]
+              const status = statusById[it.publicId] || it.status
               const priceLabel = (() => {
                 if (!it.priceAmount) return 'Brak ceny'
                 const raw = typeof it.priceAmount === 'number' ? it.priceAmount : it.priceAmount.parsedValue ?? Number(it.priceAmount.source)
@@ -281,7 +281,8 @@ export default function MyListings() {
               const isActive = status === 'ACTIVE'
 
               return (
-                <div key={it.publicId} className={`rounded-xl border bg-slate-800/50 p-4 transition-all ${isActive ? 'border-slate-700/50 hover:border-emerald-500/30' : 'border-slate-700/30 opacity-80'}`}>
+                <div key={it.publicId} className="flex flex-col gap-4">
+                  <div className={`rounded-xl border bg-slate-800/50 p-4 transition-all ${isActive ? 'border-slate-700/50 hover:border-emerald-500/30' : 'border-slate-700/30 opacity-80'}`}>
                   {isActive ? (
                     <Link to={`/listing/${it.publicId}`} className="block">
                       <div className="flex gap-4">
@@ -335,74 +336,75 @@ export default function MyListings() {
                     </button>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
 
-        {editListing && (
-          <div className="rounded-2xl border border-slate-800/50 bg-slate-800/30 p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-              Edytuj ogloszenie
-            </h2>
-            <form onSubmit={handleEditSave} className="space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Tytul <span className="text-xs text-slate-500">(Aktualnie: {editListing.original?.title || '-'})</span></label>
-                  <input name="title" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.title} onChange={handleEditChange} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Cena (PLN) <span className="text-xs text-slate-500">(Aktualnie: {editListing.original?.priceAmount || '-'})</span></label>
-                  <div className="flex items-center gap-4">
-                    <input name="priceAmount" type="number" step="0.01" className="h-11 flex-1 rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.priceAmount} onChange={handleEditChange} />
-                    <label className="relative inline-flex items-center gap-2 cursor-pointer select-none flex-none">
-                      <input type="checkbox" name="negotiable" checked={!!editListing.negotiable} onChange={(e) => setEditListing((prev) => (prev ? { ...prev, negotiable: e.target.checked } : prev))} className="sr-only peer" />
-                      <div className="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
-                      <span className="text-sm text-slate-400">Do negocjacji</span>
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Miasto</label>
-                  <input name="locationCity" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.locationCity} onChange={handleEditChange} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Wojewodztwo</label>
-                  <input name="locationRegion" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.locationRegion} onChange={handleEditChange} />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Opis</label>
-                  <textarea name="description" rows={3} className="w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 py-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 resize-none" value={editListing.description} onChange={handleEditChange} />
-                </div>
-                {editAttributes.length > 0 && (
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-slate-300 mb-3">Dodatkowe parametry</label>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {editAttributes.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((attr) => (
-                        <div key={attr.id || attr.key}>
-                          <label className="block text-xs text-slate-400 mb-1.5">{attr.label || attr.key} <span className="text-slate-500">(Aktualnie: {attr.currentValue || '-'})</span></label>
-                          {attr.type === 'ENUM' ? (
-                            <select className="h-10 w-full rounded-lg border border-slate-700/50 bg-slate-900/50 px-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))}>
-                              <option value="">Wybierz</option>
-                              {attr.options?.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((opt) => (
-                                <option key={opt.id} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input type="text" className="h-10 w-full rounded-lg border border-slate-700/50 bg-slate-900/50 px-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))} />
+                  {editListing && editListing.publicId === it.publicId && (
+                    <div className="rounded-2xl border border-slate-800/50 bg-slate-800/30 p-6 sm:p-8">
+                      <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        Edytuj ogloszenie
+                      </h2>
+                      <form onSubmit={handleEditSave} className="space-y-5">
+                        <div className="grid gap-5 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Tytul <span className="text-xs text-slate-500">(Aktualnie: {editListing.original?.title || '-'})</span></label>
+                            <input name="title" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.title} onChange={handleEditChange} />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Cena (PLN) <span className="text-xs text-slate-500">(Aktualnie: {editListing.original?.priceAmount || '-'})</span></label>
+                            <div className="flex items-center gap-4">
+                              <input name="priceAmount" type="number" step="0.01" className="h-11 flex-1 rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.priceAmount} onChange={handleEditChange} />
+                              <label className="relative inline-flex items-center gap-2 cursor-pointer select-none flex-none">
+                                <input type="checkbox" name="negotiable" checked={!!editListing.negotiable} onChange={(e) => setEditListing((prev) => (prev ? { ...prev, negotiable: e.target.checked } : prev))} className="sr-only peer" />
+                                <div className="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                                <span className="text-sm text-slate-400">Do negocjacji</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Miasto</label>
+                            <input name="locationCity" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.locationCity} onChange={handleEditChange} />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Wojewodztwo</label>
+                            <input name="locationRegion" type="text" className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20" value={editListing.locationRegion} onChange={handleEditChange} />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Opis</label>
+                            <textarea name="description" rows={3} className="w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 py-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 resize-none" value={editListing.description} onChange={handleEditChange} />
+                          </div>
+                          {editAttributes.length > 0 && (
+                            <div className="sm:col-span-2">
+                              <label className="block text-sm font-medium text-slate-300 mb-3">Dodatkowe parametry</label>
+                              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {editAttributes.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((attr) => (
+                                  <div key={attr.id || attr.key}>
+                                    <label className="block text-xs text-slate-400 mb-1.5">{attr.label || attr.key} <span className="text-slate-500">(Aktualnie: {attr.currentValue || '-'})</span></label>
+                                    {attr.type === 'ENUM' ? (
+                                      <select className="h-10 w-full rounded-lg border border-slate-700/50 bg-slate-900/50 px-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))}>
+                                        <option value="">Wybierz</option>
+                                        {attr.options?.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((opt) => (
+                                          <option key={opt.id} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <input type="text" className="h-10 w-full rounded-lg border border-slate-700/50 bg-slate-900/50 px-3 text-sm text-slate-100 outline-none transition-all focus:border-emerald-500/50" value={editAttributeValues[attr.key] ?? ''} onChange={(e) => setEditAttributeValues((prev) => ({ ...prev, [attr.key]: e.target.value }))} />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      ))}
+                        <div className="flex gap-3">
+                          <button type="submit" className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50" disabled={updatingId === editListing.publicId}>{updatingId === editListing.publicId ? 'Zapisywanie...' : 'Zapisz zmiany'}</button>
+                          <button type="button" className="inline-flex items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/50 px-6 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-slate-700 hover:text-white" onClick={() => setEditListing(null)} disabled={updatingId === editListing.publicId}>Anuluj</button>
+                        </div>
+                      </form>
                     </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button type="submit" className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50" disabled={updatingId === editListing.publicId}>{updatingId === editListing.publicId ? 'Zapisywanie...' : 'Zapisz zmiany'}</button>
-                <button type="button" className="inline-flex items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/50 px-6 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-slate-700 hover:text-white" onClick={() => setEditListing(null)} disabled={updatingId === editListing.publicId}>Anuluj</button>
-              </div>
-            </form>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

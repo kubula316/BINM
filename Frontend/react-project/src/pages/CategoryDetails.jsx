@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-
-const API_BASE_URL = 'http://localhost:8081'
+import { API_BASE_URL } from '../config'
 
 export default function CategoryDetails() {
   const { categoryId, subCategoryId } = useParams()
@@ -104,7 +103,7 @@ export default function CategoryDetails() {
         .map(([key, v]) => ({
           key,
           type: v.type,
-          op: 'eq',
+          op: v.type === 'NUMBER' && key === 'mileage' ? 'lte' : 'eq',
           value: v.value,
         }))
 
@@ -255,6 +254,7 @@ export default function CategoryDetails() {
                         <input
                           className="h-11 w-full rounded-xl border border-slate-700/50 bg-slate-900/50 px-4 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
                           type="text"
+                          placeholder={attr.type === 'NUMBER' && attr.key === 'mileage' ? 'Maksymalnie...' : ''}
                           value={filters[attr.key]?.value ?? ''}
                           onChange={(e) => handleFilterChange(attr.key, e.target.value, attr.type)}
                         />
@@ -283,7 +283,7 @@ export default function CategoryDetails() {
           {!loading && !error && isListingView && items.length === 0 && <p className="text-slate-400 text-center py-8">Brak ogloszen w tej kategorii.</p>}
 
           {!loading && !error && isListingView && items.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-3">
               {items.map((it) => {
                 const priceLabel = (() => {
                   if (it.priceAmount == null) return 'Brak ceny'
@@ -299,27 +299,37 @@ export default function CategoryDetails() {
                   <Link
                     key={it.publicId}
                     to={`/listing/${it.publicId}`}
-                    className="group rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 transition-all hover:bg-slate-700/50 hover:border-slate-600 hover:shadow-lg hover:-translate-y-0.5"
+                    className="group block rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 transition-all hover:bg-slate-700/50 hover:border-slate-600 hover:shadow-lg"
                   >
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 sm:gap-6">
                       {it.coverImageUrl ? (
-                        <img src={it.coverImageUrl} alt={it.title} className="h-24 w-28 flex-none rounded-lg object-cover" />
+                        <img src={it.coverImageUrl} alt={it.title} className="h-28 w-32 sm:h-32 sm:w-48 flex-none rounded-lg object-cover bg-slate-900" />
                       ) : (
-                        <div className="h-24 w-28 flex-none rounded-lg bg-slate-700/50 flex items-center justify-center">
+                        <div className="h-28 w-32 sm:h-32 sm:w-48 flex-none rounded-lg bg-slate-700/50 flex items-center justify-center">
                           <svg className="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                         </div>
                       )}
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium text-white group-hover:text-emerald-400 transition-colors">{it.title}</div>
-                        {it.seller?.name && <div className="truncate text-sm text-slate-400">{it.seller.name}</div>}
-                        {createdLabel && <div className="text-sm text-slate-500">Dodano: {createdLabel}</div>}
-                        {locationLabel && (
-                          <div className="flex items-center gap-1 truncate text-sm text-slate-500">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            {locationLabel}
+                      <div className="flex flex-1 flex-col min-w-0">
+                        <div className="flex justify-between items-start gap-4">
+                          <h3 className="text-lg font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">{it.title}</h3>
+                          <div className="text-lg font-bold text-emerald-400 whitespace-nowrap">{priceLabel}</div>
+                        </div>
+
+                        <div className="mt-auto pt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
+                            <div className="text-sm text-slate-400">
+                              {locationLabel && (
+                                <div className="flex items-center gap-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                  {locationLabel}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {createdLabel && `Dodano: ${createdLabel}`}
+                            </div>
                           </div>
-                        )}
-                        <div className="mt-2 text-lg font-bold text-emerald-400">{priceLabel}</div>
+                        </div>
                       </div>
                     </div>
                   </Link>

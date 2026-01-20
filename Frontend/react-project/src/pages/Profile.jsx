@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 
-export default function Profile() {
+export default function Profile({ onProfileUpdate }) {
   const [profile, setProfile] = useState(null)
   const [name, setName] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
@@ -64,6 +64,7 @@ export default function Profile() {
       if (!patchRes.ok) { setError('Blad zapisu.'); return }
       const updated = await patchRes.json()
       setProfile(updated)
+      if (onProfileUpdate) onProfileUpdate(updated)
       setSelectedFile(null)
       setMessage('Zapisano zmiany.')
     } catch {
