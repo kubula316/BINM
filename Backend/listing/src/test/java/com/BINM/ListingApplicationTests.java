@@ -1,4 +1,4 @@
-package com.BINM.listing;
+package com.BINM;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
