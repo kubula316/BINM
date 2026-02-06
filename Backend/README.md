@@ -18,6 +18,7 @@ The application uses a relational PostgreSQL database designed with a Code-First
 *   **Favorite:** Represents a user's saved/favorite listings.
 *   **Conversation:** Represents a chat thread between a buyer and a seller regarding a specific listing.
 *   **Message:** Stores individual messages within a conversation, including content, timestamp, and read status.
+<img width="7562" height="5672" alt="Baza danych" src="https://github.com/user-attachments/assets/da3bf6b1-3e00-4e06-bbac-4800d6ba9db9" />
 
 ---
 
