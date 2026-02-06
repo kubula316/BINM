@@ -1,6 +1,7 @@
 # BINM Listing Service - Backend API
 
 BINM Listing Service is a comprehensive backend solution for an e-commerce platform, designed and implemented as part of my engineering thesis. It features a modular monolith architecture, real-time communication via WebSockets, and integration with cloud services like Azure Blob Storage.
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a5ae84c4-04bc-4a89-89eb-fb63234c4f06" />
 
 ---
 
